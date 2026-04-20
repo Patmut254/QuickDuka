@@ -12,7 +12,12 @@ import { Toast, useToast } from "./Toast";
 import AlertDialog from "./AlertDialog";
 
 const ACTION_COLORS = {
-  CREATE: { bg: "#f0fdf4", border: "#86efac", text: "#16a34a", label: "Added" },
+  CREATE: {
+    bg: "#f0fdf4",
+    border: "#86efac",
+    text: "#16a34a",
+    label: "Added",
+  },
   UPDATE: {
     bg: "#eff6ff",
     border: "#93c5fd",
@@ -41,7 +46,9 @@ const COL_LABELS = {
 
 function formatVal(obj) {
   if (!obj) return null;
+
   const parts = [];
+
   if (obj.date) parts.push(obj.date);
   if (obj.description) parts.push(obj.description);
   if (obj.item) parts.push(obj.item);
@@ -50,16 +57,20 @@ function formatVal(obj) {
   if (obj.supplier) parts.push(`Supplier: ${obj.supplier}`);
   if (obj.amount) parts.push(`KES ${Number(obj.amount).toLocaleString()}`);
   if (obj.notes) parts.push(`Notes: ${obj.notes}`);
+
   return parts.join(" · ");
 }
 
 function timeSince(ts) {
   if (!ts) return "-";
+
   const d = ts.toDate ? ts.toDate() : new Date(ts);
-  const diff = Math.floor((Date.now() - d) / 1000);
+  const diff = Math.floor((Date.now() - d.getTime()) / 1000);
+
   if (diff < 60) return `${diff}s ago`;
   if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
   if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+
   return d.toLocaleDateString("en-KE", {
     day: "numeric",
     month: "short",
@@ -71,12 +82,18 @@ function timeSince(ts) {
 
 export default function History() {
   const [logs, setLogs] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [historyLoading, setHistoryLoading] = useState(true);
   const [filter, setFilter] = useState("ALL");
   const [restoreTarget, setRestoreTarget] = useState(null);
+  const [clearing, setClearing] = useState(false);
   const { toast, showToast } = useToast();
-  // We need restoreItem - borrow from a dummy collection hook
-  const { restoreItem } = useCollection("sales"); // restoreItem is collection-agnostic
+
+  // restoreItem from sales hook
+  const { restoreItem } = useCollection("sales");
+
+  // silentDelete and clearCollection from auditLog
+  const { silentDelete: deleteLog, clearCollection } =
+    useCollection("auditLog");
 
   useEffect(() => {
     const q = query(
@@ -84,32 +101,63 @@ export default function History() {
       orderBy("timestamp", "desc"),
       limit(200),
     );
+
     const unsub = onSnapshot(q, (snap) => {
-      setLogs(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
-      setLoading(false);
+      setLogs(snap.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
+      setHistoryLoading(false);
     });
-    return unsub;
+
+    return () => unsub();
   }, []);
 
   const filtered =
-    filter === "ALL" ? logs : logs.filter((l) => l.action === filter);
+    filter === "ALL" ? logs : logs.filter((log) => log.action === filter);
 
   const handleRestore = async () => {
     if (!restoreTarget) return;
-    await restoreItem(restoreTarget);
-    setRestoreTarget(null);
-    showToast("Record restored successfully!", "success");
+
+    try {
+      await restoreItem(restoreTarget);
+      setRestoreTarget(null);
+      showToast("Record restored successfully!", "success");
+    } catch (error) {
+      console.error("Restore failed:", error);
+      showToast("Failed to restore record.", "error");
+    }
+  };
+
+  const handleClearHistory = async () => {
+    const confirmed = window.confirm(
+      "Delete ALL history permanently? This cannot be undone.",
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setClearing(true);
+      await clearCollection("auditLog");
+      showToast("History cleared.", "success");
+    } catch (error) {
+      console.error("Clear history failed:", error);
+      showToast("Failed to clear history.", "error");
+    } finally {
+      setClearing(false);
+    }
   };
 
   return (
     <div className="history-page">
       <Toast toast={toast} />
+
       <AlertDialog
         open={!!restoreTarget}
         title="Restore this record?"
         message={
           restoreTarget
-            ? `This will re-add "${restoreTarget.description || ""}" back to ${COL_LABELS[restoreTarget.collectionName] || restoreTarget.collectionName}.`
+            ? `This will re-add "${restoreTarget.description || ""}" back to ${
+                COL_LABELS[restoreTarget.collectionName] ||
+                restoreTarget.collectionName
+              }.`
             : ""
         }
         confirmLabel="Yes, Restore"
@@ -123,19 +171,30 @@ export default function History() {
           {["ALL", "CREATE", "UPDATE", "DELETE", "RESTORE"].map((f) => (
             <button
               key={f}
-              className={"filter-pill" + (filter === f ? " active" : "")}
+              className={`filter-pill${filter === f ? " active" : ""}`}
               onClick={() => setFilter(f)}
             >
               {f === "ALL" ? "All Activity" : ACTION_COLORS[f]?.label || f}
             </button>
           ))}
         </div>
-        <span className="table-count">
-          {filtered.length} event{filtered.length !== 1 ? "s" : ""}
-        </span>
+
+        <div className="toolbar-right">
+          <span className="table-count">
+            {filtered.length} event{filtered.length !== 1 ? "s" : ""}
+          </span>
+
+          <button
+            onClick={handleClearHistory}
+            disabled={clearing}
+            className="btn-danger"
+          >
+            {clearing ? "Clearing..." : "🗑 Clear All History"}
+          </button>
+        </div>
       </div>
 
-      {loading ? (
+      {historyLoading ? (
         <div className="table-loading">Loading history...</div>
       ) : filtered.length === 0 ? (
         <div className="empty-state">
@@ -146,6 +205,7 @@ export default function History() {
           {filtered.map((log) => {
             const style = ACTION_COLORS[log.action] || ACTION_COLORS.CREATE;
             const canRestore = log.action === "DELETE" && log.before;
+
             return (
               <div className="history-card" key={log.id}>
                 <div className="history-left">
@@ -159,17 +219,21 @@ export default function History() {
                   >
                     {style.label}
                   </span>
+
                   <div className="history-info">
                     <div className="history-desc">{log.description || "-"}</div>
+
                     <div className="history-meta">
                       <span className="history-col">
                         {COL_LABELS[log.collectionName] || log.collectionName}
                       </span>
+
                       {log.before && (
                         <span className="history-detail">
                           Before: <em>{formatVal(log.before)}</em>
                         </span>
                       )}
+
                       {log.after && log.action === "UPDATE" && (
                         <span className="history-detail">
                           After: <em>{formatVal(log.after)}</em>
@@ -178,10 +242,12 @@ export default function History() {
                     </div>
                   </div>
                 </div>
+
                 <div className="history-right">
                   <span className="history-time">
                     {timeSince(log.timestamp)}
                   </span>
+
                   {canRestore && (
                     <button
                       className="btn-restore"
@@ -190,6 +256,14 @@ export default function History() {
                       ↩ Restore
                     </button>
                   )}
+
+                  <button
+                    className="btn-delete-log"
+                    onClick={() => deleteLog(log.id)}
+                    title="Delete this entry"
+                  >
+                    🗑
+                  </button>
                 </div>
               </div>
             );

@@ -186,6 +186,44 @@ body { font-family: 'Sora', sans-serif; background: var(--bg); color: var(--text
 .profit-badge span { font-weight: 500; }
 .profit-indicator { margin-bottom: 20px; }
 
+.btn-danger {
+  background: #ef4444;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.btn-danger:hover {
+  background: #dc2626;
+}
+
+.btn-danger:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.btn-delete-log {
+  background: transparent;
+  border: 1px solid #fca5a5;
+  color: #dc2626;
+  border-radius: 6px;
+  padding: 4px 8px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.btn-delete-log:hover {
+  background: #fef2f2;
+}
+
+.toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 /* RESPONSIVE */
 @media (max-width: 1000px) {
   .summary-cards { grid-template-columns: repeat(2, 1fr); }

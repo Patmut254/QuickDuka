@@ -10,9 +10,9 @@ import {
   orderBy,
   serverTimestamp,
   updateDoc,
+  getDocs,
 } from "firebase/firestore";
 
-// logAudit is best-effort - it must NEVER block or break the main operation
 async function logAudit({
   action,
   collectionName,
@@ -22,14 +22,13 @@ async function logAudit({
   description,
 }) {
   try {
-    // Strip Firestore Timestamps and non-serialisable values before storing
     const clean = (obj) => {
       if (!obj) return null;
       const out = {};
       for (const [k, v] of Object.entries(obj)) {
         if (v && typeof v === "object" && typeof v.toDate === "function")
-          continue; // skip Timestamps
-        if (v && typeof v === "object" && v.seconds !== undefined) continue; // skip raw Timestamp shape
+          continue;
+        if (v && typeof v === "object" && v.seconds !== undefined) continue;
         out[k] = v;
       }
       return out;
@@ -44,7 +43,6 @@ async function logAudit({
       timestamp: serverTimestamp(),
     });
   } catch (e) {
-    // Audit log failure must never crash the app
     console.warn("Audit log failed (non-critical):", e.message);
   }
 }
@@ -73,7 +71,6 @@ export function useCollection(collectionName) {
   }, [collectionName]);
 
   const addItem = async (data) => {
-    // Do the real write first - audit log is secondary
     const ref = await addDoc(collection(db, collectionName), {
       ...data,
       createdAt: serverTimestamp(),
@@ -88,7 +85,6 @@ export function useCollection(collectionName) {
   };
 
   const deleteItem = async (id, itemData) => {
-    // Log first so we capture before-state, then delete
     await logAudit({
       action: "DELETE",
       collectionName,
@@ -99,8 +95,12 @@ export function useCollection(collectionName) {
     await deleteDoc(doc(db, collectionName, id));
   };
 
+  // ✅ Silent delete — no audit log. Used for deleting auditLog entries themselves
+  const silentDelete = async (id) => {
+    await deleteDoc(doc(db, collectionName, id));
+  };
+
   const updateItem = async (id, newData, oldData) => {
-    // Do the real update first
     await updateDoc(doc(db, collectionName, id), newData);
     await logAudit({
       action: "UPDATE",
@@ -115,7 +115,6 @@ export function useCollection(collectionName) {
   const restoreItem = async (logEntry) => {
     const data = logEntry.before;
     if (!data) return;
-    // Remove any Firestore-incompatible fields from the old snapshot
     const { id: _id, createdAt: _c, restoredFrom: _r, ...cleanData } = data;
     const ref = await addDoc(collection(db, logEntry.collectionName), {
       ...cleanData,
@@ -131,5 +130,22 @@ export function useCollection(collectionName) {
     });
   };
 
-  return { items, loading, addItem, deleteItem, updateItem, restoreItem };
+  const clearCollection = async (targetCollection) => {
+    const snap = await getDocs(collection(db, targetCollection));
+    const deletes = snap.docs.map((d) =>
+      deleteDoc(doc(db, targetCollection, d.id)),
+    );
+    await Promise.all(deletes);
+  };
+
+  return {
+    items,
+    loading,
+    addItem,
+    deleteItem,
+    silentDelete,
+    updateItem,
+    restoreItem,
+    clearCollection,
+  };
 }
