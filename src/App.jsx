@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
 import { auth } from "./firebase";
-import { signInWithEmailAndPassword, signOut, onAuthStateChanged } from "firebase/auth";
+import { signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail } from "firebase/auth";
 import Dashboard from "./components/Dashboard";
 import Sales from "./components/Sales";
 import Purchases from "./components/Purchases";
 import Expenses from "./components/Expenses";
 import Reports from "./components/Reports";
 import History from "./components/History";
+import Credits from "./components/Credits";
 import "./App.css";
 
 export default function App() {
@@ -17,6 +18,11 @@ export default function App() {
   const [loginPassword, setLoginPassword] = useState("");
   const [loginError, setLoginError] = useState("");
   const [loggingIn, setLoggingIn] = useState(false);
+
+  const [showReset, setShowReset] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
+  const [resetStatus, setResetStatus] = useState("idle");
+  const [resetMsg, setResetMsg] = useState("");
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (u) => { setUser(u); setLoading(false); });
@@ -35,6 +41,27 @@ export default function App() {
     setLoggingIn(false);
   };
 
+  const handleResetPassword = async (e) => {
+    e.preventDefault();
+    if (resetStatus === "sending") return;
+    setResetStatus("sending");
+    setResetMsg("");
+    try {
+      await sendPasswordResetEmail(auth, resetEmail);
+      setResetStatus("sent");
+      setResetMsg("Password reset email sent! Check your inbox.");
+    } catch (err) {
+      setResetStatus("error");
+      if (err.code === "auth/user-not-found") {
+        setResetMsg("No account found with that email address.");
+      } else if (err.code === "auth/invalid-email") {
+        setResetMsg("Please enter a valid email address.");
+      } else {
+        setResetMsg("Failed to send reset email. Please try again.");
+      }
+    }
+  };
+
   if (loading) return (
     <div className="splash">
       <div className="splash-logo"><span>📊</span><span>MySalesPro</span></div>
@@ -49,18 +76,55 @@ export default function App() {
           <h1>MySalesPro</h1>
           <p>Your sales command centre</p>
         </div>
-        <form onSubmit={handleLogin} className="login-form">
-          <div className="field-group">
-            <label>Email</label>
-            <input type="email" placeholder="you@company.com" value={loginEmail} onChange={e => setLoginEmail(e.target.value)} required />
+
+        {!showReset ? (
+          <>
+            <form onSubmit={handleLogin} className="login-form">
+              <div className="field-group">
+                <label>Email</label>
+                <input type="email" placeholder="you@company.com" value={loginEmail} onChange={e => setLoginEmail(e.target.value)} required />
+              </div>
+              <div className="field-group">
+                <label>Password</label>
+                <input type="password" placeholder="••••••••" value={loginPassword} onChange={e => setLoginPassword(e.target.value)} required />
+              </div>
+              {loginError && <div className="login-error">{loginError}</div>}
+              <button type="submit" className="btn-login" disabled={loggingIn}>{loggingIn ? "Signing in..." : "Sign In →"}</button>
+            </form>
+            <div className="forgot-pw-wrap">
+              <button className="forgot-pw-btn" onClick={() => { setShowReset(true); setResetEmail(loginEmail); setResetStatus("idle"); setResetMsg(""); }}>
+                Forgot password?
+              </button>
+            </div>
+          </>
+        ) : (
+          <div className="reset-section">
+            <h2 className="reset-title">Reset Password</h2>
+            <p className="reset-subtitle">Enter your email and we will send you a reset link.</p>
+            {resetStatus !== "sent" ? (
+              <form onSubmit={handleResetPassword} className="login-form">
+                <div className="field-group">
+                  <label>Email</label>
+                  <input type="email" placeholder="you@company.com" value={resetEmail} onChange={e => setResetEmail(e.target.value)} required />
+                </div>
+                {resetMsg && (
+                  <div className={resetStatus === "error" ? "login-error" : "login-success"}>{resetMsg}</div>
+                )}
+                <button type="submit" className="btn-login" disabled={resetStatus === "sending"}>
+                  {resetStatus === "sending" ? "Sending..." : "Send Reset Link"}
+                </button>
+              </form>
+            ) : (
+              <div className="reset-sent-box">
+                <div className="reset-sent-icon">✅</div>
+                <p className="reset-sent-msg">{resetMsg}</p>
+              </div>
+            )}
+            <div className="forgot-pw-wrap">
+              <button className="forgot-pw-btn" onClick={() => setShowReset(false)}>Back to Sign In</button>
+            </div>
           </div>
-          <div className="field-group">
-            <label>Password</label>
-            <input type="password" placeholder="••••••••" value={loginPassword} onChange={e => setLoginPassword(e.target.value)} required />
-          </div>
-          {loginError && <div className="login-error">{loginError}</div>}
-          <button type="submit" className="btn-login" disabled={loggingIn}>{loggingIn ? "Signing in..." : "Sign In →"}</button>
-        </form>
+        )}
       </div>
     </div>
   );
@@ -68,6 +132,7 @@ export default function App() {
   const tabs = [
     { id: "dashboard", label: "Dashboard", icon: "🏠" },
     { id: "sales", label: "Sales", icon: "💰" },
+    { id: "credits", label: "Credits", icon: "📒" },
     { id: "purchases", label: "Purchases", icon: "🛒" },
     { id: "expenses", label: "Expenses", icon: "📋" },
     { id: "reports", label: "Reports", icon: "📈" },
@@ -87,10 +152,11 @@ export default function App() {
               <span className="nav-icon">{t.icon}</span>
               <span className="nav-label">{t.label}</span>
               {t.id === "history" && <span className="nav-badge">Log</span>}
+              {t.id === "credits" && <span className="nav-badge nav-badge-debt">Debt</span>}
             </button>
           ))}
         </nav>
-        <button className="logout-btn" onClick={() => signOut(auth)}>⬅ Logout</button>
+        <button className="logout-btn" onClick={() => signOut(auth)}>Logout</button>
       </aside>
 
       <div className="mobile-bar">
@@ -113,6 +179,7 @@ export default function App() {
         <div className="page-body">
           {activeTab === "dashboard" && <Dashboard setActiveTab={setActiveTab} />}
           {activeTab === "sales" && <Sales />}
+          {activeTab === "credits" && <Credits />}
           {activeTab === "purchases" && <Purchases />}
           {activeTab === "expenses" && <Expenses />}
           {activeTab === "reports" && <Reports />}

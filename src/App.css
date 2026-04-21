@@ -291,3 +291,161 @@ body { font-family: 'Sora', sans-serif; background: var(--bg); color: var(--text
 
 /* ── NAV BADGE ── */
 .nav-badge { margin-left: auto; font-size: 10px; background: var(--accent-light); color: var(--accent); padding: 2px 7px; border-radius: 10px; font-weight: 700; }
+
+/* ── RESET PASSWORD ── */
+.forgot-pw-wrap { text-align: center; margin-top: 14px; }
+.forgot-pw-btn { background: transparent; border: none; color: var(--accent); font-family: inherit; font-size: 13px; cursor: pointer; font-weight: 600; text-decoration: underline; }
+.forgot-pw-btn:hover { color: #4338ca; }
+.reset-section { }
+.reset-title { font-size: 18px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+.reset-subtitle { color: var(--muted); font-size: 13px; margin-bottom: 20px; }
+.reset-sent-box { text-align: center; padding: 20px 0; }
+.reset-sent-icon { font-size: 40px; margin-bottom: 12px; }
+.reset-sent-msg { color: var(--green); font-size: 14px; font-weight: 600; }
+.login-success { background: var(--green-bg); border: 1px solid #86efac; color: var(--green); padding: 10px 14px; border-radius: 8px; font-size: 13px; }
+
+/* ── CREDITS MODULE ── */
+.credits-stats { display: flex; gap: 32px; flex-wrap: wrap; }
+.credits-list { display: flex; flex-direction: column; gap: 12px; padding: 16px; }
+
+.credit-card { background: var(--bg2); border: 1px solid var(--border); border-left: 4px solid #f97316; border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow); transition: box-shadow .2s; }
+.credit-card:hover { box-shadow: var(--shadow-md); }
+.credit-card-paid { border-left-color: #22c55e; opacity: 0.8; }
+.credit-card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
+.credit-card-left { flex: 1; min-width: 0; }
+.credit-customer { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
+.credit-desc { font-size: 13px; color: var(--muted); margin-bottom: 2px; }
+.credit-date { font-size: 11px; color: var(--muted); }
+.credit-card-right { text-align: right; flex-shrink: 0; }
+.credit-total { font-family: 'JetBrains Mono', monospace; font-size: 17px; font-weight: 700; color: var(--text); }
+.credit-remaining { font-size: 12px; color: #ef4444; font-weight: 600; margin-top: 2px; }
+.credit-paid-badge { font-size: 12px; color: var(--green); font-weight: 700; margin-top: 2px; background: var(--green-bg); padding: 2px 8px; border-radius: 10px; display: inline-block; }
+
+.credit-progress-wrap { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.credit-progress-bar { flex: 1; background: var(--bg3); border-radius: 10px; height: 8px; overflow: hidden; }
+.credit-progress-fill { height: 100%; border-radius: 10px; transition: width .4s ease; }
+.credit-pct { font-size: 11px; font-weight: 700; color: var(--muted); min-width: 32px; text-align: right; }
+
+.credit-payment-history { margin-bottom: 10px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.credit-ph-label { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; }
+.credit-ph-item { font-size: 11px; background: var(--bg3); border: 1px solid var(--border); padding: 2px 8px; border-radius: 10px; color: var(--text); }
+
+.credit-actions { display: flex; gap: 8px; align-items: center; }
+.btn-pay { background: var(--accent); color: white; border: none; padding: 7px 16px; border-radius: 8px; font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer; transition: background .2s; }
+.btn-pay:hover { background: #4338ca; }
+
+.payment-form { background: var(--bg3); border-radius: 8px; padding: 14px; margin-top: 4px; }
+
+/* ── NAV BADGE DEBT ── */
+.nav-badge-debt { margin-left: auto; font-size: 10px; background: #fef2f2; color: #dc2626; padding: 2px 7px; border-radius: 10px; font-weight: 700; }
+
+/* ── RESPONSIVE CHARTS: fix mobile clipping ── */
+.recharts-wrapper { overflow: visible !important; }
+.recharts-surface { overflow: visible !important; }
+
+/* Charts: fix pie label overflow on mobile */
+@media (max-width: 700px) {
+  .chart-card { padding: 14px 8px; }
+  .chart-section { padding: 14px 8px; }
+  .charts-grid { grid-template-columns: 1fr; gap: 12px; }
+
+  /* Shrink chart heights slightly on mobile */
+  .chart-section .recharts-responsive-container,
+  .chart-card .recharts-responsive-container { height: 220px !important; }
+
+  /* Rotate X-axis labels on small screens */
+  .recharts-cartesian-axis-tick-value { font-size: 10px !important; }
+
+  /* Summary cards 2 col on mid, 1 col small */
+  .summary-cards { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .report-summary-cards { grid-template-columns: 1fr 1fr; gap: 8px; }
+
+  /* Credits on mobile */
+  .credits-stats { gap: 16px; }
+  .credit-card-top { flex-direction: column; }
+  .credit-card-right { text-align: left; }
+
+  /* Module header fix */
+  .module-header { flex-direction: column; align-items: flex-start; gap: 12px; }
+  .module-header .btn-primary { align-self: stretch; text-align: center; }
+
+  /* Page body bottom padding for mobile bar */
+  .page-body { padding: 12px 12px 80px; }
+  .top-bar { padding: 10px 14px; }
+  .top-bar .page-title { font-size: 14px; }
+  .user-badge { display: none; }
+  .form-grid { grid-template-columns: 1fr; }
+
+  /* Tables scroll well */
+  .table-scroll { -webkit-overflow-scrolling: touch; }
+  .data-table th, .data-table td { padding: 8px 10px; font-size: 12px; }
+
+  /* Toast position above mobile bar */
+  .toast { bottom: 76px; right: 12px; left: 12px; text-align: center; }
+
+  /* Reports controls wrap */
+  .reports-controls { flex-wrap: wrap; gap: 8px; }
+}
+
+@media (max-width: 420px) {
+  .summary-cards { grid-template-columns: 1fr; }
+  .report-summary-cards { grid-template-columns: 1fr 1fr; }
+  .card-value { font-size: 16px; }
+}
+
+/* ── MOBILE BAR: 7 tabs fix ── */
+@media (max-width: 700px) {
+  .mobile-bar {
+    display: flex;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: var(--bg2);
+    border-top: 1px solid var(--border);
+    z-index: 100;
+    box-shadow: 0 -2px 8px rgba(0,0,0,.08);
+  }
+  .mobile-bar::-webkit-scrollbar { display: none; }
+  .mobile-tab {
+    flex: 0 0 auto;
+    min-width: 60px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 8px 10px;
+    background: transparent;
+    border: none;
+    color: var(--muted);
+    font-family: inherit;
+    font-size: 9px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .mobile-tab.active { color: var(--accent); }
+  .mobile-tab span:first-child { font-size: 17px; }
+}
+
+/* ── GENERAL LAYOUT FIXES for all screen sizes ── */
+@media (max-width: 1200px) {
+  .report-summary-cards { grid-template-columns: repeat(3, 1fr); }
+}
+
+@media (max-width: 900px) {
+  .summary-cards { grid-template-columns: repeat(2, 1fr); }
+  .report-summary-cards { grid-template-columns: repeat(2, 1fr); }
+  .charts-grid { grid-template-columns: 1fr; }
+}
+
+/* Ensure nothing overflows horizontally */
+.module-page, .dashboard, .reports-page { max-width: 100%; overflow-x: hidden; }
+.entry-table-wrap { max-width: 100%; }
+.table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+/* Login card responsive */
+@media (max-width: 480px) {
+  .login-card { padding: 28px 20px; margin: 16px; }
+  .login-header h1 { font-size: 20px; }
+}

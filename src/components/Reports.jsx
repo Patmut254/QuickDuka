@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { useCollection } from "../hooks/useCollection";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
-  ResponsiveContainer, PieChart, Pie, Cell
+  ResponsiveContainer, PieChart, Pie, Cell, Legend as PieLegend
 } from "recharts";
 import { format, parseISO, startOfMonth, endOfMonth, isWithinInterval } from "date-fns";
 
@@ -126,12 +126,13 @@ export default function Reports() {
           {expenseByCat.length === 0 ? (
             <div className="empty-state">No expenses for this month.</div>
           ) : (
-            <ResponsiveContainer width="100%" height={250}>
-              <PieChart>
-                <Pie data={expenseByCat} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={90} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} labelLine={false}>
+            <ResponsiveContainer width="100%" height={260}>
+              <PieChart margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
+                <Pie data={expenseByCat} dataKey="value" nameKey="name" cx="50%" cy="45%" outerRadius={75} label={false} labelLine={false}>
                   {expenseByCat.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                 </Pie>
                 <Tooltip contentStyle={{ background: "#1a1a2e", border: "1px solid #333", color: "#fff" }} formatter={v => `KES ${v.toLocaleString()}`} />
+                <PieLegend wrapperStyle={{ fontSize: 11, paddingTop: 8 }} />
               </PieChart>
             </ResponsiveContainer>
           )}
