@@ -8,7 +8,15 @@ const EXPENSE_CATS = ["Rent", "Utilities", "Transport", "Salaries", "Marketing",
 export default function Expenses() {
   const { items, loading, addItem, deleteItem, updateItem } = useCollection("expenses");
   const { toast, showToast } = useToast();
-  const emptyForm = { date: new Date().toISOString().split("T")[0], category: "", description: "", amount: "", notes: "" };
+  const emptyForm = {
+    date: new Date().toISOString().split("T")[0],
+    category: "",
+    description: "",
+    payee: "",
+    phone: "",
+    amount: "",
+    notes: "",
+  };
   const [form, setForm] = useState(emptyForm);
   const [status, setStatus] = useState("idle");
   const [showForm, setShowForm] = useState(false);
@@ -21,11 +29,7 @@ export default function Expenses() {
       await addItem({ ...form, amount: parseFloat(form.amount) });
       setStatus("saved");
       showToast("Expense saved successfully!");
-      setTimeout(() => {
-        setStatus("idle");
-        setForm(emptyForm);
-        setShowForm(false);
-      }, 1500);
+      setTimeout(() => { setStatus("idle"); setForm(emptyForm); setShowForm(false); }, 1500);
     } catch (err) {
       console.error("Save failed:", err);
       setStatus("idle");
@@ -39,6 +43,10 @@ export default function Expenses() {
     { key: "date", label: "Date", inputType: "date" },
     { key: "category", label: "Category", type: "select", options: EXPENSE_CATS },
     { key: "description", label: "Description" },
+    { key: "payee", label: "Paid To" },
+    { key: "phone", label: "Phone", inputType: "tel", format: v => v ? (
+      <a href={`tel:${v}`} style={{ color: "var(--accent)", textDecoration: "none" }}>{v}</a>
+    ) : "-" },
     { key: "amount", label: "Amount (KES)", inputType: "number", format: v => `KES ${Number(v).toLocaleString()}` },
     { key: "notes", label: "Notes" },
   ];
@@ -76,6 +84,14 @@ export default function Expenses() {
               <input placeholder="Brief description" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} />
             </div>
             <div className="field-group">
+              <label>Paid To</label>
+              <input placeholder="Person / business paid" value={form.payee} onChange={e => setForm({ ...form, payee: e.target.value })} />
+            </div>
+            <div className="field-group">
+              <label>Phone Number</label>
+              <input type="tel" placeholder="07XX XXX XXX" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} />
+            </div>
+            <div className="field-group">
               <label>Amount (KES) *</label>
               <input type="number" min="0" step="0.01" placeholder="0.00" value={form.amount} onChange={e => setForm({ ...form, amount: e.target.value })} required />
             </div>
@@ -84,25 +100,13 @@ export default function Expenses() {
               <input placeholder="Optional notes" value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} />
             </div>
           </div>
-          <button
-            type="submit"
-            className={"btn-primary" + (status === "saved" ? " btn-saved" : "")}
-            disabled={status !== "idle"}
-          >
+          <button type="submit" className={"btn-primary" + (status === "saved" ? " btn-saved" : "")} disabled={status !== "idle"}>
             {status === "saving" ? "Saving..." : status === "saved" ? "✅ Saved!" : "Save Expense"}
           </button>
         </form>
       )}
 
-      <EntryTable
-        items={items}
-        loading={loading}
-        columns={columns}
-        onDelete={deleteItem}
-        onUpdate={updateItem}
-        showToast={showToast}
-        emptyMessage="No expenses recorded yet. Click '+ New Expense' to add one."
-      />
+      <EntryTable items={items} loading={loading} columns={columns} onDelete={deleteItem} onUpdate={updateItem} showToast={showToast} emptyMessage="No expenses recorded yet. Click '+ New Expense' to add one." />
     </div>
   );
 }

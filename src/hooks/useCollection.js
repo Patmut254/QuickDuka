@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { db } from "../firebase";
+import { db, auth } from "../firebase";
 import {
   collection,
   addDoc,
@@ -11,6 +11,7 @@ import {
   serverTimestamp,
   updateDoc,
   getDocs,
+  where,
 } from "firebase/firestore";
 
 async function logAudit({
@@ -20,6 +21,7 @@ async function logAudit({
   before,
   after,
   description,
+  userId,
 }) {
   try {
     const clean = (obj) => {
@@ -40,6 +42,7 @@ async function logAudit({
       before: clean(before),
       after: clean(after),
       description: description || "",
+      userId: userId || auth.currentUser?.uid || "",
       timestamp: serverTimestamp(),
     });
   } catch (e) {
@@ -50,10 +53,13 @@ async function logAudit({
 export function useCollection(collectionName) {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const uid = auth.currentUser?.uid;
 
   useEffect(() => {
+    if (!uid) { setLoading(false); return; }
     const q = query(
       collection(db, collectionName),
+      where("userId", "==", uid),
       orderBy("createdAt", "desc"),
     );
     const unsub = onSnapshot(
@@ -68,11 +74,12 @@ export function useCollection(collectionName) {
       },
     );
     return unsub;
-  }, [collectionName]);
+  }, [collectionName, uid]);
 
   const addItem = async (data) => {
     const ref = await addDoc(collection(db, collectionName), {
       ...data,
+      userId: uid,
       createdAt: serverTimestamp(),
     });
     await logAudit({
@@ -80,7 +87,8 @@ export function useCollection(collectionName) {
       collectionName,
       recordId: ref.id,
       after: data,
-      description: `Added ${collectionName.slice(0, -1)}: ${data.description || data.item || data.category || "-"} · KES ${data.amount}`,
+      description: `Added ${collectionName.slice(0, -1)}: ${data.description || data.item || data.name || data.category || "-"} · KES ${data.amount || ""}`,
+      userId: uid,
     });
   };
 
@@ -90,7 +98,8 @@ export function useCollection(collectionName) {
       collectionName,
       recordId: id,
       before: itemData || null,
-      description: `Deleted ${collectionName.slice(0, -1)}: ${itemData?.description || itemData?.item || itemData?.category || id} · KES ${itemData?.amount || "?"}`,
+      description: `Deleted ${collectionName.slice(0, -1)}: ${itemData?.description || itemData?.item || itemData?.name || itemData?.category || id} · KES ${itemData?.amount || "?"}`,
+      userId: uid,
     });
     await deleteDoc(doc(db, collectionName, id));
   };
@@ -108,7 +117,8 @@ export function useCollection(collectionName) {
       recordId: id,
       before: oldData || null,
       after: newData,
-      description: `Updated ${collectionName.slice(0, -1)}: ${newData.description || newData.item || newData.category || id}`,
+      description: `Updated ${collectionName.slice(0, -1)}: ${newData.description || newData.item || newData.name || newData.category || id}`,
+      userId: uid,
     });
   };
 
@@ -118,6 +128,7 @@ export function useCollection(collectionName) {
     const { id: _id, createdAt: _c, restoredFrom: _r, ...cleanData } = data;
     const ref = await addDoc(collection(db, logEntry.collectionName), {
       ...cleanData,
+      userId: uid,
       createdAt: serverTimestamp(),
       restoredFrom: logEntry.recordId,
     });
@@ -126,12 +137,15 @@ export function useCollection(collectionName) {
       collectionName: logEntry.collectionName,
       recordId: ref.id,
       after: cleanData,
-      description: `Restored: ${cleanData.description || cleanData.item || cleanData.category || logEntry.recordId}`,
+      description: `Restored: ${cleanData.description || cleanData.item || cleanData.name || cleanData.category || logEntry.recordId}`,
+      userId: uid,
     });
   };
 
   const clearCollection = async (targetCollection) => {
-    const snap = await getDocs(collection(db, targetCollection));
+    if (!uid) return;
+    const q = query(collection(db, targetCollection), where("userId", "==", uid));
+    const snap = await getDocs(q);
     const deletes = snap.docs.map((d) =>
       deleteDoc(doc(db, targetCollection, d.id)),
     );

@@ -1,3 +1,5 @@
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faMoneyBillTrendUp, faCartPlus, faReceipt, faArrowTrendUp, faArrowTrendDown } from "@fortawesome/free-solid-svg-icons";
 import { useMemo } from "react";
 import { useCollection } from "../hooks/useCollection";
 import {
@@ -88,25 +90,25 @@ export default function Dashboard({ setActiveTab }) {
       label: "Sales This Month",
       value: totalSales,
       color: "#22c55e",
-      icon: "💰",
+      icon: faMoneyBillTrendUp,
     },
     {
       label: "Purchases This Month",
       value: totalPurchases,
       color: "#f97316",
-      icon: "🛒",
+      icon: faCartPlus,
     },
     {
       label: "Expenses This Month",
       value: totalExpenses,
       color: "#a855f7",
-      icon: "📋",
+      icon: faReceipt,
     },
     {
       label: "Net Profit",
       value: profit,
       color: profit >= 0 ? "#22c55e" : "#ef4444",
-      icon: profit >= 0 ? "✅" : "⚠️",
+      icon: profit >= 0 ? faArrowTrendUp : faArrowTrendDown,
     },
   ];
 
@@ -135,7 +137,7 @@ export default function Dashboard({ setActiveTab }) {
             key={c.label}
             style={{ borderTop: `4px solid ${c.color}` }}
           >
-            <div className="card-icon">{c.icon}</div>
+            <div className="card-icon"><FontAwesomeIcon icon={c.icon} /></div>
             <div className="card-body">
               <div className="card-label">{c.label}</div>
               <div className="card-value" style={{ color: c.color }}>
@@ -230,11 +232,7 @@ export default function Dashboard({ setActiveTab }) {
             {recent.map((item, i) => (
               <div className="recent-row" key={i}>
                 <div className="recent-icon">
-                  {item.type === "Sale"
-                    ? "💰"
-                    : item.type === "Purchase"
-                      ? "🛒"
-                      : "📋"}
+                  <FontAwesomeIcon icon={item.type === "Sale" ? faMoneyBillTrendUp : item.type === "Purchase" ? faCartPlus : faReceipt} />
                 </div>
                 <div className="recent-info">
                   <div className="recent-desc">

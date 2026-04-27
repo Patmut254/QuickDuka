@@ -6,9 +6,16 @@ import { Toast, useToast } from "./Toast";
 export default function Sales() {
   const { items, loading, addItem, deleteItem, updateItem } = useCollection("sales");
   const { toast, showToast } = useToast();
-  const emptyForm = { date: new Date().toISOString().split("T")[0], description: "", customer: "", amount: "", notes: "" };
+  const emptyForm = {
+    date: new Date().toISOString().split("T")[0],
+    description: "",
+    customer: "",
+    phone: "",
+    amount: "",
+    notes: "",
+  };
   const [form, setForm] = useState(emptyForm);
-  const [status, setStatus] = useState("idle"); // idle | saving | saved
+  const [status, setStatus] = useState("idle");
   const [showForm, setShowForm] = useState(false);
 
   const handleSubmit = async (e) => {
@@ -19,11 +26,7 @@ export default function Sales() {
       await addItem({ ...form, amount: parseFloat(form.amount) });
       setStatus("saved");
       showToast("Sale saved successfully!");
-      setTimeout(() => {
-        setStatus("idle");
-        setForm(emptyForm);
-        setShowForm(false);
-      }, 1500);
+      setTimeout(() => { setStatus("idle"); setForm(emptyForm); setShowForm(false); }, 1500);
     } catch (err) {
       console.error("Save failed:", err);
       setStatus("idle");
@@ -37,6 +40,9 @@ export default function Sales() {
     { key: "date", label: "Date", inputType: "date" },
     { key: "description", label: "Item / Service" },
     { key: "customer", label: "Customer" },
+    { key: "phone", label: "Phone", inputType: "tel", format: v => v ? (
+      <a href={`tel:${v}`} style={{ color: "var(--accent)", textDecoration: "none" }}>{v}</a>
+    ) : "-" },
     { key: "amount", label: "Amount (KES)", inputType: "number", format: v => `KES ${Number(v).toLocaleString()}` },
     { key: "notes", label: "Notes" },
   ];
@@ -71,6 +77,10 @@ export default function Sales() {
               <input placeholder="Customer name" value={form.customer} onChange={e => setForm({ ...form, customer: e.target.value })} />
             </div>
             <div className="field-group">
+              <label>Phone Number</label>
+              <input type="tel" placeholder="07XX XXX XXX" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} />
+            </div>
+            <div className="field-group">
               <label>Amount (KES) *</label>
               <input type="number" min="0" step="0.01" placeholder="0.00" value={form.amount} onChange={e => setForm({ ...form, amount: e.target.value })} required />
             </div>
@@ -79,25 +89,13 @@ export default function Sales() {
               <input placeholder="Optional notes" value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} />
             </div>
           </div>
-          <button
-            type="submit"
-            className={"btn-primary" + (status === "saved" ? " btn-saved" : "")}
-            disabled={status !== "idle"}
-          >
+          <button type="submit" className={"btn-primary" + (status === "saved" ? " btn-saved" : "")} disabled={status !== "idle"}>
             {status === "saving" ? "Saving..." : status === "saved" ? "✅ Saved!" : "Save Sale"}
           </button>
         </form>
       )}
 
-      <EntryTable
-        items={items}
-        loading={loading}
-        columns={columns}
-        onDelete={deleteItem}
-        onUpdate={updateItem}
-        showToast={showToast}
-        emptyMessage="No sales recorded yet. Click '+ New Sale' to add one."
-      />
+      <EntryTable items={items} loading={loading} columns={columns} onDelete={deleteItem} onUpdate={updateItem} showToast={showToast} emptyMessage="No sales recorded yet. Click '+ New Sale' to add one." />
     </div>
   );
 }

@@ -12,6 +12,7 @@ export default function Credits() {
   const emptyForm = {
     date: new Date().toISOString().split("T")[0],
     customer: "",
+    phone: "",
     description: "",
     totalAmount: "",
     notes: "",
@@ -20,6 +21,11 @@ export default function Credits() {
   const [form, setForm] = useState(emptyForm);
   const [showForm, setShowForm] = useState(false);
   const [status, setStatus] = useState("idle");
+
+  // Edit modal state
+  const [editingCredit, setEditingCredit] = useState(null);
+  const [editForm, setEditForm] = useState({});
+  const [editStatus, setEditStatus] = useState("idle");
 
   // Payment modal state
   const [payingCredit, setPayingCredit] = useState(null);
@@ -31,7 +37,7 @@ export default function Credits() {
   const [deleteTarget, setDeleteTarget] = useState(null);
 
   // Filter
-  const [filter, setFilter] = useState("all"); // all | outstanding | paid
+  const [filter, setFilter] = useState("all");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -59,6 +65,48 @@ export default function Credits() {
     }
   };
 
+  const openEdit = (credit) => {
+    setEditingCredit(credit);
+    setEditForm({
+      date: credit.date || "",
+      customer: credit.customer || "",
+      phone: credit.phone || "",
+      description: credit.description || "",
+      totalAmount: credit.totalAmount?.toString() || "",
+      notes: credit.notes || "",
+    });
+    setEditStatus("idle");
+  };
+
+  const handleEditSave = async (e) => {
+    e.preventDefault();
+    if (editStatus !== "idle" || !editingCredit) return;
+    const newTotal = parseFloat(editForm.totalAmount);
+    if (isNaN(newTotal) || newTotal <= 0) return showToast("Enter a valid amount", "error");
+    if (newTotal < (editingCredit.paidAmount || 0)) {
+      return showToast(`Total cannot be less than amount already paid (KES ${editingCredit.paidAmount?.toLocaleString()})`, "error");
+    }
+    setEditStatus("saving");
+    try {
+      const isPaid = (editingCredit.paidAmount || 0) >= newTotal;
+      await updateItem(editingCredit.id, {
+        date: editForm.date,
+        customer: editForm.customer,
+        phone: editForm.phone || "",
+        description: editForm.description,
+        totalAmount: newTotal,
+        notes: editForm.notes,
+        status: isPaid ? "paid" : "outstanding",
+      }, editingCredit);
+      showToast("Credit updated ✅");
+      setEditingCredit(null);
+    } catch (err) {
+      console.error(err);
+      showToast("Update failed. Please try again.", "error");
+    }
+    setEditStatus("idle");
+  };
+
   const handlePayment = async () => {
     if (payStatus !== "idle" || !payingCredit) return;
     const amount = parseFloat(payAmount);
@@ -83,7 +131,6 @@ export default function Credits() {
       }, payingCredit);
 
       if (isFullyPaid) {
-        // Move to sales
         await addDoc(collection(db, "sales"), {
           date: payingCredit.date,
           description: payingCredit.description,
@@ -154,6 +201,10 @@ export default function Credits() {
               <input placeholder="Customer name" value={form.customer} onChange={e => setForm({ ...form, customer: e.target.value })} required />
             </div>
             <div className="field-group">
+              <label>Customer Phone</label>
+              <input type="tel" placeholder="07XX XXX XXX" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} />
+            </div>
+            <div className="field-group">
               <label>Item / Service *</label>
               <input placeholder="What was sold on credit?" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} required />
             </div>
@@ -210,6 +261,9 @@ export default function Credits() {
                       <div className="credit-customer">{credit.customer}</div>
                       <div className="credit-desc">{credit.description}</div>
                       <div className="credit-date">{credit.date}</div>
+                      {credit.phone && (
+                        <a href={`tel:${credit.phone}`} className="credit-phone">📞 {credit.phone}</a>
+                      )}
                     </div>
                     <div className="credit-card-right">
                       <div className="credit-amounts">
@@ -247,6 +301,7 @@ export default function Credits() {
                         💵 Record Payment
                       </button>
                     )}
+                    <button className="btn-edit-sm" title="Edit" onClick={() => openEdit(credit)}>✏️ Edit</button>
                     <button className="delete-btn" title="Delete" onClick={() => setDeleteTarget(credit)}>🗑</button>
                   </div>
                 </div>
@@ -255,6 +310,51 @@ export default function Credits() {
           </div>
         )}
       </div>
+
+      {/* Edit Modal */}
+      {editingCredit && (
+        <div className="alert-overlay" onClick={() => setEditingCredit(null)}>
+          <div className="alert-box" style={{ maxWidth: 480 }} onClick={e => e.stopPropagation()}>
+            <div className="alert-icon">✏️</div>
+            <div className="alert-title">Edit Credit Record</div>
+            <form onSubmit={handleEditSave} className="payment-form" style={{ textAlign: "left" }}>
+              <div className="field-group" style={{ marginBottom: 10 }}>
+                <label>Date</label>
+                <input type="date" value={editForm.date} onChange={e => setEditForm(f => ({ ...f, date: e.target.value }))} required />
+              </div>
+              <div className="field-group" style={{ marginBottom: 10 }}>
+                <label>Customer</label>
+                <input placeholder="Customer name" value={editForm.customer} onChange={e => setEditForm(f => ({ ...f, customer: e.target.value }))} required />
+              </div>
+              <div className="field-group" style={{ marginBottom: 10 }}>
+                <label>Customer Phone</label>
+                <input type="tel" placeholder="07XX XXX XXX" value={editForm.phone || ""} onChange={e => setEditForm(f => ({ ...f, phone: e.target.value }))} />
+              </div>
+              <div className="field-group" style={{ marginBottom: 10 }}>
+                <label>Item / Service</label>
+                <input placeholder="What was sold?" value={editForm.description} onChange={e => setEditForm(f => ({ ...f, description: e.target.value }))} required />
+              </div>
+              <div className="field-group" style={{ marginBottom: 10 }}>
+                <label>Total Amount (KES)</label>
+                <input type="number" min="0.01" step="0.01" placeholder="0.00" value={editForm.totalAmount} onChange={e => setEditForm(f => ({ ...f, totalAmount: e.target.value }))} required />
+                {editingCredit.paidAmount > 0 && (
+                  <small style={{ color: "#94a3b8" }}>Already paid: KES {editingCredit.paidAmount.toLocaleString()}</small>
+                )}
+              </div>
+              <div className="field-group" style={{ marginBottom: 16 }}>
+                <label>Notes</label>
+                <input placeholder="Optional notes" value={editForm.notes} onChange={e => setEditForm(f => ({ ...f, notes: e.target.value }))} />
+              </div>
+              <div className="alert-actions">
+                <button type="button" className="btn-cancel-sm" onClick={() => setEditingCredit(null)}>Cancel</button>
+                <button type="submit" className="btn-primary" disabled={editStatus !== "idle"}>
+                  {editStatus === "saving" ? "Saving..." : "Save Changes"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Payment Modal */}
       {payingCredit && (
