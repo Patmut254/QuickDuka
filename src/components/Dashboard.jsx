@@ -1,5 +1,7 @@
+/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable react-hooks/preserve-manual-memoization */
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faMoneyBillTrendUp, faCartPlus, faReceipt, faArrowTrendUp, faArrowTrendDown } from "@fortawesome/free-solid-svg-icons";
+import { faMoneyBillTrendUp, faCartPlus, faReceipt, faArrowTrendUp, faArrowTrendDown, faTriangleExclamation } from "@fortawesome/free-solid-svg-icons";
 import { useMemo } from "react";
 import { useCollection } from "../hooks/useCollection";
 import {
@@ -21,95 +23,56 @@ import {
 } from "date-fns";
 
 export default function Dashboard({ setActiveTab }) {
-  const { items: sales } = useCollection("sales");
+  const { items: sales }     = useCollection("sales");
   const { items: purchases } = useCollection("purchases");
-  const { items: expenses } = useCollection("expenses");
+  const { items: expenses }  = useCollection("expenses");
+  const { items: losses }    = useCollection("losses");
 
   const now = new Date();
   const monthStart = startOfMonth(now);
-  const monthEnd = endOfMonth(now);
+  const monthEnd   = endOfMonth(now);
 
   const inMonth = (item) => {
     try {
       const d = item.date ? parseISO(item.date) : item.createdAt?.toDate();
       return d && isWithinInterval(d, { start: monthStart, end: monthEnd });
-    } catch {
-      return false;
-    }
+    } catch { return false; }
   };
 
-  const totalSales = sales
-    .filter(inMonth)
-    .reduce((a, b) => a + (Number(b.amount) || 0), 0);
-  const totalPurchases = purchases
-    .filter(inMonth)
-    .reduce((a, b) => a + (Number(b.amount) || 0), 0);
-  const totalExpenses = expenses
-    .filter(inMonth)
-    .reduce((a, b) => a + (Number(b.amount) || 0), 0);
-  const profit = totalSales - totalPurchases - totalExpenses;
+  const totalSales     = sales.filter(inMonth).reduce((a, b) => a + (Number(b.amount) || 0), 0);
+  const totalPurchases = purchases.filter(inMonth).reduce((a, b) => a + (Number(b.amount) || 0), 0);
+  const totalExpenses  = expenses.filter(inMonth).reduce((a, b) => a + (Number(b.amount) || 0), 0);
+  const totalLosses    = losses.filter(inMonth).reduce((a, b) => a + (Number(b.amount) || 0), 0);
+  const profit = totalSales - totalPurchases - totalExpenses - totalLosses;
 
-  // Monthly chart data - last 6 months
   const chartData = useMemo(() => {
     const months = [];
     for (let i = 5; i >= 0; i--) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
       const label = format(d, "MMM yyyy");
       const start = startOfMonth(d);
-      const end = endOfMonth(d);
+      const end   = endOfMonth(d);
       const inRange = (item) => {
         try {
           const dt = item.date ? parseISO(item.date) : item.createdAt?.toDate();
           return dt && isWithinInterval(dt, { start, end });
-        } catch {
-          return false;
-        }
+        } catch { return false; }
       };
-      const s = sales
-        .filter(inRange)
-        .reduce((a, b) => a + (Number(b.amount) || 0), 0);
-      const p = purchases
-        .filter(inRange)
-        .reduce((a, b) => a + (Number(b.amount) || 0), 0);
-      const e = expenses
-        .filter(inRange)
-        .reduce((a, b) => a + (Number(b.amount) || 0), 0);
-      months.push({
-        month: label,
-        Sales: s,
-        Purchases: p,
-        Expenses: e,
-        Profit: s - p - e,
-      });
+      const s = sales.filter(inRange).reduce((a, b) => a + (Number(b.amount) || 0), 0);
+      const p = purchases.filter(inRange).reduce((a, b) => a + (Number(b.amount) || 0), 0);
+      const e = expenses.filter(inRange).reduce((a, b) => a + (Number(b.amount) || 0), 0);
+      const l = losses.filter(inRange).reduce((a, b) => a + (Number(b.amount) || 0), 0);
+      months.push({ month: label, Sales: s, Purchases: p, Expenses: e, Losses: l, Profit: s - p - e - l });
     }
     return months;
-  }, [sales, purchases, expenses]);
+  }, [now, sales, purchases, expenses, losses]);
 
   const cards = [
-    {
-      label: "Sales This Month",
-      value: totalSales,
-      color: "#22c55e",
-      icon: faMoneyBillTrendUp,
-    },
-    {
-      label: "Purchases This Month",
-      value: totalPurchases,
-      color: "#f97316",
-      icon: faCartPlus,
-    },
-    {
-      label: "Expenses This Month",
-      value: totalExpenses,
-      color: "#a855f7",
-      icon: faReceipt,
-    },
-    {
-      label: "Net Profit",
-      value: profit,
-      color: profit >= 0 ? "#22c55e" : "#ef4444",
-      icon: profit >= 0 ? faArrowTrendUp : faArrowTrendDown,
-    },
+    { label: "Sales This Month",     value: totalSales,     color: "#22c55e", icon: faMoneyBillTrendUp },
+    { label: "Purchases This Month", value: totalPurchases, color: "#f97316", icon: faCartPlus },
+    { label: "Expenses This Month",  value: totalExpenses,  color: "#a855f7", icon: faReceipt },
+    { label: "Losses This Month",    value: totalLosses,    color: "#ef4444", icon: faTriangleExclamation },
+    { label: "Net Profit",           value: profit,         color: profit >= 0 ? "#22c55e" : "#ef4444", icon: profit >= 0 ? faArrowTrendUp : faArrowTrendDown },
   ];
 
   const recent = [
@@ -171,46 +134,33 @@ export default function Dashboard({ setActiveTab }) {
                   <stop offset="5%" stopColor="#a855f7" stopOpacity={0.3} />
                   <stop offset="95%" stopColor="#a855f7" stopOpacity={0} />
                 </linearGradient>
+                <linearGradient id="gLoss" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
+                </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="#2a2a3a" />
-              <XAxis dataKey="month" tick={{ fill: "#9ca3af", fontSize: 12 }} />
+              <XAxis dataKey="month" tick={{ fill: "var(--muted)", fontSize: 12 }} />
               <YAxis
-                tick={{ fill: "#9ca3af", fontSize: 12 }}
+                tick={{ fill: "var(--muted)", fontSize: 12 }}
                 tickFormatter={(v) =>
                   `${v >= 1000 ? (v / 1000).toFixed(0) + "k" : v}`
                 }
               />
               <Tooltip
                 contentStyle={{
-                  background: "#1a1a2e",
-                  border: "1px solid #333",
+                  background: "var(--bg2)",
+                  border: "1px solid var(--border)",
                   borderRadius: 8,
-                  color: "#fff",
+                  color: "var(--text)",
                 }}
                 formatter={(v) => `KES ${v.toLocaleString()}`}
               />
-              <Legend wrapperStyle={{ color: "#ccc" }} />
-              <Area
-                type="monotone"
-                dataKey="Sales"
-                stroke="#22c55e"
-                fill="url(#gSales)"
-                strokeWidth={2}
-              />
-              <Area
-                type="monotone"
-                dataKey="Expenses"
-                stroke="#a855f7"
-                fill="url(#gExp)"
-                strokeWidth={2}
-              />
-              <Area
-                type="monotone"
-                dataKey="Profit"
-                stroke="#3b82f6"
-                fill="url(#gProfit)"
-                strokeWidth={2}
-              />
+              <Legend wrapperStyle={{ color: "var(--muted)", fontSize: 12 }} />
+              <Area type="monotone" dataKey="Sales"     stroke="#22c55e" fill="url(#gSales)"  strokeWidth={2} />
+              <Area type="monotone" dataKey="Expenses"  stroke="#a855f7" fill="url(#gExp)"    strokeWidth={2} />
+              <Area type="monotone" dataKey="Losses"    stroke="#ef4444" fill="url(#gLoss)"   strokeWidth={2} />
+              <Area type="monotone" dataKey="Profit"    stroke="#3b82f6" fill="url(#gProfit)" strokeWidth={2} />
             </AreaChart>
           </ResponsiveContainer>
         </div>

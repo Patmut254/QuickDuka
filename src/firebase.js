@@ -2,17 +2,17 @@ import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 
-// =============================================
 // REPLACE THIS WITH YOUR FIREBASE CONFIG
 // Go to: Firebase Console > Project Settings > Your Apps
-// =============================================
+
 const firebaseConfig = {
-  apiKey: "AIzaSyDNtC_wOmyd3w3iixYQBPFBBHELOz1bD7U",
-  authDomain: "mutito-hill-honey.firebaseapp.com",
-  projectId: "mutito-hill-honey",
-  storageBucket: "mutito-hill-honey.firebasestorage.app",
-  messagingSenderId: "205174129358",
-  appId: "1:205174129358:web:3393009b1c39ab9cb0469f",
+  apiKey: "AIzaSyAyZbACvYwWxnGt2vQprG-zmu8HzVb_nj0",
+  authDomain: "quickduka.firebaseapp.com",
+  projectId: "quickduka",
+  storageBucket: "quickduka.firebasestorage.app",
+  messagingSenderId: "995653940433",
+  appId: "1:995653940433:web:8f7d8e684f5e028fa301f0",
+  measurementId: "G-VEN4BJPGJ5",
 };
 
 const app = initializeApp(firebaseConfig);

@@ -16,9 +16,7 @@ export function useUserProfile() {
   useEffect(() => {
     let unsubFirestore = null;
 
-    // Listen to auth state — fires immediately and on every login/logout
     const unsubAuth = onAuthStateChanged(auth, (user) => {
-      // Clean up any previous Firestore listener
       if (unsubFirestore) {
         unsubFirestore();
         unsubFirestore = null;
@@ -30,7 +28,6 @@ export function useUserProfile() {
         return;
       }
 
-      // User is logged in — subscribe to their profile doc
       const ref = doc(db, "users", user.uid);
       unsubFirestore = onSnapshot(
         ref,
@@ -38,7 +35,6 @@ export function useUserProfile() {
           if (snap.exists()) {
             setProfile({ id: snap.id, ...snap.data() });
           } else {
-            // Profile doc doesn't exist yet (mid-registration race)
             setProfile(null);
           }
           setLoading(false);
@@ -61,13 +57,19 @@ export function useUserProfile() {
 
 export async function createUserProfile(uid, data) {
   const ref = doc(db, "users", uid);
+
+  // Grant a 30-day free trial from today
+  const trialExpiry = new Date();
+  trialExpiry.setDate(trialExpiry.getDate() + 30);
+
   await setDoc(
     ref,
     {
       ...data,
       role: "user",
       subscriptionStatus: "trial",
-      subscriptionExpiry: null,
+      subscriptionExpiry: trialExpiry,   // trial ends after 30 days
+      trialStartedAt: serverTimestamp(),
       createdAt: serverTimestamp(),
     },
     { merge: true }

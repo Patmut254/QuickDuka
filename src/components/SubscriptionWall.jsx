@@ -1,14 +1,14 @@
 import { useState } from "react";
 import { auth } from "../firebase";
 import { signOut } from "firebase/auth";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faPhone, faCheckCircle, faTimesCircle, faRotate,
+  faArrowRightFromBracket, faGift, faLock
+} from "@fortawesome/free-solid-svg-icons";
 
-// ============================================================
-// 🔴 DUMMY API — REPLACE BEFORE GOING LIVE
-// Replace MPESA_BACKEND_URL with your deployed Django backend URL
-// e.g. "https://quickduka-backend.vercel.app"
-// See django_backend/ folder for the full Django code
-// ============================================================
-const MPESA_BACKEND_URL = "https://DUMMY-REPLACE-WITH-YOUR-VERCEL-URL.vercel.app";
+// Set your deployed Django backend URL here (e.g. from Vercel/Railway/Render)
+const MPESA_BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "";
 
 export default function SubscriptionWall({ profile }) {
   const [phone, setPhone] = useState(profile?.phone || "");
@@ -17,8 +17,12 @@ export default function SubscriptionWall({ profile }) {
   const [checkStatus, setCheckStatus] = useState("idle");
   const [checkMsg, setCheckMsg] = useState("");
 
-  const isExpired = profile?.subscriptionStatus === "expired" ||
-    (profile?.subscriptionExpiry && new Date() > profile.subscriptionExpiry?.toDate?.());
+  const trialExpiry = profile?.subscriptionExpiry?.toDate?.() ??
+    (profile?.subscriptionExpiry instanceof Date ? profile.subscriptionExpiry : null);
+
+  const isTrialEnded = profile?.subscriptionStatus === "trial" && trialExpiry && new Date() > trialExpiry;
+  const isExpired    = profile?.subscriptionStatus === "expired" ||
+    (profile?.subscriptionStatus === "active" && trialExpiry && new Date() > trialExpiry);
 
   const normalizePhone = (p) => {
     const digits = p.replace(/\D/g, "");
@@ -34,6 +38,11 @@ export default function SubscriptionWall({ profile }) {
       setStkMsg("Enter a valid Kenyan phone number e.g. 0712 345 678");
       return;
     }
+    if (!MPESA_BACKEND_URL) {
+      setStkStatus("error");
+      setStkMsg("Payment system not yet configured. Please contact support.");
+      return;
+    }
     setStkStatus("sending");
     setStkMsg("");
     try {
@@ -45,21 +54,21 @@ export default function SubscriptionWall({ profile }) {
           amount: 100,
           user_email: profile?.email,
           user_uid: profile?.id,
-          account_ref: profile?.phone || profile?.email || "QuickDuka",
-          description: "QuickDuka Monthly Subscription",
+          account_ref: (profile?.phone || profile?.email || "QuickDuka").slice(0, 12),
+          description: "QuickDuka Monthly Sub",
         }),
       });
       const data = await res.json();
       if (res.ok && data.success) {
         setStkStatus("sent");
-        setStkMsg("✅ M-Pesa prompt sent to your phone! Enter your PIN to complete payment.");
+        setStkMsg("M-Pesa prompt sent! Check your phone and enter your PIN.");
       } else {
         setStkStatus("error");
         setStkMsg(data.error || "Failed to send M-Pesa prompt. Please try again.");
       }
     } catch {
       setStkStatus("error");
-      setStkMsg("Could not reach payment server. Check your connection and try again.");
+      setStkMsg("Could not reach payment server. Check your internet and try again.");
     }
   };
 
@@ -71,11 +80,11 @@ export default function SubscriptionWall({ profile }) {
       const data = await res.json();
       if (res.ok && data.activated) {
         setCheckStatus("ok");
-        setCheckMsg("✅ Payment confirmed! Refreshing...");
+        setCheckMsg("Payment confirmed! Opening your account...");
         setTimeout(() => window.location.reload(), 1500);
       } else {
         setCheckStatus("pending");
-        setCheckMsg("Payment not confirmed yet. If you've paid, please wait a moment and try again.");
+        setCheckMsg("Payment not confirmed yet. Please wait a moment and try again.");
       }
     } catch {
       setCheckStatus("error");
@@ -83,28 +92,45 @@ export default function SubscriptionWall({ profile }) {
     }
   };
 
+  const heading = isTrialEnded
+    ? "Your Free Trial Has Ended"
+    : isExpired
+    ? "Subscription Expired"
+    : "Activate Your Account";
+
+  const subtext = isTrialEnded
+    ? `Your 1-month free trial is over, ${profile?.ownerName || ""}. Subscribe below to keep using QuickDuka.`
+    : isExpired
+    ? "Your monthly subscription has expired. Renew below to continue."
+    : `Welcome, ${profile?.ownerName || ""}! Pay KES 100 to activate your account.`;
+
   return (
     <div className="sub-wall">
+      <div className="sub-dots sub-dots-tl" />
+      <div className="sub-dots sub-dots-br" />
+
       <div className="sub-wall-card">
-        <img src="/logo-icon.png" alt="QuickDuka" className="sub-wall-logo" />
-        <h2 className="sub-wall-title">
-          {isExpired ? "Subscription Expired" : "Activate Your Account"}
-        </h2>
-        <p className="sub-wall-msg">
-          {isExpired
-            ? "Your monthly subscription has expired. Pay KES 100 to continue."
-            : "Welcome to QuickDuka! Pay KES 100 to activate your first month."}
-        </p>
+        <img src="/logo.png" alt="QuickDuka" className="sub-wall-logo" />
+
+        <div className="sub-wall-icon">
+          <FontAwesomeIcon icon={isTrialEnded ? faLock : faGift} />
+        </div>
+
+        <h2 className="sub-wall-title">{heading}</h2>
+        <p className="sub-wall-msg">{subtext}</p>
 
         <div className="sub-price-tag">
           <span className="sub-price">KES 100</span>
           <span className="sub-period">/ month</span>
         </div>
 
-        {/* STK Push section */}
         <div className="sub-stk-box">
-          <div className="sub-stk-label">📱 Pay via M-Pesa STK Push</div>
-          <p className="sub-stk-hint">Enter your M-Pesa number — we'll send a payment prompt directly to your phone.</p>
+          <div className="sub-stk-label">
+            <FontAwesomeIcon icon={faPhone} /> Pay via M-Pesa STK Push
+          </div>
+          <p className="sub-stk-hint">
+            Enter your M-Pesa number. You'll receive a pop-up on your phone — enter your PIN to pay.
+          </p>
 
           <div className="sub-stk-input-row">
             <input
@@ -117,82 +143,68 @@ export default function SubscriptionWall({ profile }) {
             />
             <button
               className="btn-primary"
-              style={{ minWidth: 120 }}
+              style={{ minWidth: 110, justifyContent: "center" }}
               onClick={handleSTKPush}
               disabled={stkStatus === "sending" || stkStatus === "sent"}
             >
-              {stkStatus === "sending" ? "Sending..." : stkStatus === "sent" ? "Sent ✅" : "Pay Now"}
+              {stkStatus === "sending" ? "Sending..." : stkStatus === "sent" ? "Sent!" : "Pay Now"}
             </button>
           </div>
 
           {stkMsg && (
             <div className={`sub-stk-msg ${stkStatus === "error" ? "sub-stk-error" : "sub-stk-success"}`}>
+              <FontAwesomeIcon icon={stkStatus === "error" ? faTimesCircle : faCheckCircle} style={{ marginRight: 6 }} />
               {stkMsg}
             </div>
           )}
         </div>
 
-        {/* After STK sent, show check button */}
         {stkStatus === "sent" && (
           <div style={{ marginTop: 16 }}>
-            <p style={{ fontSize: 13, color: "var(--muted)", marginBottom: 10 }}>
-              Once you enter your M-Pesa PIN, click below to verify:
+            <p style={{ fontSize: 13, color: "var(--muted)", marginBottom: 10, textAlign: "center" }}>
+              Entered your PIN? Click below to verify:
             </p>
             <button
               className="sub-refresh-btn"
               onClick={handleCheckPayment}
               disabled={checkStatus === "checking"}
             >
-              {checkStatus === "checking" ? "Checking..." : "✅ I've Entered My PIN — Verify Payment"}
+              <FontAwesomeIcon icon={faRotate} style={{ marginRight: 7 }} />
+              {checkStatus === "checking" ? "Checking payment..." : "I've Paid — Verify Now"}
             </button>
             {checkMsg && (
-              <div className={`sub-stk-msg ${checkStatus === "ok" ? "sub-stk-success" : "sub-stk-error"}`} style={{ marginTop: 8 }}>
+              <div className={`sub-stk-msg ${checkStatus === "ok" ? "sub-stk-success" : "sub-stk-error"}`} style={{ marginTop: 10 }}>
                 {checkMsg}
               </div>
             )}
           </div>
         )}
 
-        <div className="sub-divider">— or pay manually —</div>
-
-        {/* Manual fallback */}
-        <div className="sub-steps">
-          <div className="sub-step">
-            <span className="sub-step-num">1</span>
-            <div className="sub-step-text">
-              <strong>M-Pesa → Lipa na M-Pesa → Buy Goods</strong>
-              <div>Till Number: <span className="sub-till">YOUR_TILL_NUMBER</span></div>
-            </div>
+        {stkStatus === "error" && (
+          <div style={{ marginTop: 12, textAlign: "center" }}>
+            <a
+              href={`https://wa.me/254700000000?text=QuickDuka subscription - ${profile?.phone || profile?.email} - ${profile?.businessName || ""}`}
+              target="_blank"
+              rel="noreferrer"
+              className="sub-wa-btn"
+            >
+              Need help? WhatsApp us
+            </a>
           </div>
-          <div className="sub-step">
-            <span className="sub-step-num">2</span>
-            <div className="sub-step-text">
-              <strong>Amount: KES 100</strong>
-              <div>Reference: <em>{profile?.phone || profile?.email}</em></div>
-            </div>
-          </div>
-          <div className="sub-step">
-            <span className="sub-step-num">3</span>
-            <div className="sub-step-text">
-              <strong>WhatsApp your M-Pesa SMS to us</strong>
-              <a
-                href={`https://wa.me/254700000000?text=QuickDuka payment - ${profile?.email || ""} - ${profile?.businessName || ""}`}
-                target="_blank"
-                rel="noreferrer"
-                className="sub-wa-btn"
-              >
-                📱 Send on WhatsApp
-              </a>
-            </div>
-          </div>
-        </div>
+        )}
 
         <div className="sub-wall-note">
-          Account: <strong>{profile?.email}</strong><br />
-          Business: <strong>{profile?.businessName || "-"}</strong>
+          <span>Account: <strong>{profile?.phone || profile?.email}</strong></span>
+          <span>Business: <strong>{profile?.businessName || "—"}</strong></span>
+          <span style={{ marginTop: 4, fontSize: 11, color: "var(--muted)" }}>
+            📅 KES 100/month billed monthly. Your account locks on expiry — renew anytime.
+          </span>
         </div>
 
-        <button className="sub-logout-btn" onClick={() => signOut(auth)}>Sign Out</button>
+        <button className="sub-logout-btn" onClick={() => signOut(auth)}>
+          <FontAwesomeIcon icon={faArrowRightFromBracket} style={{ marginRight: 6 }} />
+          Sign Out
+        </button>
       </div>
     </div>
   );

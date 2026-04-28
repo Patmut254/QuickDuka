@@ -1,300 +1,527 @@
-import { useState, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { auth } from "../firebase";
 import { createUserWithEmailAndPassword } from "firebase/auth";
+import { getFirestore, collection, query, where, getDocs } from "firebase/firestore";
 import { createUserProfile } from "../hooks/useUserProfile";
 import { kenyaCounties, REFERRERS } from "../data/kenyaLocations";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPhone, faEnvelope, faLock, faUser, faStore, faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
+import {
+  faPhone, faEnvelope, faLock, faUser, faStore,
+  faEye, faEyeSlash, faChevronRight, faChevronLeft,
+  faMobileAlt, faCheckCircle, faRotateLeft, faShieldHalved, faGift
+} from "@fortawesome/free-solid-svg-icons";
 
-// ============================================================
-// OTP via Africa's Talking — replace dummy when going live
-// See Django backend otpviews.py for the endpoint
-// ============================================================
-const BACKEND_URL = "https://DUMMY-REPLACE-WITH-YOUR-VERCEL-URL.vercel.app";
+const db = getFirestore();
 
-const STEPS = ["Phone", "Verify", "Details", "Account"];
+// ─── OTP helpers ─────────────────────────────────────────────────────────────
+// Client-side only until Django backend is live.
+// Swap sendOTPCode / verifyOTPCode to hit /api/otp/send/ when ready.
+
+let _otpStore = {};
+
+function generateCode() {
+  return String(Math.floor(100000 + Math.random() * 900000));
+}
+
+async function sendOTPCode(identifier, method) {
+  const code = generateCode();
+  const expiry = Date.now() + 10 * 60 * 1000;
+  const resendAt = Date.now() + 60 * 1000;
+  _otpStore[identifier] = { code, expiry, resendAt };
+  // When Django backend is ready, replace the above with:
+  // await fetch("/api/otp/send/", { method:"POST", body: JSON.stringify({ identifier, method }) })
+  return { success: true };
+}
+
+function verifyOTPCode(identifier, inputCode) {
+  const entry = _otpStore[identifier];
+  if (!entry) return { valid: false, reason: "No code found. Please request a new one." };
+  if (Date.now() > entry.expiry) {
+    delete _otpStore[identifier];
+    return { valid: false, reason: "Code expired. Please request a new one." };
+  }
+  if (inputCode.trim() !== entry.code) {
+    return { valid: false, reason: "Incorrect code. Please try again." };
+  }
+  delete _otpStore[identifier];
+  return { valid: true };
+}
+
+// ─── Countdown hook ───────────────────────────────────────────────────────────
+function useCountdown(targetMs) {
+  const [secs, setSecs] = useState(0);
+  useEffect(() => {
+    if (!targetMs) return;
+    const tick = () => {
+      const left = Math.ceil((targetMs - Date.now()) / 1000);
+      setSecs(Math.max(0, left));
+    };
+    tick();
+    const id = setInterval(tick, 500);
+    return () => clearInterval(id);
+  }, [targetMs]);
+  return secs;
+}
+
+// ─── OTP digit input ──────────────────────────────────────────────────────────
+function OTPInput({ value, onChange, disabled }) {
+  const refs = useRef([]);
+  const digits = (value + "      ").slice(0, 6).split("");
+
+  const handleChange = (i, v) => {
+    if (!/^\d?$/.test(v)) return;
+    const arr = (value + "      ").slice(0, 6).split("");
+    arr[i] = v;
+    const next = arr.join("").replace(/ /g, "").slice(0, 6);
+    onChange(next);
+    if (v && i < 5) refs.current[i + 1]?.focus();
+  };
+
+  const handleKeyDown = (i, e) => {
+    if (e.key === "Backspace" && !digits[i].trim() && i > 0) {
+      refs.current[i - 1]?.focus();
+    }
+  };
+
+  const handlePaste = (e) => {
+    const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
+    if (pasted) { onChange(pasted); e.preventDefault(); }
+  };
+
+  return (
+    <div className="otp-digits">
+      {[0,1,2,3,4,5].map(i => (
+        <input
+          key={i}
+          ref={el => refs.current[i] = el}
+          className="otp-digit"
+          type="text"
+          inputMode="numeric"
+          maxLength={1}
+          value={digits[i].trim()}
+          onChange={e => handleChange(i, e.target.value)}
+          onKeyDown={e => handleKeyDown(i, e)}
+          onPaste={handlePaste}
+          disabled={disabled}
+          autoFocus={i === 0}
+        />
+      ))}
+    </div>
+  );
+}
+
+// ─── Trial badge (top-right corner) ──────────────────────────────────────────
+function TrialBadge() {
+  return (
+    <div className="trial-badge-popup">
+      <div className="trial-badge-icon"><FontAwesomeIcon icon={faGift} /></div>
+      <div>
+        <div className="trial-badge-title">1 Month Free Trial</div>
+        <div className="trial-badge-sub">Then KES 100/month — cancel anytime</div>
+      </div>
+    </div>
+  );
+}
+
+const STEPS = ["Account", "Verify", "Business", "Done"];
 
 export default function Register({ onBack }) {
-  const [step, setStep] = useState(0); // 0=phone, 1=otp, 2=details, 3=account
-  const [phone, setPhone] = useState("");
-  const [otp, setOtp] = useState(["", "", "", "", "", ""]);
-  const [otpError, setOtpError] = useState("");
-  const [otpSending, setOtpSending] = useState(false);
-  const [showPw, setShowPw] = useState(false);
-  const [form, setForm] = useState({
-    businessName: "", ownerName: "", county: "", subcounty: "", referrer: "", referrerCustom: "",
-    email: "", password: "", confirm: "",
-  });
-  const [status, setStatus] = useState("idle");
-  const [error, setError] = useState("");
-  const otpRefs = useRef([]);
+  const [step, setStep] = useState(0);
 
-  const set = (k) => (e) => setForm(f => ({ ...f, [k]: e.target.value }));
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [showPw, setShowPw] = useState(false);
+  const [credError, setCredError] = useState("");
+
+  const [verifyMethod, setVerifyMethod] = useState("email");
+  const [otpCode, setOtpCode] = useState("");
+  const [otpSending, setOtpSending] = useState(false);
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpError, setOtpError] = useState("");
+  const [resendAt, setResendAt] = useState(null);
+  const countdown = useCountdown(resendAt);
+  const canResend = countdown === 0;
+
+  const [businessName, setBusinessName] = useState("");
+  const [ownerName, setOwnerName] = useState("");
+  const [county, setCounty] = useState("");
+  const [subcounty, setSubcounty] = useState("");
+  const [referrer, setReferrer] = useState("");
+  const [referrerCustom, setReferrerCustom] = useState("");
+  const [bizError, setBizError] = useState("");
+
+  const [saving, setSaving] = useState(false);
+
+  const selectedCounty = kenyaCounties.find(c => c.county === county);
+  const subcounties = selectedCounty?.subcounties || [];
 
   const normalizePhone = (p) => {
     const d = p.replace(/\D/g, "");
-    if (d.startsWith("0") && d.length === 10) return "+254" + d.slice(1);
+    if (d.startsWith("07") && d.length === 10) return "+254" + d.slice(1);
+    if (d.startsWith("011") && d.length === 10) return "+254" + d.slice(1);
+    if (d.startsWith("01") && d.length === 10) return "+254" + d.slice(1);
     if (d.startsWith("254") && d.length === 12) return "+" + d;
+    if ((d.startsWith("7") || d.startsWith("1")) && d.length === 9) return "+254" + d;
     return p;
   };
 
-  const handleSendOTP = async (e) => {
+  const normPhone = normalizePhone(phone);
+  const hasEmail = email.trim().length > 0;
+  const hasPhone = /^\+254\d{9}$/.test(normPhone);
+  const verifyIdentifier = verifyMethod === "email" ? email.trim() : normPhone;
+
+  const handleCredNext = async (e) => {
     e.preventDefault();
-    const normalized = normalizePhone(phone);
-    if (!/^\+254\d{9}$/.test(normalized)) {
-      setOtpError("Enter a valid Kenyan number e.g. 0712 345 678");
-      return;
-    }
-    setOtpSending(true);
-    setOtpError("");
+    setCredError("");
+    if (!hasEmail && !hasPhone) return setCredError("Please enter at least an email or phone number.");
+    if (hasEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) return setCredError("Enter a valid email address.");
+    if (hasPhone === false && phone.trim()) return setCredError("Enter a valid Kenyan phone number e.g. 0712 345 678.");
+    if (password.length < 6) return setCredError("Password must be at least 6 characters.");
+    if (password !== confirm) return setCredError("Passwords do not match.");
+
     try {
-      const res = await fetch(`${BACKEND_URL}/api/otp/send/`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone: normalized }),
-      });
-      const data = await res.json();
-      if (res.ok && data.success) {
-        setStep(1);
-      } else {
-        setOtpError(data.error || "Failed to send OTP. Try again.");
+      if (hasEmail) {
+        const eq = query(collection(db, "users"), where("email", "==", email.trim()));
+        const es = await getDocs(eq);
+        if (!es.empty) return setCredError("This email is already registered. Please log in.");
+      }
+      if (hasPhone) {
+        const pq = query(collection(db, "users"), where("phone", "==", normPhone));
+        const ps = await getDocs(pq);
+        if (!ps.empty) return setCredError("This phone number is already registered. Please log in.");
       }
     } catch {
-      // DUMMY fallback: skip OTP in dev
-      setStep(1);
+      // duplicate check is best-effort
     }
-    setOtpSending(false);
+
+    setVerifyMethod(hasEmail ? "email" : "sms");
+    setStep(1);
   };
 
-  const handleOtpChange = (i, val) => {
-    if (!/^\d?$/.test(val)) return;
-    const next = [...otp];
-    next[i] = val;
-    setOtp(next);
-    if (val && i < 5) otpRefs.current[i + 1]?.focus();
-  };
-
-  const handleOtpKeyDown = (i, e) => {
-    if (e.key === "Backspace" && !otp[i] && i > 0) otpRefs.current[i - 1]?.focus();
-  };
-
-  const handleVerifyOTP = async (e) => {
-    e.preventDefault();
-    const code = otp.join("");
-    if (code.length < 6) { setOtpError("Enter the 6-digit code."); return; }
+  const handleSendOTP = async (method) => {
+    const id = method === "email" ? email.trim() : normPhone;
+    if (!id) return;
     setOtpSending(true);
     setOtpError("");
-    try {
-      const res = await fetch(`${BACKEND_URL}/api/otp/verify/`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone: normalizePhone(phone), code }),
-      });
-      const data = await res.json();
-      if (res.ok && data.valid) {
-        setStep(2);
-      } else {
-        setOtpError("Incorrect code. Please try again.");
-      }
-    } catch {
-      // DUMMY: skip in dev
-      setStep(2);
-    }
+    setOtpCode("");
+    await sendOTPCode(id, method);
+    const entry = _otpStore[id];
+    setResendAt(entry?.resendAt || Date.now() + 60000);
+    setOtpSent(true);
     setOtpSending(false);
+    setVerifyMethod(method);
   };
 
-  const handleSubmit = async (e) => {
+  useEffect(() => {
+    if (step === 1 && !otpSent) {
+      handleSendOTP(hasEmail ? "email" : "sms");
+    }
+  }, [step]);
+
+  const handleVerifyOTP = (e) => {
     e.preventDefault();
-    if (form.password !== form.confirm) return setError("Passwords do not match.");
-    if (form.password.length < 6) return setError("Password must be at least 6 characters.");
-    setStatus("saving");
-    setError("");
+    setOtpError("");
+    if (otpCode.length < 6) return setOtpError("Enter the full 6-digit code.");
+    const result = verifyOTPCode(verifyIdentifier, otpCode);
+    if (!result.valid) return setOtpError(result.reason);
+    setStep(2);
+  };
+
+  const handleBizNext = (e) => {
+    e.preventDefault();
+    setBizError("");
+    if (!businessName.trim()) return setBizError("Business name is required.");
+    if (!ownerName.trim()) return setBizError("Your name is required.");
+    if (!county) return setBizError("Please select your county.");
+    setStep(3);
+    handleCreateAccount();
+  };
+
+  const handleCreateAccount = async () => {
+    setSaving(true);
     try {
-      const normalized = normalizePhone(phone);
-      const syntheticEmail = form.email || `${normalized.replace("+", "")}@quickduka.app`;
-      const cred = await createUserWithEmailAndPassword(auth, syntheticEmail, form.password);
-      const finalReferrer = form.referrer === "__custom__" ? form.referrerCustom.trim() : form.referrer;
+      const finalReferrer = referrer === "__custom__" ? referrerCustom.trim() : referrer;
+      const loginEmail = hasEmail ? email.trim() : `${normPhone.replace("+", "")}@quickduka.app`;
+      const cred = await createUserWithEmailAndPassword(auth, loginEmail, password);
       await createUserProfile(cred.user.uid, {
-        businessName: form.businessName,
-        ownerName: form.ownerName,
-        phone: normalized,
-        email: syntheticEmail,
-        county: form.county,
-        subcounty: form.subcounty,
+        businessName: businessName.trim(),
+        ownerName: ownerName.trim(),
+        phone: hasPhone ? normPhone : null,
+        email: loginEmail,
+        realEmail: hasEmail ? email.trim() : null,
+        county,
+        subcounty,
         referrer: finalReferrer || null,
       });
     } catch (err) {
+      setSaving(false);
       const msg = {
-        "auth/email-already-in-use": "This phone/email is already registered.",
-        "auth/invalid-email": "Enter a valid email address.",
+        "auth/email-already-in-use": "This email is already registered.",
+        "auth/invalid-email": "Invalid email address.",
         "auth/weak-password": "Password is too weak.",
       }[err.code] || "Registration failed. Please try again.";
-      setError(msg);
-      setStatus("idle");
+      setBizError(msg);
+      setStep(2);
     }
   };
 
-  const selectedCounty = kenyaCounties.find(c => c.county === form.county);
-  const subcounties = selectedCounty?.subcounties || [];
+  const stepBar = (
+    <div className="reg-step-bar">
+      {STEPS.map((s, i) => (
+        <div key={i} className={`reg-step${i < step ? " done" : i === step ? " active" : ""}`}>
+          <div className="reg-step-dot">
+            {i < step ? <FontAwesomeIcon icon={faCheckCircle} /> : i + 1}
+          </div>
+          <span className="reg-step-label">{s}</span>
+        </div>
+      ))}
+    </div>
+  );
 
   return (
     <div className="login-page">
-      <div className="login-card" style={{ maxWidth: 500 }}>
+      {/* 3D gradient dot field — fades left → transparent */}
+      <div className="login-dots login-dots-tl" />
+      <div className="login-dots login-dots-br" />
+
+      {/* Trial popup badge — top right */}
+      <TrialBadge />
+
+      <div className="login-card" style={{ maxWidth: 480, paddingTop: 32 }}>
         <div className="login-header">
-          <img src="/logo.png" alt="QuickDuka" className="login-logo-img" style={{ height: 60 }} />
-          <p>Create your account — KES 100/month</p>
+          <img src="/logo.png" alt="QuickDuka" className="login-logo-img" style={{ height: 58 }} />
+          <p>Create your free account — 1 month free, then KES 100/month.</p>
         </div>
 
-        {/* Progress dots */}
-        <div className="otp-steps" style={{ marginBottom: 24 }}>
-          {STEPS.map((s, i) => (
-            <div key={i} className={`otp-step-dot${i <= step ? (i < step ? " done" : " active") : ""}`} title={s} />
-          ))}
-        </div>
+        {stepBar}
 
-        {/* STEP 0: Phone */}
+        {/* ── STEP 0: Credentials ── */}
         {step === 0 && (
-          <form onSubmit={handleSendOTP} className="login-form">
-            <div className="form-section-label">Your Phone Number</div>
-            <div className="field-group">
-              <label>M-Pesa / Phone Number *</label>
-              <div className="login-input-icon">
-                <span className="fa-icon-prefix"><FontAwesomeIcon icon={faPhone} /></span>
-                <input type="tel" placeholder="07XX XXX XXX" value={phone} onChange={e => setPhone(e.target.value)} required />
-              </div>
-              <span style={{ fontSize: 11, color: "var(--muted)" }}>We'll send a verification code via SMS.</span>
-            </div>
-            {otpError && <div className="login-error">{otpError}</div>}
-            <button type="submit" className="btn-login" disabled={otpSending}>
-              {otpSending ? "Sending code..." : "Send Verification Code"}
-            </button>
-          </form>
-        )}
+          <form onSubmit={handleCredNext} className="login-form" noValidate>
+            <div className="form-section-label">Your Login Details</div>
 
-        {/* STEP 1: OTP */}
-        {step === 1 && (
-          <form onSubmit={handleVerifyOTP} className="login-form">
-            <div className="form-section-label">Verify Your Number</div>
-            <p style={{ fontSize: 13, color: "var(--muted)", marginBottom: 16 }}>Enter the 6-digit code sent to <strong>{normalizePhone(phone)}</strong></p>
-            <div className="otp-input-row" style={{ justifyContent: "center", gap: 10, marginBottom: 8 }}>
-              {otp.map((d, i) => (
+            <div className="field-group">
+              <label>Email Address</label>
+              <div className="input-icon-wrap">
+                <div className="input-icon-box"><FontAwesomeIcon icon={faEnvelope} /></div>
+                <input type="email" placeholder="you@example.com" value={email} onChange={e => setEmail(e.target.value)} autoComplete="email" />
+              </div>
+              <span className="field-hint">Optional if you provide a phone number.</span>
+            </div>
+
+            <div className="field-group">
+              <label>Phone Number</label>
+              <div className="input-icon-wrap">
+                <div className="input-icon-box"><FontAwesomeIcon icon={faPhone} /></div>
+                <input type="tel" placeholder="0712 345 678" value={phone} onChange={e => setPhone(e.target.value)} autoComplete="tel" />
+              </div>
+              <span className="field-hint">Optional if you provide an email.</span>
+            </div>
+
+            <div className="form-section-label">Set Password</div>
+
+            <div className="field-group">
+              <label>Password</label>
+              <div className="input-icon-wrap">
+                <div className="input-icon-box"><FontAwesomeIcon icon={faLock} /></div>
                 <input
-                  key={i}
-                  ref={el => otpRefs.current[i] = el}
-                  className="otp-digit"
-                  type="text"
-                  inputMode="numeric"
-                  maxLength={1}
-                  value={d}
-                  onChange={e => handleOtpChange(i, e.target.value)}
-                  onKeyDown={e => handleOtpKeyDown(i, e)}
+                  type={showPw ? "text" : "password"}
+                  placeholder="At least 6 characters"
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  autoComplete="new-password"
                 />
-              ))}
+                <button type="button" className="pw-reveal" onClick={() => setShowPw(v => !v)}>
+                  <FontAwesomeIcon icon={showPw ? faEyeSlash : faEye} />
+                </button>
+              </div>
             </div>
-            {otpError && <div className="login-error">{otpError}</div>}
-            <button type="submit" className="btn-login" disabled={otpSending}>
-              {otpSending ? "Verifying..." : "Verify Code"}
+
+            <div className="field-group">
+              <label>Confirm Password</label>
+              <div className="input-icon-wrap">
+                <div className="input-icon-box"><FontAwesomeIcon icon={faShieldHalved} /></div>
+                <input type="password" placeholder="Repeat your password" value={confirm} onChange={e => setConfirm(e.target.value)} autoComplete="new-password" />
+              </div>
+            </div>
+
+            {credError && <div className="login-error">{credError}</div>}
+
+            <button type="submit" className="btn-login">
+              Continue <FontAwesomeIcon icon={faChevronRight} />
             </button>
-            <div className="forgot-pw-wrap">
-              <button type="button" className="forgot-pw-btn" onClick={() => setStep(0)}>← Change number</button>
-            </div>
           </form>
         )}
 
-        {/* STEP 2: Business Details */}
-        {step === 2 && (
-          <form onSubmit={e => { e.preventDefault(); setStep(3); }} className="login-form">
-            <div className="form-section-label">Business Info</div>
-            <div className="field-group">
-              <label>Business Name *</label>
-              <div className="login-input-icon">
-                <span className="fa-icon-prefix"><FontAwesomeIcon icon={faStore} /></span>
-                <input placeholder="e.g. Mama Mboga Supplies" value={form.businessName} onChange={set("businessName")} required />
-              </div>
-            </div>
-            <div className="field-group">
-              <label>Your Name *</label>
-              <div className="login-input-icon">
-                <span className="fa-icon-prefix"><FontAwesomeIcon icon={faUser} /></span>
-                <input placeholder="Full name" value={form.ownerName} onChange={set("ownerName")} required />
-              </div>
-            </div>
-            <div className="form-section-label" style={{ marginTop: 8 }}>Location</div>
-            <div className="field-group">
-              <label>County *</label>
-              <select value={form.county} onChange={e => setForm(f => ({ ...f, county: e.target.value, subcounty: "" }))} required>
-                <option value="">-- Select County --</option>
-                {kenyaCounties.map(c => <option key={c.county} value={c.county}>{c.county}</option>)}
-              </select>
-            </div>
-            {subcounties.length > 0 && (
-              <div className="field-group">
-                <label>Sub-county</label>
-                <select value={form.subcounty} onChange={set("subcounty")}>
-                  <option value="">-- Select Sub-county --</option>
-                  {subcounties.map(s => <option key={s} value={s}>{s}</option>)}
-                </select>
+        {/* ── STEP 1: OTP Verification ── */}
+        {step === 1 && (
+          <div className="login-form">
+            <div className="form-section-label">Verify Your Identity</div>
+
+            {hasEmail && hasPhone && (
+              <div className="otp-method-row">
+                <span className="otp-method-label">Send code to:</span>
+                <button
+                  type="button"
+                  className={`otp-method-btn${verifyMethod === "email" ? " selected" : ""}`}
+                  onClick={() => { setVerifyMethod("email"); setOtpSent(false); setOtpCode(""); setOtpError(""); }}
+                >
+                  <FontAwesomeIcon icon={faEnvelope} /> Email
+                </button>
+                <button
+                  type="button"
+                  className={`otp-method-btn${verifyMethod === "sms" ? " selected" : ""}`}
+                  onClick={() => { setVerifyMethod("sms"); setOtpSent(false); setOtpCode(""); setOtpError(""); }}
+                >
+                  <FontAwesomeIcon icon={faMobileAlt} /> SMS
+                </button>
               </div>
             )}
-            <div className="form-section-label" style={{ marginTop: 8 }}>Referral (Optional)</div>
+
+            {!otpSent ? (
+              <div style={{ textAlign: "center", padding: "16px 0" }}>
+                <p style={{ color: "var(--muted)", fontSize: 13, marginBottom: 16 }}>
+                  We will send a 6-digit code to your {verifyMethod === "email" ? `email (${email})` : `phone (${normPhone})`}.
+                </p>
+                <button
+                  type="button"
+                  className="btn-login"
+                  onClick={() => handleSendOTP(verifyMethod)}
+                  disabled={otpSending}
+                >
+                  {otpSending ? "Sending..." : `Send Code via ${verifyMethod === "email" ? "Email" : "SMS"}`}
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={handleVerifyOTP} className="login-form" style={{ gap: 14 }}>
+                <p style={{ color: "var(--muted)", fontSize: 13, textAlign: "center" }}>
+                  Code sent to <strong style={{ color: "var(--text)" }}>
+                    {verifyMethod === "email" ? email : normPhone}
+                  </strong>. Enter it below.
+                </p>
+
+                <OTPInput value={otpCode} onChange={setOtpCode} disabled={false} />
+
+                {otpError && <div className="login-error">{otpError}</div>}
+
+                <button type="submit" className="btn-login" disabled={otpCode.length < 6}>
+                  Verify Code <FontAwesomeIcon icon={faCheckCircle} />
+                </button>
+
+                <div className="otp-resend-row">
+                  {canResend ? (
+                    <button
+                      type="button"
+                      className="otp-resend-btn"
+                      onClick={() => handleSendOTP(verifyMethod)}
+                      disabled={otpSending}
+                    >
+                      <FontAwesomeIcon icon={faRotateLeft} /> {otpSending ? "Sending..." : "Resend code"}
+                    </button>
+                  ) : (
+                    <span className="otp-countdown">Resend available in {countdown}s</span>
+                  )}
+                </div>
+              </form>
+            )}
+
+            <div className="forgot-pw-wrap" style={{ marginTop: 12 }}>
+              <button className="forgot-pw-btn" onClick={() => { setStep(0); setOtpSent(false); setOtpCode(""); setOtpError(""); }}>
+                <FontAwesomeIcon icon={faChevronLeft} /> Back
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ── STEP 2: Business Details ── */}
+        {step === 2 && (
+          <form onSubmit={handleBizNext} className="login-form" noValidate>
+            <div className="form-section-label">Business Details</div>
+
+            <div className="field-group">
+              <label>Business Name *</label>
+              <div className="input-icon-wrap">
+                <div className="input-icon-box"><FontAwesomeIcon icon={faStore} /></div>
+                <input placeholder="e.g. Wanjiru General Store" value={businessName} onChange={e => setBusinessName(e.target.value)} required />
+              </div>
+            </div>
+
+            <div className="field-group">
+              <label>Your Full Name *</label>
+              <div className="input-icon-wrap">
+                <div className="input-icon-box"><FontAwesomeIcon icon={faUser} /></div>
+                <input placeholder="Your name" value={ownerName} onChange={e => setOwnerName(e.target.value)} required />
+              </div>
+            </div>
+
+            <div className="form-section-label">Location</div>
+            <div className="form-row-2">
+              <div className="field-group">
+                <label>County *</label>
+                <select value={county} onChange={e => { setCounty(e.target.value); setSubcounty(""); }} required>
+                  <option value="">-- Select County --</option>
+                  {kenyaCounties.map(c => <option key={c.county} value={c.county}>{c.county}</option>)}
+                </select>
+              </div>
+              {subcounties.length > 0 && (
+                <div className="field-group">
+                  <label>Sub-county</label>
+                  <select value={subcounty} onChange={e => setSubcounty(e.target.value)}>
+                    <option value="">-- Select Sub-county --</option>
+                    {subcounties.map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                </div>
+              )}
+            </div>
+
+            <div className="form-section-label">Referral (Optional)</div>
             <div className="field-group">
               <label>Who referred you?</label>
-              <select value={form.referrer} onChange={set("referrer")}>
+              <select value={referrer} onChange={e => setReferrer(e.target.value)}>
                 <option value="">-- No referral --</option>
                 {REFERRERS.map(r => <option key={r} value={r}>{r}</option>)}
                 <option value="__custom__">Other (type name)</option>
               </select>
             </div>
-            {form.referrer === "__custom__" && (
+            {referrer === "__custom__" && (
               <div className="field-group">
                 <label>Referrer Name</label>
-                <input placeholder="Type referrer name" value={form.referrerCustom} onChange={set("referrerCustom")} />
+                <input placeholder="Type referrer name" value={referrerCustom} onChange={e => setReferrerCustom(e.target.value)} />
               </div>
             )}
-            <button type="submit" className="btn-login">Next →</button>
-          </form>
-        )}
 
-        {/* STEP 3: Account credentials */}
-        {step === 3 && (
-          <form onSubmit={handleSubmit} className="login-form">
-            <div className="form-section-label">Account Credentials</div>
-            <div className="field-group">
-              <label>Email (optional — can login with phone)</label>
-              <div className="login-input-icon">
-                <span className="fa-icon-prefix"><FontAwesomeIcon icon={faEnvelope} /></span>
-                <input type="email" placeholder="you@example.com (optional)" value={form.email} onChange={set("email")} />
-              </div>
-              <span style={{ fontSize: 11, color: "var(--muted)" }}>Leave blank to use phone number as login only.</span>
-            </div>
-            <div className="field-group">
-              <label>Password *</label>
-              <div className="login-input-icon" style={{ position: "relative" }}>
-                <span className="fa-icon-prefix"><FontAwesomeIcon icon={faLock} /></span>
-                <input type={showPw ? "text" : "password"} placeholder="Min 6 characters" value={form.password} onChange={set("password")} required style={{ paddingRight: 40 }} />
-                <button type="button" onClick={() => setShowPw(v => !v)}
-                  style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: "var(--muted)", cursor: "pointer", fontSize: 13 }}>
-                  <FontAwesomeIcon icon={showPw ? faEyeSlash : faEye} />
-                </button>
-              </div>
-            </div>
-            <div className="field-group">
-              <label>Confirm Password *</label>
-              <input type="password" placeholder="Repeat password" value={form.confirm} onChange={set("confirm")} required />
-            </div>
-            {error && <div className="login-error">{error}</div>}
-            <button type="submit" className="btn-login" disabled={status === "saving"}>
-              {status === "saving" ? "Creating Account..." : "Create Account →"}
+            {bizError && <div className="login-error">{bizError}</div>}
+
+            <button type="submit" className="btn-login" disabled={saving}>
+              {saving ? "Creating Account..." : <>Start My Free Month <FontAwesomeIcon icon={faChevronRight} /></>}
             </button>
+
             <div className="forgot-pw-wrap">
-              <button type="button" className="forgot-pw-btn" onClick={() => setStep(2)}>← Back</button>
+              <button type="button" className="forgot-pw-btn" onClick={() => setStep(1)}>
+                <FontAwesomeIcon icon={faChevronLeft} /> Back
+              </button>
             </div>
           </form>
         )}
 
-        <div className="forgot-pw-wrap" style={{ marginTop: 16 }}>
-          <button className="forgot-pw-btn" onClick={onBack}>← Back to Sign In</button>
-        </div>
+        {/* ── STEP 3: Done ── */}
+        {step === 3 && (
+          <div style={{ textAlign: "center", padding: "28px 0 12px" }}>
+            <div className="reset-sent-icon"><FontAwesomeIcon icon={faCheckCircle} /></div>
+            <p style={{ color: "var(--text)", fontWeight: 700, fontSize: 16, marginBottom: 6, marginTop: 12 }}>Account Created!</p>
+            <p style={{ color: "var(--muted)", fontSize: 13 }}>
+              Your free 1-month trial has started. Welcome to QuickDuka!
+            </p>
+          </div>
+        )}
+
+        {step < 3 && (
+          <div className="forgot-pw-wrap" style={{ marginTop: 14 }}>
+            <button className="forgot-pw-btn" onClick={onBack}>Already have an account? Sign in</button>
+          </div>
+        )}
       </div>
     </div>
   );

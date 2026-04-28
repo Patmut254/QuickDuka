@@ -12,6 +12,7 @@ export default function Reports() {
   const { items: sales } = useCollection("sales");
   const { items: purchases } = useCollection("purchases");
   const { items: expenses } = useCollection("expenses");
+  const { items: losses } = useCollection("losses");
 
   const [selectedMonth, setSelectedMonth] = useState(format(new Date(), "yyyy-MM"));
 
@@ -42,7 +43,8 @@ export default function Reports() {
   const ms = sales.filter(inRange).reduce((a, b) => a + (Number(b.amount) || 0), 0);
   const mp = purchases.filter(inRange).reduce((a, b) => a + (Number(b.amount) || 0), 0);
   const me = expenses.filter(inRange).reduce((a, b) => a + (Number(b.amount) || 0), 0);
-  const mProfit = ms - mp - me;
+  const ml = losses.filter(inRange).reduce((a, b) => a + (Number(b.amount) || 0), 0);
+  const mProfit = ms - mp - me - ml;
   const margin = ms > 0 ? ((mProfit / ms) * 100).toFixed(1) : 0;
 
   // Expense breakdown by category
@@ -73,7 +75,8 @@ export default function Reports() {
       const s = sales.filter(inR).reduce((a, b) => a + (Number(b.amount) || 0), 0);
       const p = purchases.filter(inR).reduce((a, b) => a + (Number(b.amount) || 0), 0);
       const e = expenses.filter(inR).reduce((a, b) => a + (Number(b.amount) || 0), 0);
-      months.push({ month: label, Sales: s, Purchases: p, Expenses: e, Profit: s - p - e });
+      const l = losses.filter(inR).reduce((a, b) => a + (Number(b.amount) || 0), 0);
+      months.push({ month: label, Sales: s, Purchases: p, Expenses: e, Losses: l, Profit: s - p - e - l });
     }
     return months;
   }, [sales, purchases, expenses]);
@@ -89,11 +92,12 @@ export default function Reports() {
 
       <div className="report-summary-cards">
         {[
-          { label: "Sales", value: ms, color: "#22c55e" },
-          { label: "Purchases", value: mp, color: "#f97316" },
-          { label: "Expenses", value: me, color: "#a855f7" },
-          { label: "Net Profit", value: mProfit, color: mProfit >= 0 ? "#22c55e" : "#ef4444" },
-          { label: "Profit Margin", value: `${margin}%`, color: mProfit >= 0 ? "#3b82f6" : "#ef4444", raw: true },
+          { label: "Sales",         value: ms,     color: "#22c55e" },
+          { label: "Purchases",      value: mp,     color: "#f97316" },
+          { label: "Expenses",       value: me,     color: "#a855f7" },
+          { label: "Losses",         value: ml,     color: "#ef4444" },
+          { label: "Net Profit",     value: mProfit, color: mProfit >= 0 ? "#22c55e" : "#ef4444" },
+          { label: "Profit Margin",  value: `${margin}%`, color: mProfit >= 0 ? "#3b82f6" : "#ef4444", raw: true },
         ].map(c => (
           <div className="report-card" key={c.label} style={{ borderLeft: `3px solid ${c.color}` }}>
             <div className="rc-label">{c.label}</div>
@@ -114,9 +118,10 @@ export default function Reports() {
               <YAxis tick={{ fill: "#9ca3af", fontSize: 12 }} tickFormatter={v => v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v} />
               <Tooltip contentStyle={{ background: "#1a1a2e", border: "1px solid #333", color: "#fff" }} formatter={v => `KES ${v.toLocaleString()}`} />
               <Legend wrapperStyle={{ color: "#ccc" }} />
-              <Bar dataKey="Sales" fill="#22c55e" radius={[3, 3, 0, 0]} />
+              <Bar dataKey="Sales"     fill="#22c55e" radius={[3, 3, 0, 0]} />
               <Bar dataKey="Purchases" fill="#f97316" radius={[3, 3, 0, 0]} />
-              <Bar dataKey="Expenses" fill="#a855f7" radius={[3, 3, 0, 0]} />
+              <Bar dataKey="Expenses"  fill="#a855f7" radius={[3, 3, 0, 0]} />
+              <Bar dataKey="Losses"    fill="#ef4444" radius={[3, 3, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>

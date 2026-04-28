@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faMoneyBill, faPen, faTrash, faExclamationTriangle, faCircleCheck } from "@fortawesome/free-solid-svg-icons";
 import { useCollection } from "../hooks/useCollection";
 import { db } from "../firebase";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
@@ -184,7 +186,7 @@ export default function Credits() {
           </div>
         </div>
         <button className="btn-primary" onClick={() => { setShowForm(!showForm); setStatus("idle"); }}>
-          {showForm ? "✕ Cancel" : "+ New Credit"}
+          {showForm ? "Cancel" : "+ New Credit"}
         </button>
       </div>
 
@@ -222,7 +224,7 @@ export default function Credits() {
             className={"btn-primary" + (status === "saved" ? " btn-saved" : "")}
             disabled={status !== "idle"}
           >
-            {status === "saving" ? "Saving..." : status === "saved" ? "✅ Saved!" : "Save Credit"}
+            {status === "saving" ? "Saving..." : status === "saved" ? "Saved!" : "Save Credit"}
           </button>
         </form>
       )}
@@ -231,7 +233,7 @@ export default function Credits() {
       <div className="filter-pills" style={{ marginBottom: 16 }}>
         {["all", "outstanding", "paid"].map(f => (
           <button key={f} className={"filter-pill" + (filter === f ? " active" : "")} onClick={() => setFilter(f)}>
-            {f === "all" ? "All" : f === "outstanding" ? "⚠️ Outstanding" : "✅ Paid"}
+            {f === "all" ? "All" : f === "outstanding" ? "Outstanding" : "Paid"}
           </button>
         ))}
       </div>
@@ -256,20 +258,20 @@ export default function Credits() {
 
               return (
                 <div key={credit.id} className={"credit-card" + (isPaid ? " credit-card-paid" : "")}>
-                  <div className="credit-card-top">
-                    <div className="credit-card-left">
+                  <div className="credit-card-header">
+                    <div className="credit-card-info">
                       <div className="credit-customer">{credit.customer}</div>
                       <div className="credit-desc">{credit.description}</div>
                       <div className="credit-date">{credit.date}</div>
                       {credit.phone && (
-                        <a href={`tel:${credit.phone}`} className="credit-phone">📞 {credit.phone}</a>
+                        <a href={`tel:${credit.phone}`} className="credit-phone">{credit.phone}</a>
                       )}
                     </div>
-                    <div className="credit-card-right">
+                    <div className="credit-card-right" style={{flexShrink:0,textAlign:"right"}}>
                       <div className="credit-amounts">
                         <div className="credit-total">KES {(credit.totalAmount || 0).toLocaleString()}</div>
                         {!isPaid && <div className="credit-remaining">Remaining: KES {remaining.toLocaleString()}</div>}
-                        {isPaid && <div className="credit-paid-badge">✅ Fully Paid</div>}
+                        {isPaid && <div className="credit-paid-badge">Fully Paid</div>}
                       </div>
                     </div>
                   </div>
@@ -298,11 +300,11 @@ export default function Credits() {
                   <div className="credit-actions">
                     {!isPaid && (
                       <button className="btn-pay" onClick={() => { setPayingCredit(credit); setPayAmount(""); setPayNote(""); }}>
-                        💵 Record Payment
+                        Record Payment
                       </button>
                     )}
-                    <button className="btn-edit-sm" title="Edit" onClick={() => openEdit(credit)}>✏️ Edit</button>
-                    <button className="delete-btn" title="Delete" onClick={() => setDeleteTarget(credit)}>🗑</button>
+                    <button className="btn-edit-sm" title="Edit" onClick={() => openEdit(credit)}>Edit</button>
+                    <button className="delete-btn" title="Delete" onClick={() => setDeleteTarget(credit)}>Delete</button>
                   </div>
                 </div>
               );
@@ -315,7 +317,7 @@ export default function Credits() {
       {editingCredit && (
         <div className="alert-overlay" onClick={() => setEditingCredit(null)}>
           <div className="alert-box" style={{ maxWidth: 480 }} onClick={e => e.stopPropagation()}>
-            <div className="alert-icon">✏️</div>
+            <div className="alert-icon">Edit</div>
             <div className="alert-title">Edit Credit Record</div>
             <form onSubmit={handleEditSave} className="payment-form" style={{ textAlign: "left" }}>
               <div className="field-group" style={{ marginBottom: 10 }}>
