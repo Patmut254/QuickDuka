@@ -45,7 +45,7 @@ export function useUserProfile() {
       timeoutId = setTimeout(() => {
         setLoading(false);
         setNotFound(true);
-      }, 8000);
+      }, 12000);
 
       unsubFirestore = onSnapshot(
         ref,
@@ -65,7 +65,7 @@ export function useUserProfile() {
           clearTimeout(timeoutId);
           setLoading(false);
           setNotFound(true);
-        }
+        },
       );
     });
 
