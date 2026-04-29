@@ -410,7 +410,6 @@ export default function App() {
   const [resetMsg, setResetMsg] = useState("");
   const [resetEmail, setResetEmail] = useState(""); // the resolved email that was actually used
 
-<<<<<<< HEAD
   const [theme, setTheme] = useState(
     () => localStorage.getItem("qd-theme") || "light",
   );
@@ -419,10 +418,6 @@ export default function App() {
     loading: profileLoading,
     notFound: profileNotFound,
   } = useUserProfile();
-=======
-  const [theme, setTheme] = useState(() => localStorage.getItem("qd-theme") || "light");
-  const { profile, loading: profileLoading } = useUserProfile();
->>>>>>> e45464fa5847feedddbedeb65a44376a07f38a5d
 
   // Detect if we're on the admin route: yoursite.com/#/admin
   const isAdminRoute = window.location.hash === "#/admin";
@@ -879,7 +874,6 @@ export default function App() {
 
   // ── Profile not yet created (mid-registration race) — skip for admin
   if (!isAdmin(user) && !profile) {
-<<<<<<< HEAD
     if (profileNotFound) {
       // Timed out — profile doc doesn't exist in Firestore
       return (
@@ -922,8 +916,6 @@ export default function App() {
       );
     }
     // Still waiting for Firestore doc to appear (e.g. just after registration)
-=======
->>>>>>> e45464fa5847feedddbedeb65a44376a07f38a5d
     return (
       <div className="splash">
         <img src="/logo-icon.png" alt="QuickDuka" />
