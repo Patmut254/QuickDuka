@@ -12,7 +12,6 @@ import { onAuthStateChanged } from "firebase/auth";
 export function useUserProfile() {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
-  // null = still waiting, true = doc confirmed missing after timeout
   const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
@@ -20,6 +19,7 @@ export function useUserProfile() {
     let timeoutId = null;
 
     const unsubAuth = onAuthStateChanged(auth, (user) => {
+      // Cleanup previous listeners
       if (unsubFirestore) {
         unsubFirestore();
         unsubFirestore = null;
@@ -36,13 +36,16 @@ export function useUserProfile() {
         return;
       }
 
+      console.log("👤 Auth user detected:", user.uid);
+
       setLoading(true);
       setNotFound(false);
 
       const ref = doc(db, "users", user.uid);
 
-      // If no profile doc arrives within 8 seconds, mark as notFound
+      // Wait longer to avoid race condition
       timeoutId = setTimeout(() => {
+        console.warn("⚠️ Profile not found after waiting");
         setLoading(false);
         setNotFound(true);
       }, 12000);
@@ -51,17 +54,20 @@ export function useUserProfile() {
         ref,
         (snap) => {
           if (snap.exists()) {
+            console.log("✅ Profile loaded:", snap.data());
+
             clearTimeout(timeoutId);
+
             setProfile({ id: snap.id, ...snap.data() });
             setNotFound(false);
             setLoading(false);
           } else {
-            // Doc doesn't exist yet — keep waiting for the timeout
+            console.log("⏳ Profile doc not yet created...");
             setProfile(null);
           }
         },
         (err) => {
-          console.error("Profile listener error:", err.message);
+          console.error("❌ Profile listener error:", err.message);
           clearTimeout(timeoutId);
           setLoading(false);
           setNotFound(true);
@@ -79,30 +85,49 @@ export function useUserProfile() {
   return { profile, loading, notFound };
 }
 
+// 🔥 CREATE USER PROFILE (FIXED + SAFE)
 export async function createUserProfile(uid, data) {
-  const ref = doc(db, "users", uid);
+  try {
+    console.log("🔥 Creating Firestore profile for UID:", uid);
 
-  // Grant a 30-day free trial from today
-  const trialExpiry = new Date();
-  trialExpiry.setDate(trialExpiry.getDate() + 30);
+    const ref = doc(db, "users", uid);
 
-  await setDoc(
-    ref,
-    {
-      ...data,
-      role: "user",
-      subscriptionStatus: "trial",
-      subscriptionExpiry: trialExpiry,   // trial ends after 30 days
-      trialStartedAt: serverTimestamp(),
-      createdAt: serverTimestamp(),
-    },
-    { merge: true }
-  );
+    const trialExpiry = new Date();
+    trialExpiry.setDate(trialExpiry.getDate() + 30);
+
+    await setDoc(
+      ref,
+      {
+        ...data,
+        role: "user",
+        subscriptionStatus: "trial",
+        subscriptionExpiry: trialExpiry,
+        trialStartedAt: serverTimestamp(),
+        createdAt: serverTimestamp(),
+      },
+      { merge: true },
+    );
+
+    console.log("✅ Firestore profile created successfully");
+  } catch (err) {
+    console.error("❌ Firestore profile creation FAILED:", err);
+    throw err; // VERY IMPORTANT
+  }
 }
 
+// 🔍 GET USER PROFILE (unchanged, but safe)
 export async function getUserProfile(uid) {
-  const ref = doc(db, "users", uid);
-  const snap = await getDoc(ref);
-  if (snap.exists()) return { id: snap.id, ...snap.data() };
-  return null;
+  try {
+    const ref = doc(db, "users", uid);
+    const snap = await getDoc(ref);
+
+    if (snap.exists()) {
+      return { id: snap.id, ...snap.data() };
+    }
+
+    return null;
+  } catch (err) {
+    console.error("❌ getUserProfile failed:", err);
+    return null;
+  }
 }
