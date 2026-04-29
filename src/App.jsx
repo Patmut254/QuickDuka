@@ -851,7 +851,7 @@ export default function App() {
                     style={{ marginTop: 20, display: "block" }}
                     onClick={() => setView("login")}
                   >
-                    Back to Sign In
+                    {/* Back to Sign In */}
                   </button>
                 </div>
               )}
