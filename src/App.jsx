@@ -276,7 +276,7 @@ export default function App() {
   const [resetEmail,  setResetEmail]  = useState(""); // the resolved email that was actually used
 
   const [theme, setTheme] = useState(() => localStorage.getItem("qd-theme") || "light");
-  const { profile, loading: profileLoading } = useUserProfile();
+  const { profile, loading: profileLoading, notFound: profileNotFound } = useUserProfile();
 
   // Detect if we're on the admin route: yoursite.com/#/admin
   const isAdminRoute = window.location.hash === "#/admin";
@@ -610,6 +610,27 @@ export default function App() {
 
   // ── Profile not yet created (mid-registration race) — skip for admin
   if (!isAdmin(user) && !profile) {
+    if (profileNotFound) {
+      // Timed out — profile doc doesn't exist in Firestore
+      return (
+        <div className="splash">
+          <img src="/logo-icon.png" alt="QuickDuka" />
+          <span className="splash-sub" style={{ color: "var(--red)", marginBottom: 8 }}>
+            Account setup incomplete.
+          </span>
+          <span style={{ fontSize: 13, color: "var(--muted)", maxWidth: 280, textAlign: "center", lineHeight: 1.5 }}>
+            Your account was not fully created. Please sign out and register again, or contact support.
+          </span>
+          <button
+            style={{ marginTop: 24, padding: "8px 20px", background: "transparent", border: "1px solid var(--border2)", borderRadius: 8, color: "var(--muted)", cursor: "pointer", fontFamily: "inherit" }}
+            onClick={() => signOut(auth)}
+          >
+            Sign out
+          </button>
+        </div>
+      );
+    }
+    // Still waiting for Firestore doc to appear (e.g. just after registration)
     return (
       <div className="splash">
         <img src="/logo-icon.png" alt="QuickDuka" />
