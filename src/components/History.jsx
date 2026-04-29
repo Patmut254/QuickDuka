@@ -1,12 +1,6 @@
 import { useState, useEffect } from "react";
 import { db } from "../firebase";
-import {
-  collection,
-  query,
-  orderBy,
-  onSnapshot,
-  limit,
-} from "firebase/firestore";
+import { collection, query, orderBy, limit, getDocs } from "firebase/firestore";
 import { useCollection } from "../hooks/useCollection";
 import { Toast, useToast } from "./Toast";
 import AlertDialog from "./AlertDialog";
@@ -88,26 +82,32 @@ export default function History() {
   const [clearing, setClearing] = useState(false);
   const { toast, showToast } = useToast();
 
-  // restoreItem from sales hook
+  // hooks
   const { restoreItem } = useCollection("sales");
-
-  // silentDelete and clearCollection from auditLog
   const { silentDelete: deleteLog, clearCollection } =
     useCollection("auditLog");
 
+  // ✅ FIXED: NO onSnapshot — safe fetch
   useEffect(() => {
-    const q = query(
-      collection(db, "auditLog"),
-      orderBy("timestamp", "desc"),
-      limit(200),
-    );
+    const fetchHistory = async () => {
+      try {
+        const q = query(
+          collection(db, "auditLog"),
+          orderBy("timestamp", "desc"),
+          limit(200),
+        );
 
-    const unsub = onSnapshot(q, (snap) => {
-      setLogs(snap.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
-      setHistoryLoading(false);
-    });
+        const snap = await getDocs(q);
 
-    return () => unsub();
+        setLogs(snap.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
+        setHistoryLoading(false);
+      } catch (err) {
+        console.error("History fetch error:", err.message);
+        setHistoryLoading(false);
+      }
+    };
+
+    fetchHistory();
   }, []);
 
   const filtered =
@@ -136,6 +136,7 @@ export default function History() {
     try {
       setClearing(true);
       await clearCollection("auditLog");
+      setLogs([]); // instant UI update
       showToast("History cleared.", "success");
     } catch (error) {
       console.error("Clear history failed:", error);

@@ -149,7 +149,7 @@ export default function ContactPage() {
         <p>Prefer a faster reply? Message us directly on WhatsApp.</p>
         <div className="contact-methods">
           <a
-            href="https://wa.me/254700000000?text=Hello QuickDuka, I need help with..."
+            href="https://wa.me/254769758819?text=Hello QuickDuka, I need help with..."
             target="_blank"
             rel="noreferrer"
             className="contact-method"
@@ -159,7 +159,7 @@ export default function ContactPage() {
             </div>
             <div className="contact-method-text">
               <strong>WhatsApp</strong>
-              <span>Quick responses — tap to chat</span>
+              <span>Quick responses, tap to chat.</span>
             </div>
           </a>
         </div>
@@ -179,8 +179,8 @@ export default function ContactPage() {
           <span className="fa-icon"><FontAwesomeIcon icon={faMapMarkerAlt} /></span> About QuickDuka
         </h2>
         <p>
-          QuickDuka is built for Kenyan small businesses — dukas, boutiques, agro-dealers,
-          wholesalers, and more. Proudly made in Kenya.
+          QuickDuka is built for Kenyan small businesses like: dukas, boutiques, agro-dealers,
+          wholesalers, and more. 
         </p>
         <p>
           For subscription, billing, or account issues, send a message above with your

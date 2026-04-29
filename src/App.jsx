@@ -62,10 +62,11 @@ import "./App.css";
 const db = getFirestore();
 const GRACE_DAYS = 2;
 
-// Auto-lock: returns false if subscription expired — user sees SubscriptionWall automatically
-// Trial: free 30-day access after registration.
-// Paid: active subscription with expiry date.
-// Grace period = 2 days after expiry date.
+// ── Subscription gate ──────────────────────────────────────
+// Admin emails bypass this entirely (handled separately).
+// trial  → active for 30 days from signup + grace
+// active → active until expiry + grace
+// anything else (expired/pending/undefined) → wall
 function isSubscriptionActive(profile) {
   if (!profile) return false;
   if (isAdmin({ email: profile.email })) return true;
@@ -77,61 +78,54 @@ function isSubscriptionActive(profile) {
       ? profile.subscriptionExpiry
       : null);
 
-  // Trial: active for 30 days from signup
   if (status === "trial") {
-    if (!expiry) return true;
+    if (!expiry) return true; // no expiry set = unlimited trial (shouldn't happen)
     const grace = new Date(expiry.getTime() + GRACE_DAYS * 24 * 60 * 60 * 1000);
     return new Date() <= grace;
   }
 
-  // Paid subscription
   if (status === "active") {
-    if (!expiry) return true; // lifetime/admin
+    if (!expiry) return true; // lifetime / admin-created without expiry
     const grace = new Date(expiry.getTime() + GRACE_DAYS * 24 * 60 * 60 * 1000);
     return new Date() <= grace;
   }
 
-  return false; // pending/expired → wall
+  return false;
 }
 
-// Resolve phone or email input → actual Firebase Auth email
+// ── Phone / email → Firebase Auth email ───────────────────
 async function resolveLoginEmail(input) {
   const trimmed = input.trim();
-  // Detect phone input (07, 011, 01, +254, 254)
   if (/^(\+?254|07|011|01)/.test(trimmed)) {
     const digits = trimmed.replace(/\D/g, "");
     let normalized;
-    if (digits.startsWith("254") && digits.length === 12) {
+    if (digits.startsWith("254") && digits.length === 12)
       normalized = "+" + digits;
-    } else if (digits.startsWith("0") && digits.length === 10) {
+    else if (digits.startsWith("0") && digits.length === 10)
       normalized = "+254" + digits.slice(1);
-    } else if (
+    else if (
       (digits.startsWith("7") || digits.startsWith("1")) &&
       digits.length === 9
-    ) {
+    )
       normalized = "+254" + digits;
-    } else {
-      normalized = "+254" + digits.slice(1);
-    }
+    else normalized = "+254" + digits.slice(1);
+
     const q = query(collection(db, "users"), where("phone", "==", normalized));
     const snap = await getDocs(q);
-    if (!snap.empty) {
-      return snap.docs[0].data().email;
-    }
-    // fallback synthetic
+    if (!snap.empty) return snap.docs[0].data().email;
     return `${normalized.replace("+", "")}@quickduka.app`;
   }
   return trimmed;
 }
 
-// ─── Footer ────────────────────────────────────────────────
+// ── Footer ─────────────────────────────────────────────────
 function AppFooter() {
   return (
     <div className="app-footer">© 2026 QuickDuka. All rights reserved.</div>
   );
 }
 
-// ─── TRANSLATIONS ───────────────────────────────────────────
+// ── Translations ───────────────────────────────────────────
 const T = {
   en: {
     dashboard: "Dashboard",
@@ -179,12 +173,14 @@ const T = {
   },
 };
 
-// ─── APP SHELL ─────────────────────────────────────────────
+// ── App Shell ──────────────────────────────────────────────
 function AppShell({ user, profile, theme, toggleTheme }) {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [lang, setLang] = useState(
     () => localStorage.getItem("qd-lang") || "en",
   );
+
+  // isAdmin checks the Firebase Auth user email — reliable, doesn't need Firestore
   const admin = isAdmin(user);
   const t = T[lang];
 
@@ -196,6 +192,7 @@ function AppShell({ user, profile, theme, toggleTheme }) {
 
   const tabs = [
     { id: "dashboard", label: t.dashboard, icon: faChartLine },
+    // Admin tab: shown when Firebase Auth email matches ADMIN_EMAIL
     ...(admin
       ? [
           {
@@ -246,51 +243,61 @@ function AppShell({ user, profile, theme, toggleTheme }) {
   return (
     <div className="app-shell">
       <AppFooter />
-      {/* ── Sidebar (desktop) */}
+
+      {/* ── Sidebar (desktop) ──────────────────────────────── */}
       <aside className="sidebar">
+        {/* Brand */}
         <div className="sidebar-brand">
           <img src="/logo-icon.png" alt="QuickDuka" />
           <span className="brand-name">QuickDuka</span>
         </div>
+
+        {/* Business name */}
         {profile?.businessName && (
           <div className="sidebar-biz-name">{profile.businessName}</div>
         )}
+
+        {/* Nav — scrollable, fills available space */}
         <nav className="sidebar-nav">
-          {mainTabs.map((t) => (
+          {mainTabs.map((tab) => (
             <button
-              key={t.id}
-              className={"nav-item" + (activeTab === t.id ? " active" : "")}
-              onClick={() => setActiveTab(t.id)}
+              key={tab.id}
+              className={"nav-item" + (activeTab === tab.id ? " active" : "")}
+              onClick={() => setActiveTab(tab.id)}
             >
               <span className="nav-icon">
-                <FontAwesomeIcon icon={t.icon} />
+                <FontAwesomeIcon icon={tab.icon} />
               </span>
-              <span className="nav-label">{t.label}</span>
-              {t.badge && (
+              <span className="nav-label">{tab.label}</span>
+              {tab.badge && (
                 <span
-                  className={`nav-badge ${t.badgeClass || ""}`}
-                  style={t.badgeStyle}
+                  className={`nav-badge ${tab.badgeClass || ""}`}
+                  style={tab.badgeStyle}
                 >
-                  {t.badge}
+                  {tab.badge}
                 </span>
               )}
             </button>
           ))}
+
           <div className="sidebar-divider" />
           <div className="sidebar-section-label">{t.info}</div>
-          {infoTabs.map((t) => (
+
+          {infoTabs.map((tab) => (
             <button
-              key={t.id}
-              className={"nav-item" + (activeTab === t.id ? " active" : "")}
-              onClick={() => setActiveTab(t.id)}
+              key={tab.id}
+              className={"nav-item" + (activeTab === tab.id ? " active" : "")}
+              onClick={() => setActiveTab(tab.id)}
             >
               <span className="nav-icon">
-                <FontAwesomeIcon icon={t.icon} />
+                <FontAwesomeIcon icon={tab.icon} />
               </span>
-              <span className="nav-label">{t.label}</span>
+              <span className="nav-label">{tab.label}</span>
             </button>
           ))}
         </nav>
+
+        {/* Subscription expiry chip — always visible above footer buttons */}
         {!admin && expiryDate && (
           <div className="sidebar-sub-info">
             <span
@@ -304,6 +311,8 @@ function AppShell({ user, profile, theme, toggleTheme }) {
             </span>
           </div>
         )}
+
+        {/* Language toggle — always visible */}
         <button
           className="sidebar-lang-toggle"
           onClick={toggleLang}
@@ -311,28 +320,30 @@ function AppShell({ user, profile, theme, toggleTheme }) {
         >
           {lang === "en" ? "🇰🇪 Swahili" : "🇬🇧 English"}
         </button>
+
+        {/* Sign out — always visible, never clipped */}
         <button className="logout-btn" onClick={() => signOut(auth)}>
           <FontAwesomeIcon icon={faRightFromBracket} /> {t.signOut}
         </button>
       </aside>
 
-      {/* ── Mobile bottom nav */}
+      {/* ── Mobile bottom nav ──────────────────────────────── */}
       <div className="mobile-bar">
-        {mobileTabs.map((t) => (
+        {mobileTabs.map((tab) => (
           <button
-            key={t.id}
-            className={"mobile-tab" + (activeTab === t.id ? " active" : "")}
-            onClick={() => setActiveTab(t.id)}
+            key={tab.id}
+            className={"mobile-tab" + (activeTab === tab.id ? " active" : "")}
+            onClick={() => setActiveTab(tab.id)}
           >
             <span className="mobile-tab-icon">
-              <FontAwesomeIcon icon={t.icon} />
+              <FontAwesomeIcon icon={tab.icon} />
             </span>
-            <span>{t.label}</span>
+            <span>{tab.label}</span>
           </button>
         ))}
       </div>
 
-      {/* ── Main */}
+      {/* ── Main content ───────────────────────────────────── */}
       <main className="main-content">
         <header className="top-bar">
           <div className="page-title">
@@ -369,6 +380,7 @@ function AppShell({ user, profile, theme, toggleTheme }) {
             </button>
           </div>
         </header>
+
         <div className="page-body">
           {activeTab === "dashboard" && (
             <Dashboard setActiveTab={setActiveTab} />
@@ -394,9 +406,9 @@ function AppShell({ user, profile, theme, toggleTheme }) {
   );
 }
 
-// ─── ROOT APP ───────────────────────────────────────────────
+// ── Root App ───────────────────────────────────────────────
 export default function App() {
-  const [user, setUser] = useState(undefined); // undefined = not yet checked
+  const [user, setUser] = useState(undefined); // undefined = still checking
   const [view, setView] = useState("login"); // "login" | "register" | "reset"
   const [loginId, setLoginId] = useState("");
   const [loginPw, setLoginPw] = useState("");
@@ -404,22 +416,21 @@ export default function App() {
   const [loginErr, setLoginErr] = useState("");
   const [loggingIn, setLoggingIn] = useState(false);
 
-  // Reset password flow
   const [resetInput, setResetInput] = useState("");
-  const [resetStatus, setResetStatus] = useState("idle"); // idle | sending | sent | error
+  const [resetStatus, setResetStatus] = useState("idle"); // idle|sending|sent|error
   const [resetMsg, setResetMsg] = useState("");
-  const [resetEmail, setResetEmail] = useState(""); // the resolved email that was actually used
+  const [resetEmail, setResetEmail] = useState("");
 
   const [theme, setTheme] = useState(
     () => localStorage.getItem("qd-theme") || "light",
   );
+
   const {
     profile,
     loading: profileLoading,
     notFound: profileNotFound,
   } = useUserProfile();
 
-  // Detect if we're on the admin route: yoursite.com/#/admin
   const isAdminRoute = window.location.hash === "#/admin";
 
   useEffect(() => {
@@ -434,7 +445,7 @@ export default function App() {
 
   const toggleTheme = () => setTheme((t) => (t === "dark" ? "light" : "dark"));
 
-  // ── Login
+  // ── Login ──────────────────────────────────────────────
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoggingIn(true);
@@ -448,9 +459,7 @@ export default function App() {
     setLoggingIn(false);
   };
 
-  // ── Password Reset
-  // Firebase sendPasswordResetEmail only works with real emails.
-  // We look up the user's stored realEmail first; if not available we use their Firebase email.
+  // ── Password reset ─────────────────────────────────────
   const handleResetPassword = async (e) => {
     e.preventDefault();
     if (resetStatus === "sending") return;
@@ -460,7 +469,6 @@ export default function App() {
       const input = resetInput.trim();
       let emailToReset = input;
 
-      // If it looks like a phone, look up from Firestore
       if (/^\+?254|^07|^01/.test(input)) {
         const digits = input.replace(/\D/g, "");
         const normalized =
@@ -472,7 +480,6 @@ export default function App() {
         const snap = await getDocs(q);
         if (!snap.empty) {
           const data = snap.docs[0].data();
-          // Prefer realEmail (the one user actually typed), then fallback to Firebase email
           emailToReset = data.realEmail || data.email;
         } else {
           setResetStatus("error");
@@ -481,7 +488,6 @@ export default function App() {
         }
       }
 
-      // Validate it looks like a real email before calling Firebase
       if (
         !emailToReset ||
         !emailToReset.includes("@") ||
@@ -489,7 +495,7 @@ export default function App() {
       ) {
         setResetStatus("error");
         setResetMsg(
-          "This account was registered without an email address. Password reset is not available. Please contact support.",
+          "This account has no email address. Please contact support.",
         );
         return;
       }
@@ -503,7 +509,7 @@ export default function App() {
         "auth/user-not-found": "No account found with that email.",
         "auth/invalid-email": "Please enter a valid email address.",
         "auth/too-many-requests":
-          "Too many attempts. Please wait a few minutes before trying again.",
+          "Too many attempts. Please wait a few minutes.",
       };
       setResetMsg(
         msgs[err.code] || "Failed to send reset email. Please try again.",
@@ -511,7 +517,7 @@ export default function App() {
     }
   };
 
-  // ── Splash (Firebase checking auth)
+  // ── Splash — Firebase still checking auth ──────────────
   if (user === undefined) {
     return (
       <div className="splash">
@@ -521,9 +527,8 @@ export default function App() {
     );
   }
 
-  // ── ADMIN ROUTE: yoursite.com/#/admin
+  // ── Admin route: yoursite.com/#/admin ──────────────────
   if (isAdminRoute) {
-    // Not logged in on admin route → show dedicated admin login
     if (!user) {
       return (
         <div className="login-page">
@@ -591,7 +596,7 @@ export default function App() {
         </div>
       );
     }
-    // Logged in but not admin → reject
+
     if (!isAdmin(user)) {
       return (
         <div className="splash">
@@ -617,7 +622,8 @@ export default function App() {
         </div>
       );
     }
-    // Logged in as admin → show panel directly, no profile/subscription needed
+
+    // Admin logged in on #/admin — full panel, no subscription check needed
     return (
       <div
         style={{
@@ -672,15 +678,16 @@ export default function App() {
     );
   }
 
-  // ── Not logged in (regular app)
+  // ── Not logged in (regular app) ────────────────────────
   if (!user) {
-    if (view === "register")
+    if (view === "register") {
       return (
         <>
           <Register onBack={() => setView("login")} />
           <AppFooter />
         </>
       );
+    }
 
     return (
       <div className="login-page">
@@ -737,9 +744,7 @@ export default function App() {
                     </button>
                   </div>
                 </div>
-
                 {loginErr && <div className="login-error">{loginErr}</div>}
-
                 <div className="login-form-actions">
                   <button
                     type="submit"
@@ -780,13 +785,12 @@ export default function App() {
               <button className="reset-back" onClick={() => setView("login")}>
                 <FontAwesomeIcon icon={faChevronLeft} /> Back to Sign In
               </button>
-
               {resetStatus !== "sent" ? (
                 <>
                   <h2 className="reset-title">Reset Password</h2>
                   <p className="reset-subtitle">
-                    Enter your email address or registered phone number. We will
-                    send a password reset link to your email.
+                    Enter your email or registered phone. We will send a reset
+                    link to your email.
                   </p>
                   <form
                     onSubmit={handleResetPassword}
@@ -808,7 +812,6 @@ export default function App() {
                         />
                       </div>
                     </div>
-
                     {resetMsg && (
                       <div
                         className={
@@ -820,7 +823,6 @@ export default function App() {
                         {resetMsg}
                       </div>
                     )}
-
                     <button
                       type="submit"
                       className="btn-login"
@@ -841,17 +843,16 @@ export default function App() {
                     Check your inbox.
                   </p>
                   <p className="reset-sent-msg">
-                    A password reset link was sent to{" "}
+                    A reset link was sent to{" "}
                     <span className="reset-sent-email">{resetEmail}</span>.
-                    Check your spam folder if you do not see it within a few
-                    minutes.
+                    Check your spam folder if you don't see it.
                   </p>
                   <button
                     className="forgot-pw-btn"
                     style={{ marginTop: 20, display: "block" }}
                     onClick={() => setView("login")}
                   >
-                    {/* Back to Sign In */}
+                    Back to Sign In
                   </button>
                 </div>
               )}
@@ -862,8 +863,20 @@ export default function App() {
     );
   }
 
-  // ── Profile loading (skip for admin)
-  if (!isAdmin(user) && profileLoading) {
+  // ── Admin bypasses all profile / subscription checks ───
+  if (isAdmin(user)) {
+    return (
+      <AppShell
+        user={user}
+        profile={profile || { email: user.email }}
+        theme={theme}
+        toggleTheme={toggleTheme}
+      />
+    );
+  }
+
+  // ── Profile loading ────────────────────────────────────
+  if (profileLoading) {
     return (
       <div className="splash">
         <img src="/logo-icon.png" alt="QuickDuka" />
@@ -872,10 +885,9 @@ export default function App() {
     );
   }
 
-  // ── Profile not yet created (mid-registration race) — skip for admin
-  if (!isAdmin(user) && !profile) {
+  // ── Profile not found after timeout ───────────────────
+  if (!profile) {
     if (profileNotFound) {
-      // Timed out — profile doc doesn't exist in Firestore
       return (
         <div className="splash">
           <img src="/logo-icon.png" alt="QuickDuka" />
@@ -894,8 +906,8 @@ export default function App() {
               lineHeight: 1.5,
             }}
           >
-            Your account was not fully created. Please sign out and register
-            again, or contact support.
+            Your profile could not be created. Please sign out and try
+            registering again, or contact support.
           </span>
           <button
             style={{
@@ -915,7 +927,7 @@ export default function App() {
         </div>
       );
     }
-    // Still waiting for Firestore doc to appear (e.g. just after registration)
+    // Still waiting for Firestore doc to appear
     return (
       <div className="splash">
         <img src="/logo-icon.png" alt="QuickDuka" />
@@ -939,8 +951,8 @@ export default function App() {
     );
   }
 
-  // ── Subscription gate — no bypass, ever
-  if (!isAdmin(user) && !isSubscriptionActive(profile)) {
+  // ── Subscription gate — no bypass for regular users ───
+  if (!isSubscriptionActive(profile)) {
     return (
       <>
         <SubscriptionWall profile={profile} />
