@@ -11,7 +11,7 @@ import {
   faBox, faClockRotateLeft, faSliders, faSackDollar, faRightFromBracket,
   faSun, faMoon, faEnvelope, faQuestionCircle, faShieldHalved,
   faHeadset, faUser, faLock, faEye, faEyeSlash, faCheckCircle, faChevronLeft,
-  faCircleUser, faTriangleExclamation, faRotateRight
+  faCircleUser, faTriangleExclamation
 } from "@fortawesome/free-solid-svg-icons";
 import { faSquareCheck } from "@fortawesome/free-regular-svg-icons";
 import Dashboard from "./components/Dashboard";
@@ -35,6 +35,10 @@ import "./App.css";
 const db = getFirestore();
 const GRACE_DAYS = 2;
 
+// Auto-lock: returns false if subscription expired — user sees SubscriptionWall automatically
+// Trial: free 30-day access after registration.
+// Paid: active subscription with expiry date.
+// Grace period = 2 days after expiry date.
 function isSubscriptionActive(profile) {
   if (!profile) return false;
   if (isAdmin({ email: profile.email })) return true;
@@ -42,23 +46,27 @@ function isSubscriptionActive(profile) {
   const status = profile.subscriptionStatus;
   const expiry = profile.subscriptionExpiry?.toDate?.() ?? (profile.subscriptionExpiry instanceof Date ? profile.subscriptionExpiry : null);
 
+  // Trial: active for 30 days from signup
   if (status === "trial") {
     if (!expiry) return true;
     const grace = new Date(expiry.getTime() + GRACE_DAYS * 24 * 60 * 60 * 1000);
     return new Date() <= grace;
   }
 
+  // Paid subscription
   if (status === "active") {
-    if (!expiry) return true;
+    if (!expiry) return true; // lifetime/admin
     const grace = new Date(expiry.getTime() + GRACE_DAYS * 24 * 60 * 60 * 1000);
     return new Date() <= grace;
   }
 
-  return false;
+  return false; // pending/expired → wall
 }
 
+// Resolve phone or email input → actual Firebase Auth email
 async function resolveLoginEmail(input) {
   const trimmed = input.trim();
+  // Detect phone input (07, 011, 01, +254, 254)
   if (/^(\+?254|07|011|01)/.test(trimmed)) {
     const digits = trimmed.replace(/\D/g, "");
     let normalized;
@@ -76,6 +84,7 @@ async function resolveLoginEmail(input) {
     if (!snap.empty) {
       return snap.docs[0].data().email;
     }
+    // fallback synthetic
     return `${normalized.replace("+", "")}@quickduka.app`;
   }
   return trimmed;
@@ -250,88 +259,26 @@ function AppShell({ user, profile, theme, toggleTheme }) {
   );
 }
 
-// ─── Workspace Setup Splash (with auto-reload & manual refresh) ────────────
-function WorkspaceSetupSplash() {
-  const [elapsed, setElapsed] = useState(0);
-  const TIMEOUT_SECS = 10;
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setElapsed(prev => {
-        if (prev + 1 >= TIMEOUT_SECS) {
-          clearInterval(interval);
-          window.location.reload();
-        }
-        return prev + 1;
-      });
-    }, 1000);
-    return () => clearInterval(interval);
-  }, []);
-
-  return (
-    <div className="splash">
-      <img src="/logo-icon.png" alt="QuickDuka" />
-      <span className="splash-sub">Setting up your workspace...</span>
-      <p style={{ fontSize: 12, color: "var(--muted)", marginTop: 8, marginBottom: 0 }}>
-        Auto-refreshing in {TIMEOUT_SECS - elapsed}s…
-      </p>
-      <button
-        onClick={() => window.location.reload()}
-        style={{
-          marginTop: 12,
-          padding: "7px 18px",
-          background: "var(--accent)",
-          border: "none",
-          borderRadius: 8,
-          color: "#fff",
-          cursor: "pointer",
-          fontFamily: "inherit",
-          fontSize: 13,
-          display: "flex",
-          alignItems: "center",
-          gap: 7,
-        }}
-      >
-        <FontAwesomeIcon icon={faRotateRight} /> Refresh now
-      </button>
-      <button
-        style={{
-          marginTop: 10,
-          padding: "7px 18px",
-          background: "transparent",
-          border: "1px solid var(--border2)",
-          borderRadius: 8,
-          color: "var(--muted)",
-          cursor: "pointer",
-          fontFamily: "inherit",
-          fontSize: 13,
-        }}
-        onClick={() => signOut(auth)}
-      >
-        Sign out
-      </button>
-    </div>
-  );
-}
-
 // ─── ROOT APP ───────────────────────────────────────────────
 export default function App() {
-  const [user,     setUser]     = useState(undefined);
-  const [view,     setView]     = useState("login");
+  const [user,     setUser]     = useState(undefined); // undefined = not yet checked
+  const [view,     setView]     = useState("login");   // "login" | "register" | "reset"
   const [loginId,  setLoginId]  = useState("");
   const [loginPw,  setLoginPw]  = useState("");
   const [showPw,   setShowPw]   = useState(false);
   const [loginErr, setLoginErr] = useState("");
   const [loggingIn, setLoggingIn] = useState(false);
 
+  // Reset password flow
   const [resetInput,  setResetInput]  = useState("");
-  const [resetStatus, setResetStatus] = useState("idle");
+  const [resetStatus, setResetStatus] = useState("idle"); // idle | sending | sent | error
   const [resetMsg,    setResetMsg]    = useState("");
-  const [resetEmail,  setResetEmail]  = useState("");
+  const [resetEmail,  setResetEmail]  = useState(""); // the resolved email that was actually used
 
   const [theme, setTheme] = useState(() => localStorage.getItem("qd-theme") || "light");
   const { profile, loading: profileLoading } = useUserProfile();
 
+  // Detect if we're on the admin route: yoursite.com/#/admin
   const isAdminRoute = window.location.hash === "#/admin";
 
   useEffect(() => {
@@ -361,6 +308,8 @@ export default function App() {
   };
 
   // ── Password Reset
+  // Firebase sendPasswordResetEmail only works with real emails.
+  // We look up the user's stored realEmail first; if not available we use their Firebase email.
   const handleResetPassword = async (e) => {
     e.preventDefault();
     if (resetStatus === "sending") return;
@@ -370,6 +319,7 @@ export default function App() {
       const input = resetInput.trim();
       let emailToReset = input;
 
+      // If it looks like a phone, look up from Firestore
       if (/^\+?254|^07|^01/.test(input)) {
         const digits = input.replace(/\D/g, "");
         const normalized = "+" + (digits.startsWith("254") ? digits : "254" + digits.slice(1));
@@ -377,6 +327,7 @@ export default function App() {
         const snap = await getDocs(q);
         if (!snap.empty) {
           const data = snap.docs[0].data();
+          // Prefer realEmail (the one user actually typed), then fallback to Firebase email
           emailToReset = data.realEmail || data.email;
         } else {
           setResetStatus("error");
@@ -385,6 +336,7 @@ export default function App() {
         }
       }
 
+      // Validate it looks like a real email before calling Firebase
       if (!emailToReset || !emailToReset.includes("@") || emailToReset.endsWith("@quickduka.app")) {
         setResetStatus("error");
         setResetMsg("This account was registered without an email address. Password reset is not available. Please contact support.");
@@ -397,8 +349,8 @@ export default function App() {
     } catch (err) {
       setResetStatus("error");
       const msgs = {
-        "auth/user-not-found":    "No account found with that email.",
-        "auth/invalid-email":     "Please enter a valid email address.",
+        "auth/user-not-found":  "No account found with that email.",
+        "auth/invalid-email":   "Please enter a valid email address.",
         "auth/too-many-requests": "Too many attempts. Please wait a few minutes before trying again.",
       };
       setResetMsg(msgs[err.code] || "Failed to send reset email. Please try again.");
@@ -415,8 +367,9 @@ export default function App() {
     );
   }
 
-  // ── ADMIN ROUTE
+  // ── ADMIN ROUTE: yoursite.com/#/admin
   if (isAdminRoute) {
+    // Not logged in on admin route → show dedicated admin login
     if (!user) {
       return (
         <div className="login-page">
@@ -468,6 +421,7 @@ export default function App() {
         </div>
       );
     }
+    // Logged in but not admin → reject
     if (!isAdmin(user)) {
       return (
         <div className="splash">
@@ -480,6 +434,7 @@ export default function App() {
         </div>
       );
     }
+    // Logged in as admin → show panel directly, no profile/subscription needed
     return (
       <div style={{ minHeight: "100vh", background: "var(--bg)", padding: "24px 16px" }}>
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
@@ -653,13 +608,23 @@ export default function App() {
     );
   }
 
-  // ── FIX: Profile not yet created (Firestore write race condition after registration)
-  // Auto-reloads after 10s so the user is never stuck here permanently.
+  // ── Profile not yet created (mid-registration race) — skip for admin
   if (!isAdmin(user) && !profile) {
-    return <WorkspaceSetupSplash />;
+    return (
+      <div className="splash">
+        <img src="/logo-icon.png" alt="QuickDuka" />
+        <span className="splash-sub">Setting up your workspace...</span>
+        <button
+          style={{ marginTop: 24, padding: "8px 20px", background: "transparent", border: "1px solid var(--border2)", borderRadius: 8, color: "var(--muted)", cursor: "pointer", fontFamily: "inherit" }}
+          onClick={() => signOut(auth)}
+        >
+          Sign out
+        </button>
+      </div>
+    );
   }
 
-  // ── Subscription gate
+  // ── Subscription gate — no bypass, ever
   if (!isAdmin(user) && !isSubscriptionActive(profile)) {
     return <><SubscriptionWall profile={profile} /><AppFooter /></>;
   }
