@@ -90,6 +90,15 @@ async function resolveLoginEmail(input) {
   return trimmed;
 }
 
+// ─── Footer ────────────────────────────────────────────────
+function AppFooter() {
+  return (
+    <div className="app-footer">
+      © 2026 QuickDuka. All rights reserved.
+    </div>
+  );
+}
+
 // ─── TRANSLATIONS ───────────────────────────────────────────
 const T = {
   en: {
@@ -151,6 +160,7 @@ function AppShell({ user, profile, theme, toggleTheme }) {
 
   return (
     <div className="app-shell">
+      <AppFooter />
       {/* ── Sidebar (desktop) */}
       <aside className="sidebar">
         <div className="sidebar-brand">
@@ -448,10 +458,11 @@ export default function App() {
 
   // ── Not logged in (regular app)
   if (!user) {
-    if (view === "register") return <Register onBack={() => setView("login")} />;
+    if (view === "register") return <><Register onBack={() => setView("login")} /><AppFooter /></>;
 
     return (
       <div className="login-page">
+        <AppFooter />
         <div className="login-dots login-dots-tl" />
         <div className="login-dots login-dots-br" />
         <div className="login-blob" />
@@ -615,7 +626,7 @@ export default function App() {
 
   // ── Subscription gate — no bypass, ever
   if (!isAdmin(user) && !isSubscriptionActive(profile)) {
-    return <SubscriptionWall profile={profile} />;
+    return <><SubscriptionWall profile={profile} /><AppFooter /></>;
   }
 
   return <AppShell user={user} profile={profile} theme={theme} toggleTheme={toggleTheme} />;

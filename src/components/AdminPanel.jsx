@@ -229,7 +229,7 @@ function AddUserModal({ onClose, onSuccess }) {
               <div className="amf-field">
                 <label>County *</label>
                 <select value={form.county} onChange={e => { set("county", e.target.value); set("subcounty", ""); }}>
-                  <option value="">-- Select County --</option>
+                  <option value="">Select County</option>
                   {kenyaCounties.map(c => <option key={c.county} value={c.county}>{c.county}</option>)}
                 </select>
               </div>
@@ -237,7 +237,7 @@ function AddUserModal({ onClose, onSuccess }) {
                 <div className="amf-field">
                   <label>Sub-county</label>
                   <select value={form.subcounty} onChange={e => set("subcounty", e.target.value)}>
-                    <option value="">-- Select Sub-county --</option>
+                    <option value="">Select Sub-county</option>
                     {subcounties.map(s => <option key={s} value={s}>{s}</option>)}
                   </select>
                 </div>
@@ -255,7 +255,7 @@ function AddUserModal({ onClose, onSuccess }) {
               <div className="amf-field">
                 <label>Referrer (optional)</label>
                 <select value={form.referrer} onChange={e => set("referrer", e.target.value)}>
-                  <option value="">-- None --</option>
+                  <option value="">None</option>
                   {REFERRERS.map(r => <option key={r} value={r}>{r}</option>)}
                   <option value="Admin">Admin (direct)</option>
                 </select>

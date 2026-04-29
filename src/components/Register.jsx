@@ -11,40 +11,51 @@ import {
   faMobileAlt, faCheckCircle, faRotateLeft, faShieldHalved, faGift
 } from "@fortawesome/free-solid-svg-icons";
 
+function AppFooter() {
+  return (
+    <div className="app-footer">
+      © 2026 QuickDuka. All rights reserved.
+    </div>
+  );
+}
+
 const db = getFirestore();
 
-// ─── OTP helpers ─────────────────────────────────────────────────────────────
-// Client-side only until Django backend is live.
-// Swap sendOTPCode / verifyOTPCode to hit /api/otp/send/ when ready.
-
-let _otpStore = {};
-
-function generateCode() {
-  return String(Math.floor(100000 + Math.random() * 900000));
-}
+// ─── OTP helpers ──────────────────────────────────────────────────────────────
+// Calls Django backend for real email/SMS OTP.
+// Backend URL: set VITE_BACKEND_URL in your .env (e.g. https://quickduka-back.onrender.com)
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "https://quickduka-back.onrender.com";
 
 async function sendOTPCode(identifier, method) {
-  const code = generateCode();
-  const expiry = Date.now() + 10 * 60 * 1000;
-  const resendAt = Date.now() + 60 * 1000;
-  _otpStore[identifier] = { code, expiry, resendAt };
-  // When Django backend is ready, replace the above with:
-  // await fetch("/api/otp/send/", { method:"POST", body: JSON.stringify({ identifier, method }) })
-  return { success: true };
+  try {
+    const res = await fetch(`${BACKEND_URL}/api/otp/send/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ identifier, method }),
+    });
+    const data = await res.json();
+    if (!res.ok) return { success: false, error: data.error || "Failed to send code." };
+    // dev_code is only present in development when email is not configured
+    return { success: true, devCode: data.dev_code || null };
+  } catch {
+    return { success: false, error: "Could not reach the server. Check your internet connection." };
+  }
 }
 
-function verifyOTPCode(identifier, inputCode) {
-  const entry = _otpStore[identifier];
-  if (!entry) return { valid: false, reason: "No code found. Please request a new one." };
-  if (Date.now() > entry.expiry) {
-    delete _otpStore[identifier];
-    return { valid: false, reason: "Code expired. Please request a new one." };
+async function verifyOTPCode(identifier, inputCode) {
+  try {
+    const res = await fetch(`${BACKEND_URL}/api/otp/verify/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ identifier, code: inputCode }),
+    });
+    const data = await res.json();
+    if (!res.ok) return { valid: false, reason: data.error || "Verification failed." };
+    if (!data.valid) return { valid: false, reason: data.error || "Incorrect code." };
+    return { valid: true };
+  } catch {
+    return { valid: false, reason: "Could not reach the server. Please try again." };
   }
-  if (inputCode.trim() !== entry.code) {
-    return { valid: false, reason: "Incorrect code. Please try again." };
-  }
-  delete _otpStore[identifier];
-  return { valid: true };
 }
 
 // ─── Countdown hook ───────────────────────────────────────────────────────────
@@ -206,9 +217,18 @@ export default function Register({ onBack }) {
     setOtpSending(true);
     setOtpError("");
     setOtpCode("");
-    await sendOTPCode(id, method);
-    const entry = _otpStore[id];
-    setResendAt(entry?.resendAt || Date.now() + 60000);
+    const result = await sendOTPCode(id, method);
+    if (!result.success) {
+      setOtpError(result.error || "Failed to send code. Please try again.");
+      setOtpSending(false);
+      return;
+    }
+    // In dev mode, backend returns the code directly so you can test
+    if (result.devCode) {
+      console.info(`[DEV] OTP for ${id}: ${result.devCode}`);
+      setOtpError(`[Dev mode] Code not sent via email/SMS yet. Check browser console or server logs. Code: ${result.devCode}`);
+    }
+    setResendAt(Date.now() + 60000);
     setOtpSent(true);
     setOtpSending(false);
     setVerifyMethod(method);
@@ -220,11 +240,11 @@ export default function Register({ onBack }) {
     }
   }, [step]);
 
-  const handleVerifyOTP = (e) => {
+  const handleVerifyOTP = async (e) => {
     e.preventDefault();
     setOtpError("");
     if (otpCode.length < 6) return setOtpError("Enter the full 6-digit code.");
-    const result = verifyOTPCode(verifyIdentifier, otpCode);
+    const result = await verifyOTPCode(verifyIdentifier, otpCode);
     if (!result.valid) return setOtpError(result.reason);
     setStep(2);
   };
@@ -285,6 +305,7 @@ export default function Register({ onBack }) {
       {/* 3D gradient dot field — fades left → transparent */}
       <div className="login-dots login-dots-tl" />
       <div className="login-dots login-dots-br" />
+      <AppFooter />
 
       {/* Trial popup badge — top right */}
       <TrialBadge />
@@ -461,7 +482,7 @@ export default function Register({ onBack }) {
               <div className="field-group">
                 <label>County *</label>
                 <select value={county} onChange={e => { setCounty(e.target.value); setSubcounty(""); }} required>
-                  <option value="">-- Select County --</option>
+                  <option value="">Select County</option>
                   {kenyaCounties.map(c => <option key={c.county} value={c.county}>{c.county}</option>)}
                 </select>
               </div>
@@ -469,7 +490,7 @@ export default function Register({ onBack }) {
                 <div className="field-group">
                   <label>Sub-county</label>
                   <select value={subcounty} onChange={e => setSubcounty(e.target.value)}>
-                    <option value="">-- Select Sub-county --</option>
+                    <option value="">Select Sub-county</option>
                     {subcounties.map(s => <option key={s} value={s}>{s}</option>)}
                   </select>
                 </div>
@@ -480,7 +501,7 @@ export default function Register({ onBack }) {
             <div className="field-group">
               <label>Who referred you?</label>
               <select value={referrer} onChange={e => setReferrer(e.target.value)}>
-                <option value="">-- No referral --</option>
+                <option value="">No referral</option>
                 {REFERRERS.map(r => <option key={r} value={r}>{r}</option>)}
                 <option value="__custom__">Other (type name)</option>
               </select>

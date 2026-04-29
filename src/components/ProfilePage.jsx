@@ -145,7 +145,7 @@ export default function ProfilePage({ user, profile }) {
               <div className="field-group">
                 <label>County</label>
                 <select name="county" value={form.county} onChange={e => { handleChange(e); setForm(p => ({ ...p, subcounty: "" })); }}>
-                  <option value="">-- Select County --</option>
+                  <option value="">Select County</option>
                   {kenyaCounties.map(c => <option key={c.county} value={c.county}>{c.county}</option>)}
                 </select>
               </div>
@@ -153,7 +153,7 @@ export default function ProfilePage({ user, profile }) {
                 <div className="field-group">
                   <label>Sub-county</label>
                   <select name="subcounty" value={form.subcounty} onChange={handleChange}>
-                    <option value="">-- Select --</option>
+                    <option value="">Select</option>
                     {subcounties.map(s => <option key={s} value={s}>{s}</option>)}
                   </select>
                 </div>
