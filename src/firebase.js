@@ -1,9 +1,6 @@
 import { initializeApp } from "firebase/app";
-import { getFirestore } from "firebase/firestore";
+import { getFirestore, enableIndexedDbPersistence } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
-
-// REPLACE THIS WITH YOUR FIREBASE CONFIG
-// Go to: Firebase Console > Project Settings > Your Apps
 
 const firebaseConfig = {
   apiKey: "AIzaSyAyZbACvYwWxnGt2vQprG-zmu8HzVb_nj0",
@@ -18,3 +15,12 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app);
 export const auth = getAuth(app);
+
+// Offline persistence — data saves locally when no internet, syncs when reconnected
+enableIndexedDbPersistence(db).catch((err) => {
+  if (err.code === "failed-precondition") {
+    console.warn("Offline persistence: multiple tabs open");
+  } else if (err.code === "unimplemented") {
+    console.warn("Offline persistence not supported on this browser");
+  }
+});

@@ -5073,3 +5073,49 @@ a[href^="tel:"]:hover {
     padding: 4px 6px;
   }
 }
+
+/* ─── CREDIT CARD STATUS BADGES ─────────────────────── */
+.credit-status-badge {
+  font-size: 10px;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 4px;
+  border: 1px solid;
+  letter-spacing: .3px;
+}
+
+/* ─── CREDIT CARD STATES ────────────────────────────── */
+.credit-card-bad {
+  border-color: #fca5a5 !important;
+  border-width: 1px;
+  opacity: 0.85;
+}
+
+.credit-card-paid {
+  border-color: #86efac !important;
+  border-width: 1px;
+  opacity: 0.85;
+}
+
+/* ─── CREDIT FLOW NOTE (shows where it went) ────────── */
+.credit-closed-note {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 10px;
+  background: var(--bg3, #f5f5f5);
+  border-radius: 4px;
+  margin-top: 2px;
+  margin-bottom: 2px;
+}
+
+/* ─── PAYMENT MODAL FLOW NOTE ───────────────────────── */
+.credit-flow-note {
+  background: var(--green-bg);
+  border: 1px solid var(--green-lt);
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 12px;
+  color: var(--green);
+  font-weight: 600;
+  margin-bottom: 14px;
+}

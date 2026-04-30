@@ -118,6 +118,31 @@ async function resolveLoginEmail(input) {
   return trimmed;
 }
 
+// ── Online / Offline Banner ─────────────────────────────
+function OnlineStatus() {
+  const [online, setOnline] = useState(true);
+  useEffect(() => {
+    setOnline(navigator.onLine);
+    const on = () => setOnline(true);
+    const off = () => setOnline(false);
+    window.addEventListener("online", on);
+    window.addEventListener("offline", off);
+    return () => { window.removeEventListener("online", on); window.removeEventListener("offline", off); };
+  }, []);
+
+  if (online) return null;
+  return (
+    <div style={{
+      position: "fixed", top: 0, left: 0, right: 0, zIndex: 9999,
+      background: "#856404", color: "#fff",
+      padding: "7px 16px", fontSize: 12, fontWeight: 700,
+      textAlign: "center", letterSpacing: ".2px",
+    }}>
+      ⚡ Offline — your records are saved on this device and will sync when internet returns
+    </div>
+  );
+}
+
 // ── Footer ─────────────────────────────────────────────────
 function AppFooter({ offset }) {
   return (
@@ -242,6 +267,7 @@ function AppShell({ user, profile, theme, toggleTheme }) {
 
   return (
     <div className="app-shell">
+      <OnlineStatus />
       <AppFooter offset={true} />
 
       {/* ── Sidebar (desktop) ──────────────────────────────── */}
