@@ -106,6 +106,9 @@ export async function createUserProfile(uid, data) {
   const trialExpiry = new Date();
   trialExpiry.setDate(trialExpiry.getDate() + 30);
 
+  // Use a real Date (not serverTimestamp) for createdAt so admin orderBy works immediately
+  const now = new Date();
+
   await setDoc(
     ref,
     {
@@ -113,8 +116,8 @@ export async function createUserProfile(uid, data) {
       role: "user",
       subscriptionStatus: "trial",
       subscriptionExpiry: trialExpiry,
-      trialStartedAt: serverTimestamp(),
-      createdAt: serverTimestamp(),
+      trialStartedAt: now,
+      createdAt: now,
     },
     { merge: true },
   );

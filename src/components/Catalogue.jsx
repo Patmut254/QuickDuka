@@ -77,8 +77,8 @@ export default function Catalogue() {
         </button>
       </div>
 
-      <div style={{ marginBottom: 12, color: "var(--muted)", fontSize: 13 }}>
-        📦 Your product/item list. Set a price if fixed (e.g. cake KES 80), or leave blank to enter manually when recording a sale.
+      <div className="catalogue-hint">
+        📦 Your product and item list. Set a price if it is fixed (e.g. Queen cake KES 500/kg), or leave blank to enter the price manually when recording a sale.
       </div>
 
       {showForm && (

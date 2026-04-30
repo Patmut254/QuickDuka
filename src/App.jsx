@@ -119,9 +119,9 @@ async function resolveLoginEmail(input) {
 }
 
 // ── Footer ─────────────────────────────────────────────────
-function AppFooter() {
+function AppFooter({ offset }) {
   return (
-    <div className="app-footer">© 2026 QuickDuka. All rights reserved.</div>
+    <div className={`app-footer${offset ? " app-footer-offset" : ""}`}>© 2026 QuickDuka. All rights reserved.</div>
   );
 }
 
@@ -230,7 +230,7 @@ function AppShell({ user, profile, theme, toggleTheme }) {
     ["contact", "faq", "privacy"].includes(t.id),
   );
   const mobileTabs = tabs.filter(
-    (t) => !["contact", "faq", "privacy", "admin"].includes(t.id),
+    (t) => !["contact", "faq", "privacy"].includes(t.id),
   );
   const currentTab = tabs.find((t) => t.id === activeTab);
 
@@ -242,7 +242,7 @@ function AppShell({ user, profile, theme, toggleTheme }) {
 
   return (
     <div className="app-shell">
-      <AppFooter />
+      <AppFooter offset={true} />
 
       {/* ── Sidebar (desktop) ──────────────────────────────── */}
       <aside className="sidebar">
@@ -372,9 +372,13 @@ function AppShell({ user, profile, theme, toggleTheme }) {
             >
               <FontAwesomeIcon icon={theme === "dark" ? faSun : faMoon} />
             </button>
-            <span className="user-badge">
-              {profile?.ownerName || user.email}
-            </span>
+            <button
+              className="user-badge user-badge-btn"
+              onClick={() => setActiveTab("profile")}
+              title="Go to Profile"
+            >
+              {profile?.ownerName || profile?.businessName || user.email}
+            </button>
             <button className="logout-inline" onClick={() => signOut(auth)}>
               Sign out
             </button>

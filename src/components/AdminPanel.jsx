@@ -507,9 +507,21 @@ export default function AdminPanel() {
   const { toast, showToast } = useToast();
 
   useEffect(() => {
-    const q = query(collection(db, "users"), orderBy("createdAt", "desc"));
+    // Use collection snapshot without orderBy to catch ALL users including new ones
+    // (orderBy on createdAt fails if field is missing or null due to race conditions)
+    const q = query(collection(db, "users"));
     return onSnapshot(q, (snap) => {
-      setUsers(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+      const allUsers = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      // Sort client-side to handle missing createdAt gracefully
+      allUsers.sort((a, b) => {
+        const aTime = a.createdAt?.toDate?.()?.getTime() ?? 0;
+        const bTime = b.createdAt?.toDate?.()?.getTime() ?? 0;
+        return bTime - aTime;
+      });
+      setUsers(allUsers);
+      setLoading(false);
+    }, (err) => {
+      console.error("Admin users fetch error:", err.message);
       setLoading(false);
     });
   }, []);

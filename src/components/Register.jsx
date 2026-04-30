@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { auth } from "../firebase";
 import { createUserWithEmailAndPassword, sendEmailVerification } from "firebase/auth";
 import { getFirestore, collection, query, where, getDocs } from "firebase/firestore";
@@ -29,7 +29,48 @@ function TrialBadge() {
   );
 }
 
-const STEPS = ["Account", "Business", "Done"];
+function DoneStep({ onBack }) {
+  const [countdown, setCountdown] = useState(4);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCountdown((c) => {
+        if (c <= 1) {
+          clearInterval(timer);
+          onBack(); // redirect to login
+          return 0;
+        }
+        return c - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [onBack]);
+
+  return (
+    <div style={{ textAlign: "center", padding: "28px 0 12px" }}>
+      <div className="reset-sent-icon" style={{ background: "var(--green-bg)", color: "var(--green)" }}>
+        <FontAwesomeIcon icon={faCheckCircle} />
+      </div>
+      <p style={{ color: "var(--text)", fontWeight: 800, fontSize: 17, marginBottom: 8, marginTop: 14 }}>
+        Account Created!
+      </p>
+      <p style={{ color: "var(--muted)", fontSize: 13, lineHeight: 1.7, marginBottom: 16 }}>
+        Your free 1-month trial has started. Check your email to verify your account.
+      </p>
+      <div style={{
+        background: "var(--green-bg)", border: "1px solid var(--green-lt)", borderRadius: 8,
+        padding: "10px 16px", fontSize: 13, color: "var(--green)", fontWeight: 600, marginBottom: 16
+      }}>
+        Taking you to sign in in {countdown} second{countdown !== 1 ? "s" : ""}...
+      </div>
+      <button className="btn-login" onClick={onBack}>
+        Go to Sign In Now
+      </button>
+    </div>
+  );
+}
+
+
 
 export default function Register({ onBack }) {
   const [step, setStep] = useState(0);
@@ -345,17 +386,7 @@ export default function Register({ onBack }) {
 
         {/* ── STEP 2: Done ── */}
         {step === 2 && (
-          <div style={{ textAlign: "center", padding: "28px 0 12px" }}>
-            <div className="reset-sent-icon">
-              <FontAwesomeIcon icon={faCheckCircle} />
-            </div>
-            <p style={{ color: "var(--text)", fontWeight: 700, fontSize: 16, marginBottom: 6, marginTop: 12 }}>
-              Account Created!
-            </p>
-            <p style={{ color: "var(--muted)", fontSize: 13 }}>
-              Your free 1-month trial has started. Please check your email to verify your account.
-            </p>
-          </div>
+          <DoneStep onBack={onBack} />
         )}
 
         {step < 2 && (
