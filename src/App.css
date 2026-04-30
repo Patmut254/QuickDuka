@@ -4496,9 +4496,22 @@ a[href^="tel:"]:hover {
   }
   /* Ensure footer doesn't overlap mobile nav */
   .app-footer {
-    bottom: 62px;
+    position: static;
+    bottom: auto;
     font-size: 10px;
     z-index: 90;
+    margin-top: 12px;
+  }
+  /* Inside login-page, footer should be static not fixed */
+  .login-page .app-footer {
+    position: static;
+    margin-top: 16px;
+    border-top: 1px solid var(--border);
+    background: transparent;
+  }
+  .app-shell .app-footer {
+    position: fixed;
+    bottom: 62px;
   }
   .app-shell {
     padding-bottom: 86px !important;
@@ -5119,3 +5132,995 @@ a[href^="tel:"]:hover {
   font-weight: 600;
   margin-bottom: 14px;
 }
+
+
+/* ═══════════════════════════════════════════════════════════
+   REFERRER REGISTER PAGE
+   ═══════════════════════════════════════════════════════════ */
+
+.ref-reg-page {
+  padding-bottom: 48px;
+}
+
+.ref-page-footer {
+  text-align: center;
+  font-size: 11px;
+  color: var(--muted);
+  padding: 16px 0 8px;
+  letter-spacing: 0.02em;
+}
+
+/* Card sizing */
+.ref-reg-card {
+  max-width: 500px;
+  padding-top: 28px !important;
+}
+
+/* Header */
+.ref-reg-header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.ref-reg-title {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text);
+  margin: 12px 0 4px;
+}
+
+.ref-reg-sub {
+  font-size: 13px;
+  color: var(--muted);
+  margin: 0;
+}
+
+/* Earnings strip */
+.ref-earn-strip {
+  display: flex;
+  align-items: stretch;
+  background: var(--green-bg);
+  border: 1px solid var(--green-lt);
+  border-radius: 10px;
+  padding: 14px 0;
+  margin-bottom: 24px;
+  gap: 0;
+}
+
+.ref-earn-strip-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 0 8px;
+}
+
+.ref-earn-strip-val {
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--green);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.ref-earn-strip-lbl {
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 600;
+  text-align: center;
+}
+
+.ref-earn-strip-divider {
+  width: 1px;
+  background: var(--green-lt);
+  margin: 4px 0;
+  flex-shrink: 0;
+}
+
+/* Section labels in form */
+.ref-section-label {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--muted);
+  margin: 18px 0 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border);
+}
+
+.ref-section-label:first-of-type {
+  margin-top: 0;
+}
+
+.ref-section-hint {
+  font-size: 12px;
+  color: var(--muted);
+  margin: -4px 0 10px;
+  line-height: 1.5;
+}
+
+/* Required / optional markers */
+.ref-required {
+  color: var(--red);
+  margin-left: 2px;
+}
+
+.ref-optional {
+  color: var(--muted);
+  font-weight: 400;
+  font-size: 11px;
+}
+
+/* Textarea */
+.ref-textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border2);
+  background: var(--bg3);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 13px;
+  resize: vertical;
+  box-sizing: border-box;
+  outline: none;
+  transition: border-color 0.13s;
+  line-height: 1.6;
+}
+
+.ref-textarea:focus {
+  border-color: var(--accent);
+}
+
+/* CV upload */
+.ref-upload-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  background: var(--bg3);
+  border: 1.5px dashed var(--border2);
+  border-radius: 8px;
+  padding: 11px 14px;
+  transition: border-color 0.13s, background 0.13s;
+}
+
+.ref-upload-btn:hover {
+  border-color: var(--accent);
+  background: var(--green-bg);
+}
+
+.ref-upload-icon {
+  font-size: 16px;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.ref-upload-text {
+  font-size: 13px;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Radio options */
+.ref-radio-row {
+  display: flex;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.ref-radio-option {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 11px 8px;
+  border-radius: 8px;
+  border: 1.5px solid var(--border2);
+  background: var(--bg3);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: center;
+}
+
+.ref-radio-option:hover {
+  border-color: var(--accent);
+  color: var(--text);
+}
+
+.ref-radio-option.selected {
+  border-color: var(--accent);
+  background: var(--green-bg);
+  color: var(--green);
+}
+
+/* Info notice */
+.ref-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 11px 13px;
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.6;
+  margin-bottom: 4px;
+}
+
+.ref-notice-icon {
+  color: var(--accent);
+  margin-top: 1px;
+  flex-shrink: 0;
+}
+
+/* Success screen */
+.ref-success-wrap {
+  text-align: center;
+  padding: 28px 8px 16px;
+}
+
+.ref-success-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: var(--green-bg);
+  color: var(--green);
+  font-size: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px;
+  border: 2px solid var(--green-lt);
+}
+
+.ref-success-title {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text);
+  margin: 0 0 8px;
+}
+
+.ref-success-sub {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.7;
+  margin-bottom: 20px;
+}
+
+.ref-earnings-summary {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 4px 0;
+  margin-bottom: 20px;
+  text-align: left;
+}
+
+.ref-earnings-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+
+.ref-earnings-row:last-child {
+  border-bottom: none;
+}
+
+.ref-earnings-total {
+  background: var(--green-bg);
+}
+
+.ref-earn-label {
+  color: var(--muted);
+}
+
+.ref-earn-val {
+  font-weight: 800;
+  color: var(--green);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+}
+
+.ref-earn-sub {
+  font-weight: 400;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+/* Form */
+.ref-reg-form {
+  margin-top: 0;
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+  .ref-earn-strip-val { font-size: 14px; }
+  .ref-earn-strip-lbl { font-size: 10px; }
+  .ref-radio-row { flex-direction: column; gap: 8px; }
+}
+
+
+/* ═══════════════════════════════════════════════════════════
+   ADMIN — REFERRERS TAB
+   ═══════════════════════════════════════════════════════════ */
+
+.reftab-body {
+  min-height: 200px;
+}
+
+/* Section toggle bar */
+.reftab-sections {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid var(--border);
+  padding: 12px 16px 0;
+  background: var(--bg3);
+}
+
+.reftab-sec-btn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 14px;
+  background: none;
+  border: 1px solid transparent;
+  border-bottom: none;
+  border-radius: 8px 8px 0 0;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+  transition: color 0.13s, background 0.13s;
+  margin-bottom: -1px;
+  position: relative;
+}
+
+.reftab-sec-btn:hover {
+  color: var(--text);
+  background: var(--bg2);
+}
+
+.reftab-sec-btn.active {
+  background: var(--bg2);
+  color: var(--green);
+  border-color: var(--border);
+  border-bottom-color: var(--bg2);
+}
+
+.reftab-sec-btn.has-pending {
+  color: #f97316;
+}
+
+.reftab-count {
+  font-size: 11px;
+  font-weight: 700;
+  background: var(--bg3);
+  color: var(--muted);
+  border-radius: 20px;
+  padding: 1px 7px;
+  border: 1px solid var(--border);
+}
+
+.reftab-sec-btn.active .reftab-count {
+  background: var(--accent-lt);
+  color: var(--green);
+  border-color: var(--green-lt);
+}
+
+.reftab-pending-badge {
+  font-size: 11px;
+  font-weight: 700;
+  background: #f97316;
+  color: #fff;
+  border-radius: 20px;
+  padding: 1px 7px;
+}
+
+/* Content area */
+.reftab-content {
+  padding: 16px;
+}
+
+.reftab-add-btn {
+  margin-bottom: 16px;
+}
+
+/* Add form */
+.reftab-add-form {
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 18px;
+}
+
+.reftab-add-form-title {
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--muted);
+  margin-bottom: 12px;
+}
+
+.reftab-add-form-fields {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+@media (max-width: 600px) {
+  .reftab-add-form-fields { grid-template-columns: 1fr; }
+}
+
+.reftab-add-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.reftab-add-field label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.reftab-add-field input {
+  padding: 8px 10px;
+  border-radius: 7px;
+  border: 1px solid var(--border2);
+  background: var(--bg2);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.13s;
+}
+
+.reftab-add-field input:focus {
+  border-color: var(--accent);
+}
+
+.reftab-add-form-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* Referrer list */
+.reftab-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.reftab-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px 16px;
+  transition: border-color 0.13s;
+}
+
+.reftab-item:hover {
+  border-color: var(--border2);
+}
+
+.reftab-item-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--accent-lt);
+  color: var(--green);
+  font-size: 16px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.reftab-item-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.reftab-item-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.reftab-item-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+.reftab-item-meta svg {
+  opacity: 0.6;
+  margin-right: 3px;
+}
+
+.reftab-item-stats {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.reftab-stat-pill {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 20px;
+  background: var(--bg2);
+  color: var(--muted);
+  border: 1px solid var(--border);
+}
+
+.reftab-stat-paid {
+  background: var(--green-bg);
+  color: var(--green);
+  border-color: var(--green-lt);
+}
+
+.reftab-item-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-end;
+  flex-shrink: 0;
+}
+
+@media (max-width: 580px) {
+  .reftab-item { flex-wrap: wrap; }
+  .reftab-item-actions { flex-direction: row; width: 100%; }
+}
+
+/* Application items */
+.reftab-app-item {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px 16px;
+  transition: border-color 0.13s;
+}
+
+.reftab-app-item.reftab-app-pending {
+  border-color: #f9731644;
+  background: #fff8f3;
+}
+
+[data-theme="dark"] .reftab-app-item.reftab-app-pending {
+  background: #1f1208;
+  border-color: #f9731633;
+}
+
+.reftab-app-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.reftab-app-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 5px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.reftab-app-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 20px;
+}
+
+.reftab-badge-pending {
+  background: #f9731622;
+  color: #f97316;
+  border: 1px solid #f9731644;
+}
+
+.reftab-badge-approved {
+  background: #22c55e22;
+  color: #22c55e;
+  border: 1px solid #22c55e44;
+}
+
+.reftab-badge-rejected {
+  background: #ef444422;
+  color: #ef4444;
+  border: 1px solid #ef444444;
+}
+
+.reftab-app-mpesa {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 5px;
+}
+
+.reftab-app-mpesa svg {
+  margin-right: 4px;
+  opacity: 0.7;
+}
+
+.reftab-app-experience {
+  font-size: 12px;
+  color: var(--muted);
+  font-style: italic;
+  margin-top: 7px;
+  padding-left: 8px;
+  border-left: 2px solid var(--border2);
+  line-height: 1.6;
+  max-width: 420px;
+}
+
+.reftab-app-footer-row {
+  display: flex;
+  gap: 16px;
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 7px;
+  flex-wrap: wrap;
+}
+
+.reftab-app-footer-row svg {
+  margin-right: 4px;
+  opacity: 0.7;
+}
+
+.reftab-app-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+@media (max-width: 560px) {
+  .reftab-app-actions { flex-direction: row; width: 100%; }
+}
+
+
+/* ═══════════════════════════════════════════════════════════
+   ADMIN — CUSTOMER TRACKER TAB
+   ═══════════════════════════════════════════════════════════ */
+
+.ctab-body {
+  min-height: 200px;
+}
+
+/* Filter bar */
+.ctab-filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg3);
+  flex-wrap: wrap;
+}
+
+.ctab-filter-select {
+  padding: 7px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border2);
+  background: var(--bg2);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.13s;
+}
+
+.ctab-filter-select:focus {
+  border-color: var(--accent);
+}
+
+.ctab-count-label {
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+/* Groups */
+.ctab-groups {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.ctab-group {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+/* Group header */
+.ctab-group-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--bg3);
+  border-bottom: 1px solid var(--border);
+}
+
+.ctab-group-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--accent-lt);
+  color: var(--green);
+  font-size: 16px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.ctab-group-info {
+  flex: 1;
+}
+
+.ctab-group-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+
+.ctab-group-sub {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.ctab-group-earnings {
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.ctab-earnings-label {
+  font-size: 11px;
+  color: var(--muted);
+  margin-bottom: 2px;
+}
+
+.ctab-earnings-val {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--green);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* Customer rows */
+.ctab-customers {
+  display: flex;
+  flex-direction: column;
+  background: var(--bg2);
+}
+
+.ctab-customer-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 13px 16px;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.12s;
+}
+
+.ctab-customer-row:last-child {
+  border-bottom: none;
+}
+
+.ctab-customer-row:hover {
+  background: var(--bg3);
+}
+
+.ctab-customer-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.ctab-customer-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 3px;
+}
+
+.ctab-customer-owner {
+  font-weight: 400;
+  color: var(--muted);
+  margin-left: 6px;
+  font-size: 12px;
+}
+
+.ctab-customer-meta {
+  display: flex;
+  gap: 12px;
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.ctab-customer-meta svg {
+  opacity: 0.6;
+  margin-right: 3px;
+}
+
+/* Month dots row */
+.ctab-months-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+
+.ctab-month-dot {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  flex-shrink: 0;
+  transition: all 0.15s;
+}
+
+.ctab-month-dot.unpaid {
+  background: var(--bg3);
+  color: var(--muted);
+  border: 2px solid var(--border2);
+}
+
+.ctab-month-dot.paid-first {
+  background: #dcfce7;
+  color: #16a34a;
+  border: 2px solid #86efac;
+}
+
+[data-theme="dark"] .ctab-month-dot.paid-first {
+  background: #052e16;
+  color: #4ade80;
+  border-color: #166534;
+}
+
+.ctab-month-dot.paid-renewal {
+  background: #dbeafe;
+  color: #1d4ed8;
+  border: 2px solid #93c5fd;
+}
+
+[data-theme="dark"] .ctab-month-dot.paid-renewal {
+  background: #0c1a3d;
+  color: #60a5fa;
+  border-color: #1d3a8a;
+}
+
+.ctab-months-label {
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 600;
+  margin-left: 4px;
+}
+
+/* Right side */
+.ctab-customer-right {
+  text-align: right;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 5px;
+}
+
+.ctab-customer-earn {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--green);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.ctab-cycle-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 20px;
+}
+
+.ctab-cycle-done {
+  background: #f9731622;
+  color: #f97316;
+  border: 1px solid #f9731644;
+}
+
+.ctab-cycle-active {
+  background: var(--green-bg);
+  color: var(--green);
+  border: 1px solid var(--green-lt);
+}
+
+.ctab-cycle-none {
+  background: var(--bg3);
+  color: var(--muted);
+  border: 1px solid var(--border);
+}
+
+/* Mobile tweaks */
+@media (max-width: 500px) {
+  .ctab-group-header { flex-wrap: wrap; }
+  .ctab-customer-row { flex-wrap: wrap; }
+  .ctab-customer-right { flex-direction: row; align-items: center; gap: 10px; }
+  .ctab-group-earnings { text-align: left; }
+  .ctab-month-dot { width: 24px; height: 24px; font-size: 9px; }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   ADMIN NAV TABS — MOBILE SCROLL
+   ═══════════════════════════════════════════════════════════ */
+
+.admin-nav-tabs {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.admin-nav-tabs::-webkit-scrollbar { display: none; }
+
+.admin-nav-tab {
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   LOGIN PAGE — FOOTER FIX ON MOBILE
+   ═══════════════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+  .app-footer {
+    position: static !important;
+    height: auto;
+    padding: 8px 0;
+    margin-top: 12px;
+    border-top: 1px solid var(--border);
+  }
+  /* But keep fixed inside the actual logged-in shell */
+  .app-shell ~ .app-footer,
+  .app-footer-offset {
+    left: 0 !important;
+  }
+}
+

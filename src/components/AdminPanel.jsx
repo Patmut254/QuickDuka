@@ -48,9 +48,14 @@ import {
   faXmark,
   faTriangleExclamation,
   faLock,
+  faCirclePlus,
+  faEdit,
+  faMoneyBillTrendUp,
+  faPiggyBank,
+  faFileLines,
 } from "@fortawesome/free-solid-svg-icons";
 import { Toast, useToast } from "./Toast";
-import { kenyaCounties, REFERRERS } from "../data/kenyaLocations";
+import { kenyaCounties } from "../data/kenyaLocations";
 
 const ADMIN_EMAIL = "anitapatrick025@gmail.com";
 
@@ -87,6 +92,7 @@ async function extendSubscription(u, months) {
 function AddUserModal({ onClose, onSuccess }) {
   const [step, setStep] = useState(0); // 0=form, 1=saving, 2=done, -1=error
   const [errMsg, setErrMsg] = useState("");
+  const [referrersList, setReferrersList] = useState([]);
   const [form, setForm] = useState({
     businessName: "",
     ownerName: "",
@@ -98,6 +104,14 @@ function AddUserModal({ onClose, onSuccess }) {
     subscriptionMonths: "1",
     referrer: "",
   });
+
+  // Load referrers from Firestore
+  useEffect(() => {
+    const unsub = onSnapshot(collection(db, "referrers"), (snap) => {
+      setReferrersList(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+    }, () => {});
+    return unsub;
+  }, []);
 
   const set = (k, v) => setForm((p) => ({ ...p, [k]: v }));
   const selectedCounty = kenyaCounties.find((c) => c.county === form.county);
@@ -369,9 +383,9 @@ function AddUserModal({ onClose, onSuccess }) {
                   onChange={(e) => set("referrer", e.target.value)}
                 >
                   <option value="">None</option>
-                  {REFERRERS.map((r) => (
-                    <option key={r} value={r}>
-                      {r}
+                  {referrersList.map((r) => (
+                    <option key={r.id} value={r.name}>
+                      {r.name}
                     </option>
                   ))}
                   <option value="Admin">Admin (direct)</option>
@@ -810,6 +824,8 @@ export default function AdminPanel() {
         {[
           { id: "users", label: "Users", icon: faUsers },
           { id: "payments", label: "Payment History", icon: faMoneyBill },
+          { id: "referrers", label: "Referrers", icon: faHandshake },
+          { id: "customers", label: "Customer Tracker", icon: faMoneyBillTrendUp },
           { id: "messages", label: "Messages", icon: faMessage },
         ].map((tab) => (
           <button
@@ -996,6 +1012,8 @@ export default function AdminPanel() {
       )}
 
       {activeTab === "payments" && <AllPaymentsHistory users={users} />}
+      {activeTab === "referrers" && <ReferrersTab users={users} showToast={showToast} />}
+      {activeTab === "customers" && <CustomerTrackerTab users={users} />}
       {activeTab === "messages" && <ContactMessages />}
     </div>
   );
@@ -1306,6 +1324,415 @@ function AllPaymentsHistory({ users }) {
     </div>
   );
 }
+
+/* ── Referrers Tab ──────────────────────────────────────── */
+function ReferrersTab({ users, showToast }) {
+  const [referrers, setReferrers] = useState([]);
+  const [applications, setApplications] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [newName, setNewName] = useState("");
+  const [newPhone, setNewPhone] = useState("");
+  const [newMpesa, setNewMpesa] = useState("");
+  const [activeSection, setActiveSection] = useState("approved");
+
+  useEffect(() => {
+    const unsub1 = onSnapshot(collection(db, "referrers"), (snap) => {
+      setReferrers(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+      setLoading(false);
+    }, () => setLoading(false));
+    const unsub2 = onSnapshot(
+      query(collection(db, "referrerApplications"), orderBy("createdAt", "desc")),
+      (snap) => setApplications(snap.docs.map((d) => ({ id: d.id, ...d.data() }))),
+      () => {}
+    );
+    return () => { unsub1(); unsub2(); };
+  }, []);
+
+  const addReferrer = async () => {
+    if (!newName.trim()) return;
+    await addDoc(collection(db, "referrers"), {
+      name: newName.trim(), phone: newPhone.trim() || null,
+      mpesaPhone: newMpesa.trim() || null,
+      status: "active", totalPaid: 0, createdAt: serverTimestamp(),
+    });
+    setNewName(""); setNewPhone(""); setNewMpesa("");
+    setShowAddForm(false);
+    showToast(`Referrer "${newName.trim()}" added.`);
+  };
+
+  const deleteReferrer = async (r) => {
+    if (!window.confirm(`Remove ${r.name} from referrers?`)) return;
+    await deleteDoc(doc(db, "referrers", r.id));
+    showToast(`${r.name} removed.`);
+  };
+
+  const markPaid = async (r, amount) => {
+    const newTotal = (r.totalPaid || 0) + amount;
+    await updateDoc(doc(db, "referrers", r.id), { totalPaid: newTotal });
+    await addDoc(collection(db, "referrers", r.id, "payments"), {
+      amount, note: "Manual payment by admin", createdAt: serverTimestamp(),
+    });
+    showToast(`KES ${amount} marked as paid to ${r.name}`);
+  };
+
+  const approveApplication = async (app) => {
+    await addDoc(collection(db, "referrers"), {
+      name: app.fullName, phone: app.phone || null, email: app.email || null,
+      mpesaPhone: app.mpesaPhone || null, mpesaName: app.mpesaName || null,
+      county: app.county || null, status: "active", totalPaid: 0,
+      createdAt: serverTimestamp(), fromApplication: app.id,
+    });
+    await updateDoc(doc(db, "referrerApplications", app.id), { status: "approved" });
+    showToast(`${app.fullName} approved and added as referrer!`);
+  };
+
+  const rejectApplication = async (app) => {
+    await updateDoc(doc(db, "referrerApplications", app.id), { status: "rejected" });
+    showToast(`Application from ${app.fullName} rejected.`);
+  };
+
+  const pending = applications.filter((a) => a.status === "pending");
+
+  return (
+    <div className="admin-tab-body reftab-body">
+      {/* Section tabs */}
+      <div className="reftab-sections">
+        <button
+          className={`reftab-sec-btn${activeSection === "approved" ? " active" : ""}`}
+          onClick={() => setActiveSection("approved")}
+        >
+          <FontAwesomeIcon icon={faHandshake} />
+          Active Referrers
+          <span className="reftab-count">{referrers.length}</span>
+        </button>
+        <button
+          className={`reftab-sec-btn${activeSection === "applications" ? " active" : ""}${pending.length > 0 ? " has-pending" : ""}`}
+          onClick={() => setActiveSection("applications")}
+        >
+          <FontAwesomeIcon icon={faFileLines} />
+          Applications
+          <span className="reftab-count">{applications.length}</span>
+          {pending.length > 0 && (
+            <span className="reftab-pending-badge">{pending.length} new</span>
+          )}
+        </button>
+      </div>
+
+      <div className="reftab-content">
+        {/* ── Active Referrers ── */}
+        {activeSection === "approved" && (
+          <>
+            {!showAddForm ? (
+              <button className="adm-act-btn adm-green reftab-add-btn" onClick={() => setShowAddForm(true)}>
+                <FontAwesomeIcon icon={faCirclePlus} /> Add Referrer Manually
+              </button>
+            ) : (
+              <div className="reftab-add-form">
+                <div className="reftab-add-form-title">New Referrer</div>
+                <div className="reftab-add-form-fields">
+                  <div className="reftab-add-field">
+                    <label>Full Name *</label>
+                    <input placeholder="Full name" value={newName}
+                      onChange={(e) => setNewName(e.target.value)} />
+                  </div>
+                  <div className="reftab-add-field">
+                    <label>Phone</label>
+                    <input placeholder="07xx xxx xxx" value={newPhone}
+                      onChange={(e) => setNewPhone(e.target.value)} />
+                  </div>
+                  <div className="reftab-add-field">
+                    <label>M-Pesa Phone</label>
+                    <input placeholder="07xx xxx xxx" value={newMpesa}
+                      onChange={(e) => setNewMpesa(e.target.value)} />
+                  </div>
+                </div>
+                <div className="reftab-add-form-actions">
+                  <button className="adm-act-btn adm-green" onClick={addReferrer}>
+                    <FontAwesomeIcon icon={faUserPlus} /> Save Referrer
+                  </button>
+                  <button className="adm-act-btn adm-ghost" onClick={() => setShowAddForm(false)}>
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {loading ? (
+              <div className="admin-loading">Loading referrers...</div>
+            ) : referrers.length === 0 ? (
+              <div className="admin-empty">
+                <FontAwesomeIcon icon={faHandshake} style={{ fontSize: 28 }} />
+                <div>No referrers yet.</div>
+                <p style={{ fontSize: 12, maxWidth: 260 }}>
+                  Add one manually above, or approve an incoming application.
+                </p>
+              </div>
+            ) : (
+              <div className="reftab-list">
+                {referrers.map((r) => {
+                  const theirUsers = users.filter((u) => u.referrer === r.name);
+                  return (
+                    <div key={r.id} className="reftab-item">
+                      <div className="reftab-item-avatar">
+                        {(r.name || "?")[0].toUpperCase()}
+                      </div>
+                      <div className="reftab-item-info">
+                        <div className="reftab-item-name">{r.name}</div>
+                        <div className="reftab-item-meta">
+                          {r.phone && <span><FontAwesomeIcon icon={faPhone} /> {r.phone}</span>}
+                          {r.mpesaPhone && <span><FontAwesomeIcon icon={faPiggyBank} /> M-Pesa: {r.mpesaPhone}</span>}
+                          {r.county && <span><FontAwesomeIcon icon={faLocationDot} /> {r.county}</span>}
+                        </div>
+                        <div className="reftab-item-stats">
+                          <span className="reftab-stat-pill">
+                            {theirUsers.length} customer{theirUsers.length !== 1 ? "s" : ""}
+                          </span>
+                          <span className="reftab-stat-pill reftab-stat-paid">
+                            KES {(r.totalPaid || 0).toLocaleString()} paid out
+                          </span>
+                        </div>
+                      </div>
+                      <div className="reftab-item-actions">
+                        <button className="adm-act-btn adm-green" onClick={() => markPaid(r, 50)}
+                          title="Mark KES 50 paid">
+                          <FontAwesomeIcon icon={faMoneyBill} /> KES 50
+                        </button>
+                        <button className="adm-act-btn adm-blue" onClick={() => markPaid(r, 20)}
+                          title="Mark KES 20 paid">
+                          <FontAwesomeIcon icon={faMoneyBill} /> KES 20
+                        </button>
+                        <button className="adm-act-btn adm-red" onClick={() => deleteReferrer(r)}
+                          title="Remove referrer">
+                          <FontAwesomeIcon icon={faTrash} />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </>
+        )}
+
+        {/* ── Applications ── */}
+        {activeSection === "applications" && (
+          <>
+            {applications.length === 0 ? (
+              <div className="admin-empty">
+                <FontAwesomeIcon icon={faFileLines} style={{ fontSize: 28 }} />
+                <div>No applications yet.</div>
+              </div>
+            ) : (
+              <div className="reftab-list">
+                {applications.map((app) => (
+                  <div key={app.id} className={`reftab-app-item reftab-app-${app.status}`}>
+                    <div className="reftab-app-top">
+                      <div>
+                        <div className="reftab-app-name">
+                          {app.fullName}
+                          <span className={`reftab-app-badge reftab-badge-${app.status}`}>
+                            {app.status}
+                          </span>
+                        </div>
+                        <div className="reftab-item-meta">
+                          {app.phone && <span><FontAwesomeIcon icon={faPhone} /> {app.phone}</span>}
+                          {app.email && <span><FontAwesomeIcon icon={faEnvelope} /> {app.email}</span>}
+                          {app.county && <span><FontAwesomeIcon icon={faLocationDot} /> {app.county}</span>}
+                        </div>
+                        {app.mpesaPhone && (
+                          <div className="reftab-app-mpesa">
+                            <FontAwesomeIcon icon={faPiggyBank} /> M-Pesa: <strong>{app.mpesaPhone}</strong>
+                            {app.mpesaName && ` (${app.mpesaName})`}
+                          </div>
+                        )}
+                        {app.experience && (
+                          <div className="reftab-app-experience">"{app.experience}"</div>
+                        )}
+                        <div className="reftab-app-footer-row">
+                          <span>Willing to earn: <strong>{app.willingToEarn ? "Yes" : "No"}</strong></span>
+                          {app.cvFileName && (
+                            <span><FontAwesomeIcon icon={faFileLines} /> {app.cvFileName}</span>
+                          )}
+                        </div>
+                      </div>
+                      {app.status === "pending" && (
+                        <div className="reftab-app-actions">
+                          <button className="adm-act-btn adm-green" onClick={() => approveApplication(app)}>
+                            <FontAwesomeIcon icon={faCircleCheck} /> Approve
+                          </button>
+                          <button className="adm-act-btn adm-red" onClick={() => rejectApplication(app)}>
+                            <FontAwesomeIcon icon={faCircleXmark} /> Reject
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ── Customer Tracker Tab ────────────────────────────────── */
+function CustomerTrackerTab({ users }) {
+  const [paymentHistories, setPaymentHistories] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [filterReferrer, setFilterReferrer] = useState("all");
+
+  useEffect(() => {
+    if (users.length === 0) { setLoading(false); return; }
+    let loaded = 0;
+    const collected = {};
+    const unsubs = users.map((u) => {
+      const q = query(collection(db, "users", u.id, "paymentHistory"), orderBy("createdAt", "asc"));
+      return onSnapshot(q, (snap) => {
+        collected[u.id] = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+        loaded++;
+        if (loaded >= users.length) { setPaymentHistories({ ...collected }); setLoading(false); }
+      }, () => { loaded++; if (loaded >= users.length) setLoading(false); });
+    });
+    return () => unsubs.forEach((u) => u());
+  }, [users]);
+
+  const customerData = users
+    .filter((u) => u.referrer)
+    .map((u) => {
+      const hist = paymentHistories[u.id] || [];
+      const payments = hist.filter((h) =>
+        h.type === "mpesa_payment" ||
+        (h.type === "admin_extension" && !h.note?.includes("Account created by admin"))
+      );
+      const firstPayment = payments[0];
+      const renewals = payments.slice(1);
+      return {
+        ...u, payments, firstPayment, renewals, monthsPaid: payments.length,
+        referrerEarnings: (firstPayment ? 50 : 0) + Math.min(renewals.length, 5) * 20,
+      };
+    });
+
+  const referrers = [...new Set(customerData.map((c) => c.referrer))].sort();
+  const filtered = filterReferrer === "all" ? customerData : customerData.filter((c) => c.referrer === filterReferrer);
+
+  const grouped = {};
+  filtered.forEach((c) => {
+    const r = c.referrer || "Unknown";
+    if (!grouped[r]) grouped[r] = [];
+    grouped[r].push(c);
+  });
+
+  if (loading) return <div className="admin-loading">Loading customer data...</div>;
+
+  return (
+    <div className="admin-tab-body ctab-body">
+      {/* Filter bar */}
+      <div className="ctab-filter-bar">
+        <select className="ctab-filter-select" value={filterReferrer}
+          onChange={(e) => setFilterReferrer(e.target.value)}>
+          <option value="all">All Referrers</option>
+          {referrers.map((r) => <option key={r} value={r}>{r}</option>)}
+        </select>
+        <span className="ctab-count-label">
+          {filtered.length} referred customer{filtered.length !== 1 ? "s" : ""}
+        </span>
+      </div>
+
+      {Object.keys(grouped).length === 0 ? (
+        <div className="admin-empty">
+          <FontAwesomeIcon icon={faHandshake} style={{ fontSize: 28 }} />
+          <div>No referred customers yet.</div>
+          <p style={{ fontSize: 12, maxWidth: 280 }}>
+            Customers with a referrer assigned will appear here with full payment tracking.
+          </p>
+        </div>
+      ) : (
+        <div className="ctab-groups">
+          {Object.entries(grouped).map(([referrer, customers]) => {
+            const totalEarnings = customers.reduce((s, c) => s + c.referrerEarnings, 0);
+            const totalPaid = customers.filter((c) => c.firstPayment).length;
+
+            return (
+              <div key={referrer} className="ctab-group">
+                {/* Referrer header */}
+                <div className="ctab-group-header">
+                  <div className="ctab-group-avatar">
+                    {(referrer || "?")[0].toUpperCase()}
+                  </div>
+                  <div className="ctab-group-info">
+                    <div className="ctab-group-name">{referrer}</div>
+                    <div className="ctab-group-sub">
+                      {customers.length} customer{customers.length !== 1 ? "s" : ""} · {totalPaid} paid first month
+                    </div>
+                  </div>
+                  <div className="ctab-group-earnings">
+                    <div className="ctab-earnings-label">Total owed / earned</div>
+                    <div className="ctab-earnings-val">KES {totalEarnings.toLocaleString()}</div>
+                  </div>
+                </div>
+
+                {/* Customer rows */}
+                <div className="ctab-customers">
+                  {customers.map((c) => {
+                    const cycleComplete = c.monthsPaid >= 6;
+                    const monthsLeft = Math.max(0, 6 - c.monthsPaid);
+
+                    return (
+                      <div key={c.id} className="ctab-customer-row">
+                        <div className="ctab-customer-info">
+                          <div className="ctab-customer-name">
+                            {c.businessName || c.email}
+                            {c.ownerName && <span className="ctab-customer-owner">({c.ownerName})</span>}
+                          </div>
+                          <div className="ctab-customer-meta">
+                            {c.phone && <span><FontAwesomeIcon icon={faPhone} /> {c.phone}</span>}
+                            {c.county && <span><FontAwesomeIcon icon={faLocationDot} /> {c.county}</span>}
+                          </div>
+
+                          {/* Month progress dots */}
+                          <div className="ctab-months-row">
+                            {[1, 2, 3, 4, 5, 6].map((month) => {
+                              const paid = month <= c.monthsPaid;
+                              const isFirst = month === 1;
+                              return (
+                                <div key={month}
+                                  className={`ctab-month-dot${paid ? (isFirst ? " paid-first" : " paid-renewal") : " unpaid"}`}
+                                  title={`Month ${month}${paid ? ` — ${isFirst ? "KES 50" : "KES 20"} to referrer` : " — not paid yet"}`}
+                                >
+                                  {month}
+                                </div>
+                              );
+                            })}
+                            <span className="ctab-months-label">{c.monthsPaid}/6</span>
+                          </div>
+                        </div>
+
+                        <div className="ctab-customer-right">
+                          <div className="ctab-customer-earn">KES {c.referrerEarnings}</div>
+                          {cycleComplete ? (
+                            <span className="ctab-cycle-badge ctab-cycle-done">Cycle complete</span>
+                          ) : !c.firstPayment ? (
+                            <span className="ctab-cycle-badge ctab-cycle-none">No payment yet</span>
+                          ) : (
+                            <span className="ctab-cycle-badge ctab-cycle-active">{monthsLeft}mo left</span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 
 /* ── Contact Messages ────────────────────────────────────── */
 function ContactMessages() {

@@ -50,6 +50,7 @@ import History from "./components/History";
 import Credits from "./components/Credits";
 import Catalogue from "./components/Catalogue";
 import Register from "./components/Register";
+import ReferrerRegister from "./components/ReferrerRegister";
 import SubscriptionWall from "./components/SubscriptionWall";
 import AdminPanel, { isAdmin } from "./components/AdminPanel";
 import ContactPage from "./components/ContactPage";
@@ -439,7 +440,7 @@ function AppShell({ user, profile, theme, toggleTheme }) {
 // ── Root App ───────────────────────────────────────────────
 export default function App() {
   const [user, setUser] = useState(undefined); // undefined = still checking
-  const [view, setView] = useState("login"); // "login" | "register" | "reset"
+  const [view, setView] = useState("login"); // "login" | "register" | "reset" | "referrer"
   const [loginId, setLoginId] = useState("");
   const [loginPw, setLoginPw] = useState("");
   const [showPw, setShowPw] = useState(false);
@@ -719,6 +720,10 @@ export default function App() {
       );
     }
 
+    if (view === "referrer") {
+      return <ReferrerRegister onBack={() => setView("login")} />;
+    }
+
     return (
       <div className="login-page">
         <AppFooter />
@@ -806,6 +811,19 @@ export default function App() {
                 onClick={() => setView("register")}
               >
                 Start Free 1-Month Trial
+              </button>
+
+              <div className="login-divider" style={{ marginTop: 14 }}>Earn by referring businesses?</div>
+              <button
+                className="btn-register"
+                style={{
+                  background: "transparent",
+                  border: "1.5px solid var(--accent)",
+                  color: "var(--accent)",
+                }}
+                onClick={() => setView("referrer")}
+              >
+                🤝 Register as a Referrer
               </button>
             </>
           )}

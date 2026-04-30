@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import { auth } from "../firebase";
 import { createUserWithEmailAndPassword, sendEmailVerification } from "firebase/auth";
-import { getFirestore, collection, query, where, getDocs } from "firebase/firestore";
+import { getFirestore, collection, query, where, getDocs, onSnapshot } from "firebase/firestore";
 import { createUserProfile } from "../hooks/useUserProfile";
-import { kenyaCounties, REFERRERS } from "../data/kenyaLocations";
+import { kenyaCounties } from "../data/kenyaLocations";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faPhone, faEnvelope, faLock, faUser, faStore,
@@ -92,6 +92,15 @@ export default function Register({ onBack }) {
   const [referrerCustom, setReferrerCustom] = useState("");
   const [bizError, setBizError]             = useState("");
   const [saving, setSaving]                 = useState(false);
+  const [referrersList, setReferrersList]   = useState([]);
+
+  // Load referrers from Firestore
+  useEffect(() => {
+    const unsub = onSnapshot(collection(db, "referrers"), (snap) => {
+      setReferrersList(snap.docs.map((d) => ({ id: d.id, name: d.data().name })));
+    }, () => {});
+    return unsub;
+  }, []);
 
   const selectedCounty = kenyaCounties.find((c) => c.county === county);
   const subcounties    = selectedCounty?.subcounties || [];
@@ -355,7 +364,7 @@ export default function Register({ onBack }) {
               <label>Who referred you?</label>
               <select value={referrer} onChange={(e) => setReferrer(e.target.value)}>
                 <option value="">No referral</option>
-                {REFERRERS.map((r) => <option key={r} value={r}>{r}</option>)}
+                {referrersList.map((r) => <option key={r.id} value={r.name}>{r.name}</option>)}
                 <option value="__custom__">Other (type name)</option>
               </select>
               <span className="field-hint">Helps track marketers and referral payments.</span>
