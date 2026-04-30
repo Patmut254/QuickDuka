@@ -12,6 +12,7 @@ import {
   addDoc,
   deleteDoc,
   setDoc,
+  getDocs,
   Timestamp,
   serverTimestamp,
 } from "firebase/firestore";
@@ -506,24 +507,55 @@ export default function AdminPanel() {
   const [deleteTarget, setDeleteTarget] = useState(null);
   const { toast, showToast } = useToast();
 
+  const [fetchError, setFetchError] = useState(null);
+
   useEffect(() => {
-    // Use collection snapshot without orderBy to catch ALL users including new ones
-    // (orderBy on createdAt fails if field is missing or null due to race conditions)
-    const q = query(collection(db, "users"));
-    return onSnapshot(q, (snap) => {
-      const allUsers = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-      // Sort client-side to handle missing createdAt gracefully
-      allUsers.sort((a, b) => {
-        const aTime = a.createdAt?.toDate?.()?.getTime() ?? 0;
-        const bTime = b.createdAt?.toDate?.()?.getTime() ?? 0;
-        return bTime - aTime;
-      });
-      setUsers(allUsers);
+    setFetchError(null);
+    // Try real-time listener first (no orderBy — avoids index requirement)
+    let unsub;
+    try {
+      const q = query(collection(db, "users"));
+      unsub = onSnapshot(
+        q,
+        (snap) => {
+          setFetchError(null);
+          const allUsers = snap.docs
+            .map((d) => ({ id: d.id, ...d.data() }))
+            .sort((a, b) => {
+              const aT = a.createdAt?.toDate?.()?.getTime?.() ?? (a.createdAt?.seconds ? a.createdAt.seconds * 1000 : 0);
+              const bT = b.createdAt?.toDate?.()?.getTime?.() ?? (b.createdAt?.seconds ? b.createdAt.seconds * 1000 : 0);
+              return bT - aT;
+            });
+          setUsers(allUsers);
+          setLoading(false);
+        },
+        async (err) => {
+          console.error("Admin onSnapshot error:", err.code, err.message);
+          // Fallback: try getDocs (one-time fetch)
+          try {
+            const snap = await getDocs(collection(db, "users"));
+            const allUsers = snap.docs
+              .map((d) => ({ id: d.id, ...d.data() }))
+              .sort((a, b) => {
+                const aT = a.createdAt?.toDate?.()?.getTime?.() ?? 0;
+                const bT = b.createdAt?.toDate?.()?.getTime?.() ?? 0;
+                return bT - aT;
+              });
+            setUsers(allUsers);
+            setFetchError("Live updates unavailable — showing snapshot. Check Firestore rules.");
+          } catch (fallbackErr) {
+            console.error("Admin getDocs fallback error:", fallbackErr.code, fallbackErr.message);
+            setFetchError(`Cannot load users: ${fallbackErr.code || fallbackErr.message}. Check Firestore security rules.`);
+          }
+          setLoading(false);
+        },
+      );
+    } catch (setupErr) {
+      console.error("Admin query setup error:", setupErr);
+      setFetchError(`Query failed: ${setupErr.message}`);
       setLoading(false);
-    }, (err) => {
-      console.error("Admin users fetch error:", err.message);
-      setLoading(false);
-    });
+    }
+    return () => unsub?.();
   }, []);
 
   const getStatus = (u) => {
@@ -623,6 +655,27 @@ export default function AdminPanel() {
     <div className="admin-panel-wrap">
       <Toast toast={toast} />
 
+      {/* Firestore error banner */}
+      {fetchError && (
+        <div style={{
+          background: "#fff3cd", border: "1px solid #ffc107", borderRadius: 6,
+          padding: "10px 16px", marginBottom: 16, fontSize: 13, color: "#856404",
+          display: "flex", gap: 10, alignItems: "flex-start"
+        }}>
+          <FontAwesomeIcon icon={faTriangleExclamation} style={{ marginTop: 2, flexShrink: 0 }} />
+          <div>
+            <strong>Data load issue:</strong> {fetchError}
+            <br />
+            <span style={{ fontSize: 12 }}>
+              Go to Firebase Console → Firestore → Rules → ensure:{" "}
+              <code style={{ background: "#f8f9fa", padding: "1px 4px", borderRadius: 3 }}>
+                allow read, write: if request.auth != null;
+              </code>
+            </span>
+          </div>
+        </div>
+      )}
+
       {showAddModal && (
         <AddUserModal
           onClose={() => setShowAddModal(false)}
@@ -657,9 +710,36 @@ export default function AdminPanel() {
             Manage users and subscriptions · Accounts auto-lock on expiry
           </p>
         </div>
-        <button className="admin-add-btn" onClick={() => setShowAddModal(true)}>
-          <FontAwesomeIcon icon={faUserPlus} /> Add User
-        </button>
+        <div style={{ display: "flex", gap: 10 }}>
+          <button
+            className="admin-add-btn"
+            style={{ background: "var(--bg2)", color: "var(--text)", border: "1px solid var(--border2)" }}
+            onClick={async () => {
+              setLoading(true);
+              setFetchError(null);
+              try {
+                const snap = await getDocs(collection(db, "users"));
+                const allUsers = snap.docs
+                  .map((d) => ({ id: d.id, ...d.data() }))
+                  .sort((a, b) => {
+                    const aT = a.createdAt?.toDate?.()?.getTime?.() ?? 0;
+                    const bT = b.createdAt?.toDate?.()?.getTime?.() ?? 0;
+                    return bT - aT;
+                  });
+                setUsers(allUsers);
+              } catch (err) {
+                setFetchError(`Refresh failed: ${err.code || err.message}`);
+              }
+              setLoading(false);
+            }}
+            title="Manually refresh user list"
+          >
+            ↻ Refresh
+          </button>
+          <button className="admin-add-btn" onClick={() => setShowAddModal(true)}>
+            <FontAwesomeIcon icon={faUserPlus} /> Add User
+          </button>
+        </div>
       </div>
 
       {/* Stats */}
@@ -772,9 +852,21 @@ export default function AdminPanel() {
           </div>
 
           {loading ? (
-            <div className="admin-loading">Loading users...</div>
+            <div className="admin-loading">
+              <FontAwesomeIcon icon={faClock} style={{ marginRight: 8, color: "var(--muted)" }} />
+              Loading users...
+            </div>
+          ) : fetchError ? (
+            <div className="admin-empty" style={{ color: "var(--red)" }}>
+              <FontAwesomeIcon icon={faTriangleExclamation} style={{ marginRight: 8 }} />
+              Could not load users. See the warning above for how to fix this.
+            </div>
+          ) : filtered.length === 0 && users.length === 0 ? (
+            <div className="admin-empty">
+              No registered users yet. Users will appear here once they sign up.
+            </div>
           ) : filtered.length === 0 ? (
-            <div className="admin-empty">No users found.</div>
+            <div className="admin-empty">No users match your filter or search.</div>
           ) : (
             <div className="admin-users-list">
               {filtered.map((u) => {
