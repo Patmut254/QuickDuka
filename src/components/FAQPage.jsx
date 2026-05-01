@@ -1,10 +1,21 @@
 import { useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  faQuestionCircle, faChevronDown, faChevronUp,
-  faChartLine, faHandHoldingDollar, faCartPlus, faReceipt,
-  faTriangleExclamation, faBox, faSquareCheck, faClockRotateLeft,
-  faMobileScreen, faLock, faMoneyBill, faInfoCircle
+  faQuestionCircle,
+  faChevronDown,
+  faChevronUp,
+  faChartLine,
+  faHandHoldingDollar,
+  faCartPlus,
+  faReceipt,
+  faTriangleExclamation,
+  faBox,
+  faSquareCheck,
+  faClockRotateLeft,
+  faMobileScreen,
+  faLock,
+  faMoneyBill,
+  faInfoCircle,
 } from "@fortawesome/free-solid-svg-icons";
 import { faSquareCheck as faSquareCheckR } from "@fortawesome/free-regular-svg-icons";
 
@@ -47,9 +58,9 @@ const HOW_TO_STEPS = [
   },
   {
     icon: faBox,
-    title: "Catalogue",
+    title: "stock",
     color: "#14b8a6",
-    desc: "Use Catalogue to keep a list of all the items you sell along with their prices. This makes it faster to fill in sales and purchases because you can refer to your own price list. Go to Catalogue and add your items with their names and prices.",
+    desc: "Use stock to keep a list of all the items you sell along with their prices. This makes it faster to fill in sales and purchases because you can refer to your own price list. Go to stock and add your items with their names and prices.",
   },
   {
     icon: faChartLine,
@@ -125,7 +136,10 @@ function FaqItem({ f, i, open, setOpen }) {
     <div className="faq-item">
       <div className="faq-q" onClick={() => setOpen(open === i ? null : i)}>
         {f.q}
-        <FontAwesomeIcon icon={open === i ? faChevronUp : faChevronDown} style={{ fontSize: 12, color: "var(--muted)", flexShrink: 0 }} />
+        <FontAwesomeIcon
+          icon={open === i ? faChevronUp : faChevronDown}
+          style={{ fontSize: 12, color: "var(--muted)", flexShrink: 0 }}
+        />
       </div>
       {open === i && <div className="faq-a">{f.a}</div>}
     </div>
@@ -139,10 +153,14 @@ export default function FAQPage() {
   return (
     <div className="info-page">
       <h1>
-        <span style={{ color: "var(--green)" }}><FontAwesomeIcon icon={faInfoCircle} /></span>{" "}
+        <span style={{ color: "var(--green)" }}>
+          <FontAwesomeIcon icon={faInfoCircle} />
+        </span>{" "}
         Help Centre
       </h1>
-      <p className="subtitle">Learn how to use QuickDuka and get answers to common questions.</p>
+      <p className="subtitle">
+        Learn how to use QuickDuka and get answers to common questions.
+      </p>
 
       {/* Tab switcher */}
       <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
@@ -152,7 +170,10 @@ export default function FAQPage() {
             padding: "9px 18px",
             borderRadius: 0,
             border: "none",
-            borderBottom: activeTab === "how" ? "3px solid var(--green)" : "3px solid transparent",
+            borderBottom:
+              activeTab === "how"
+                ? "3px solid var(--green)"
+                : "3px solid transparent",
             background: "transparent",
             color: activeTab === "how" ? "var(--green)" : "var(--muted)",
             fontFamily: "inherit",
@@ -169,7 +190,10 @@ export default function FAQPage() {
             padding: "9px 18px",
             borderRadius: 0,
             border: "none",
-            borderBottom: activeTab === "faq" ? "3px solid var(--green)" : "3px solid transparent",
+            borderBottom:
+              activeTab === "faq"
+                ? "3px solid var(--green)"
+                : "3px solid transparent",
             background: "transparent",
             color: activeTab === "faq" ? "var(--green)" : "var(--muted)",
             fontFamily: "inherit",
@@ -185,30 +209,62 @@ export default function FAQPage() {
 
       {activeTab === "how" && (
         <div>
-          <div className="info-card" style={{ marginBottom: 14, borderLeft: "4px solid var(--green)" }}>
+          <div
+            className="info-card"
+            style={{ marginBottom: 14, borderLeft: "4px solid var(--green)" }}
+          >
             <h2 style={{ marginBottom: 8 }}>
-              <FontAwesomeIcon icon={faMobileScreen} style={{ color: "var(--green)", marginRight: 8 }} />
+              <FontAwesomeIcon
+                icon={faMobileScreen}
+                style={{ color: "var(--green)", marginRight: 8 }}
+              />
               Welcome to QuickDuka
             </h2>
             <p>
-              QuickDuka is a simple business management app built for small business owners in Kenya.
-              Use it to record your daily sales, track expenses, manage customer debts, and see your profit every month.
-              Everything is saved securely online so you can access it from any device.
+              QuickDuka is a simple business management app built for small
+              business owners in Kenya. Use it to record your daily sales, track
+              expenses, manage customer debts, and see your profit every month.
+              Everything is saved securely online so you can access it from any
+              device.
             </p>
-            <p style={{ marginTop: 8, background: "var(--green-bg)", padding: "10px 14px", borderRadius: 6, border: "1px solid var(--green-lt)" }}>
-              <strong style={{ color: "var(--green)" }}>Tip:</strong> Record every sale and expense daily for accurate reports at the end of the month.
+            <p
+              style={{
+                marginTop: 8,
+                background: "var(--green-bg)",
+                padding: "10px 14px",
+                borderRadius: 6,
+                border: "1px solid var(--green-lt)",
+              }}
+            >
+              <strong style={{ color: "var(--green)" }}>Tip:</strong> Record
+              every sale and expense daily for accurate reports at the end of
+              the month.
             </p>
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {HOW_TO_STEPS.map((step, i) => (
-              <div key={i} className="info-card" style={{ borderLeft: `4px solid ${step.color}` }}>
+              <div
+                key={i}
+                className="info-card"
+                style={{ borderLeft: `4px solid ${step.color}` }}
+              >
                 <h2>
-                  <span style={{
-                    width: 32, height: 32, borderRadius: 8, background: step.color + "22",
-                    color: step.color, display: "inline-flex", alignItems: "center", justifyContent: "center",
-                    fontSize: 14, marginRight: 10, flexShrink: 0
-                  }}>
+                  <span
+                    style={{
+                      width: 32,
+                      height: 32,
+                      borderRadius: 8,
+                      background: step.color + "22",
+                      color: step.color,
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: 14,
+                      marginRight: 10,
+                      flexShrink: 0,
+                    }}
+                  >
                     <FontAwesomeIcon icon={step.icon} />
                   </span>
                   {step.title}
@@ -218,14 +274,21 @@ export default function FAQPage() {
             ))}
           </div>
 
-          <div className="info-card" style={{ marginTop: 14, textAlign: "center" }}>
+          <div
+            className="info-card"
+            style={{ marginTop: 14, textAlign: "center" }}
+          >
             <h2 style={{ justifyContent: "center" }}>
-              <FontAwesomeIcon icon={faLock} style={{ color: "var(--green)", marginRight: 8 }} />
+              <FontAwesomeIcon
+                icon={faLock}
+                style={{ color: "var(--green)", marginRight: 8 }}
+              />
               Your Data is Private
             </h2>
             <p>
-              All your business records are stored securely in your personal account.
-              No one else can see your data. QuickDuka does not share your information with anyone.
+              All your business records are stored securely in your personal
+              account. No one else can see your data. QuickDuka does not share
+              your information with anyone.
             </p>
           </div>
         </div>
@@ -235,14 +298,22 @@ export default function FAQPage() {
         <div>
           <div className="info-card">
             {faqs.map((f, i) => (
-              <FaqItem key={i} f={f} i={i} open={openFaq} setOpen={setOpenFaq} />
+              <FaqItem
+                key={i}
+                f={f}
+                i={i}
+                open={openFaq}
+                setOpen={setOpenFaq}
+              />
             ))}
           </div>
           <div className="info-card" style={{ marginTop: 14 }}>
             <h2>Still have questions?</h2>
             <p>
               Email us at{" "}
-              <a href="mailto:anitapatrick025@gmail.com">anitapatrick025@gmail.com</a>{" "}
+              <a href="mailto:anitapatrick025@gmail.com">
+                anitapatrick025@gmail.com
+              </a>{" "}
               or WhatsApp us and we will respond within 24 hours.
             </p>
           </div>

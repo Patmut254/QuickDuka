@@ -34,7 +34,7 @@ export default function PrivacyPage() {
           <li>Your county and sub-county (for regional analytics)</li>
           <li>
             Business records you enter: sales, purchases, expenses, credits, and
-            catalogue items
+            stock items
           </li>
           <li>
             Subscription and payment status (not your M-Pesa PIN — we never see

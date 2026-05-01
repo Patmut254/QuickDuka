@@ -3,8 +3,9 @@ import { useCollection } from "../hooks/useCollection";
 import { Toast, useToast } from "./Toast";
 import AlertDialog from "./AlertDialog";
 
-export default function Catalogue() {
-  const { items, loading, addItem, deleteItem, updateItem } = useCollection("catalogue");
+export default function stock() {
+  const { items, loading, addItem, deleteItem, updateItem } =
+    useCollection("stock");
   const { toast, showToast } = useToast();
 
   const emptyForm = { name: "", price: "", unit: "", notes: "" };
@@ -16,8 +17,9 @@ export default function Catalogue() {
   const [editForm, setEditForm] = useState({});
   const [search, setSearch] = useState("");
 
-  const set = (k) => (e) => setForm(f => ({ ...f, [k]: e.target.value }));
-  const setEdit = (k) => (e) => setEditForm(f => ({ ...f, [k]: e.target.value }));
+  const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
+  const setEdit = (k) => (e) =>
+    setEditForm((f) => ({ ...f, [k]: e.target.value }));
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -31,7 +33,7 @@ export default function Catalogue() {
         notes: form.notes.trim(),
       });
       setStatus("saved");
-      showToast("Item added to catalogue!");
+      showToast("Item added to stock!");
       setTimeout(() => {
         setStatus("idle");
         setForm(emptyForm);
@@ -46,12 +48,16 @@ export default function Catalogue() {
   const handleEdit = async (e) => {
     e.preventDefault();
     try {
-      await updateItem(editTarget.id, {
-        name: editForm.name.trim(),
-        price: editForm.price !== "" ? parseFloat(editForm.price) : null,
-        unit: editForm.unit?.trim() || "",
-        notes: editForm.notes?.trim() || "",
-      }, editTarget);
+      await updateItem(
+        editTarget.id,
+        {
+          name: editForm.name.trim(),
+          price: editForm.price !== "" ? parseFloat(editForm.price) : null,
+          unit: editForm.unit?.trim() || "",
+          notes: editForm.notes?.trim() || "",
+        },
+        editTarget,
+      );
       showToast("Item updated!");
       setEditTarget(null);
     } catch {
@@ -59,8 +65,8 @@ export default function Catalogue() {
     }
   };
 
-  const filtered = items.filter(i =>
-    !search || i.name?.toLowerCase().includes(search.toLowerCase())
+  const filtered = items.filter(
+    (i) => !search || i.name?.toLowerCase().includes(search.toLowerCase()),
   );
 
   return (
@@ -70,36 +76,66 @@ export default function Catalogue() {
       <div className="module-header">
         <div className="module-stat">
           <span className="stat-label">Total Items</span>
-          <span className="stat-value" style={{ color: "var(--accent)" }}>{items.length}</span>
+          <span className="stat-value" style={{ color: "var(--accent)" }}>
+            {items.length}
+          </span>
         </div>
-        <button className="btn-primary" onClick={() => { setShowForm(!showForm); setStatus("idle"); }}>
+        <button
+          className="btn-primary"
+          onClick={() => {
+            setShowForm(!showForm);
+            setStatus("idle");
+          }}
+        >
           {showForm ? "✕ Cancel" : "+ Add Item"}
         </button>
       </div>
 
-      <div className="catalogue-hint">
-        📦 Your product and item list. Set a price if it is fixed (e.g. Queen cake KES 500/kg), or leave blank to enter the price manually when recording a sale.
+      <div className="stock-hint">
+        📦 Your product and item list. Set a price if it is fixed (e.g. Queen
+        cake KES 500/kg), or leave blank to enter the price manually when
+        recording a sale.
       </div>
 
       {showForm && (
         <form className="entry-form" onSubmit={handleSubmit}>
-          <h3>Add Item to Catalogue</h3>
+          <h3>Add Item to Stock</h3>
           <div className="form-grid">
             <div className="field-group">
               <label>Item / Product Name *</label>
-              <input placeholder="e.g. Sukuma wiki, Cake, Bread..." value={form.name} onChange={set("name")} required />
+              <input
+                placeholder="e.g. Sukuma wiki, Cake, Bread..."
+                value={form.name}
+                onChange={set("name")}
+                required
+              />
             </div>
             <div className="field-group">
               <label>Price (KES) — Optional</label>
-              <input type="number" min="0" step="0.01" placeholder="Leave blank if price varies" value={form.price} onChange={set("price")} />
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="Leave blank if price varies"
+                value={form.price}
+                onChange={set("price")}
+              />
             </div>
             <div className="field-group">
               <label>Unit — Optional</label>
-              <input placeholder="e.g. bunch, kg, piece, packet" value={form.unit} onChange={set("unit")} />
+              <input
+                placeholder="e.g. bunch, kg, piece, packet"
+                value={form.unit}
+                onChange={set("unit")}
+              />
             </div>
             <div className="field-group full-width">
               <label>Notes</label>
-              <input placeholder="Optional notes" value={form.notes} onChange={set("notes")} />
+              <input
+                placeholder="Optional notes"
+                value={form.notes}
+                onChange={set("notes")}
+              />
             </div>
           </div>
           <button
@@ -107,15 +143,26 @@ export default function Catalogue() {
             className={"btn-primary" + (status === "saved" ? " btn-saved" : "")}
             disabled={status !== "idle"}
           >
-            {status === "saving" ? "Saving..." : status === "saved" ? "✅ Saved!" : "Add to Catalogue"}
+            {status === "saving"
+              ? "Saving..."
+              : status === "saved"
+                ? "✅ Saved!"
+                : "Add to stock"}
           </button>
         </form>
       )}
 
       {/* Search */}
       {items.length > 4 && (
-        <div className="field-group" style={{ maxWidth: 300, marginBottom: 16 }}>
-          <input placeholder="🔍 Search items..." value={search} onChange={e => setSearch(e.target.value)} />
+        <div
+          className="field-group"
+          style={{ maxWidth: 300, marginBottom: 16 }}
+        >
+          <input
+            placeholder="🔍 Search items..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
         </div>
       )}
 
@@ -124,27 +171,51 @@ export default function Catalogue() {
         <div className="table-loading">Loading...</div>
       ) : filtered.length === 0 ? (
         <div className="empty-state">
-          {search ? "No items match your search." : "No items yet. Add your products or services above."}
+          {search
+            ? "No items match your search."
+            : "No items yet. Add your products or services above."}
         </div>
       ) : (
-        <div className="catalogue-grid">
-          {filtered.map(item => (
-            <div key={item.id} className="catalogue-card">
-              <div className="catalogue-card-top">
-                <div className="catalogue-item-name">{item.name}</div>
-                <div className="catalogue-item-price">
-                  {item.price != null
-                    ? <span className="price-tag">KES {Number(item.price).toLocaleString()}{item.unit ? ` / ${item.unit}` : ""}</span>
-                    : <span className="price-variable">Price varies</span>
-                  }
+        <div className="stock-grid">
+          {filtered.map((item) => (
+            <div key={item.id} className="stock-card">
+              <div className="stock-card-top">
+                <div className="stock-item-name">{item.name}</div>
+                <div className="stock-item-price">
+                  {item.price != null ? (
+                    <span className="price-tag">
+                      KES {Number(item.price).toLocaleString()}
+                      {item.unit ? ` / ${item.unit}` : ""}
+                    </span>
+                  ) : (
+                    <span className="price-variable">Price varies</span>
+                  )}
                 </div>
               </div>
-              {item.notes && <div className="catalogue-item-notes">{item.notes}</div>}
-              <div className="catalogue-actions">
-                <button className="edit-btn-sm" onClick={() => { setEditTarget(item); setEditForm({ name: item.name, price: item.price ?? "", unit: item.unit || "", notes: item.notes || "" }); }}>
+              {item.notes && (
+                <div className="stock-item-notes">{item.notes}</div>
+              )}
+              <div className="stock-actions">
+                <button
+                  className="edit-btn-sm"
+                  onClick={() => {
+                    setEditTarget(item);
+                    setEditForm({
+                      name: item.name,
+                      price: item.price ?? "",
+                      unit: item.unit || "",
+                      notes: item.notes || "",
+                    });
+                  }}
+                >
                   ✏️ Edit
                 </button>
-                <button className="delete-btn" onClick={() => setDeleteTarget(item)}>🗑</button>
+                <button
+                  className="delete-btn"
+                  onClick={() => setDeleteTarget(item)}
+                >
+                  🗑
+                </button>
               </div>
             </div>
           ))}
@@ -154,28 +225,59 @@ export default function Catalogue() {
       {/* Edit Modal */}
       {editTarget && (
         <div className="alert-overlay" onClick={() => setEditTarget(null)}>
-          <div className="alert-box" style={{ maxWidth: 420 }} onClick={e => e.stopPropagation()}>
+          <div
+            className="alert-box"
+            style={{ maxWidth: 420 }}
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="alert-title">✏️ Edit Item</div>
-            <form onSubmit={handleEdit} className="login-form" style={{ marginTop: 16 }}>
+            <form
+              onSubmit={handleEdit}
+              className="login-form"
+              style={{ marginTop: 16 }}
+            >
               <div className="field-group">
                 <label>Item Name *</label>
-                <input value={editForm.name} onChange={setEdit("name")} required />
+                <input
+                  value={editForm.name}
+                  onChange={setEdit("name")}
+                  required
+                />
               </div>
               <div className="field-group">
                 <label>Price (KES)</label>
-                <input type="number" min="0" step="0.01" placeholder="Leave blank if varies" value={editForm.price} onChange={setEdit("price")} />
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  placeholder="Leave blank if varies"
+                  value={editForm.price}
+                  onChange={setEdit("price")}
+                />
               </div>
               <div className="field-group">
                 <label>Unit</label>
-                <input placeholder="e.g. kg, piece" value={editForm.unit} onChange={setEdit("unit")} />
+                <input
+                  placeholder="e.g. kg, piece"
+                  value={editForm.unit}
+                  onChange={setEdit("unit")}
+                />
               </div>
               <div className="field-group">
                 <label>Notes</label>
                 <input value={editForm.notes} onChange={setEdit("notes")} />
               </div>
               <div className="alert-actions">
-                <button type="button" className="btn-cancel-sm" onClick={() => setEditTarget(null)}>Cancel</button>
-                <button type="submit" className="btn-primary">Save Changes</button>
+                <button
+                  type="button"
+                  className="btn-cancel-sm"
+                  onClick={() => setEditTarget(null)}
+                >
+                  Cancel
+                </button>
+                <button type="submit" className="btn-primary">
+                  Save Changes
+                </button>
               </div>
             </form>
           </div>
@@ -184,8 +286,10 @@ export default function Catalogue() {
 
       <AlertDialog
         open={!!deleteTarget}
-        title="Remove from Catalogue?"
-        message={deleteTarget ? `Remove "${deleteTarget.name}" from your list?` : ""}
+        title="Remove from stock?"
+        message={
+          deleteTarget ? `Remove "${deleteTarget.name}" from your list?` : ""
+        }
         onCancel={() => setDeleteTarget(null)}
         onConfirm={async () => {
           await deleteItem(deleteTarget.id, deleteTarget);

@@ -48,7 +48,7 @@ import Expenses from "./components/Expenses";
 import Reports from "./components/Reports";
 import History from "./components/History";
 import Credits from "./components/Credits";
-import Catalogue from "./components/Catalogue";
+import stock from "./components/stock";
 import Register from "./components/Register";
 import ReferrerRegister from "./components/ReferrerRegister";
 import SubscriptionWall from "./components/SubscriptionWall";
@@ -128,18 +128,32 @@ function OnlineStatus() {
     const off = () => setOnline(false);
     window.addEventListener("online", on);
     window.addEventListener("offline", off);
-    return () => { window.removeEventListener("online", on); window.removeEventListener("offline", off); };
+    return () => {
+      window.removeEventListener("online", on);
+      window.removeEventListener("offline", off);
+    };
   }, []);
 
   if (online) return null;
   return (
-    <div style={{
-      position: "fixed", top: 0, left: 0, right: 0, zIndex: 9999,
-      background: "#856404", color: "#fff",
-      padding: "7px 16px", fontSize: 12, fontWeight: 700,
-      textAlign: "center", letterSpacing: ".2px",
-    }}>
-      ⚡ Offline — your records are saved on this device and will sync when internet returns
+    <div
+      style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 9999,
+        background: "#856404",
+        color: "#fff",
+        padding: "7px 16px",
+        fontSize: 12,
+        fontWeight: 700,
+        textAlign: "center",
+        letterSpacing: ".2px",
+      }}
+    >
+      ⚡ Offline — your records are saved on this device and will sync when
+      internet returns
     </div>
   );
 }
@@ -147,7 +161,9 @@ function OnlineStatus() {
 // ── Footer ─────────────────────────────────────────────────
 function AppFooter({ offset }) {
   return (
-    <div className={`app-footer${offset ? " app-footer-offset" : ""}`}>© 2026 QuickDuka. All rights reserved.</div>
+    <div className={`app-footer${offset ? " app-footer-offset" : ""}`}>
+      © 2026 QuickDuka. All rights reserved.
+    </div>
   );
 }
 
@@ -161,7 +177,7 @@ const T = {
     purchases: "Purchases",
     expenses: "Expenses",
     losses: "Losses",
-    catalogue: "Catalogue",
+    stock: "stock",
     reports: "Reports",
     history: "History",
     profile: "Profile",
@@ -183,7 +199,7 @@ const T = {
     purchases: "Manunuzi",
     expenses: "Matumizi",
     losses: "Hasara",
-    catalogue: "Katalogi",
+    stock: "Katalogi",
     reports: "Ripoti",
     history: "Historia",
     profile: "Wasifu",
@@ -241,7 +257,7 @@ function AppShell({ user, profile, theme, toggleTheme }) {
     { id: "purchases", label: t.purchases, icon: faCartPlus },
     { id: "expenses", label: t.expenses, icon: faReceipt },
     { id: "losses", label: t.losses, icon: faTriangleExclamation },
-    { id: "catalogue", label: t.catalogue, icon: faBox },
+    { id: "stock", label: t.stock, icon: faBox },
     { id: "reports", label: t.reports, icon: faSackDollar },
     { id: "history", label: t.history, icon: faClockRotateLeft },
     { id: "contact", label: t.contact, icon: faHeadset },
@@ -421,7 +437,7 @@ function AppShell({ user, profile, theme, toggleTheme }) {
           {activeTab === "purchases" && <Purchases />}
           {activeTab === "expenses" && <Expenses />}
           {activeTab === "losses" && <Losses />}
-          {activeTab === "catalogue" && <Catalogue />}
+          {activeTab === "stock" && <stock />}
           {activeTab === "reports" && <Reports />}
           {activeTab === "history" && <History />}
           {activeTab === "profile" && (
@@ -563,70 +579,74 @@ export default function App() {
     if (!user) {
       return (
         <>
-        <div className="login-page">
-          <div className="login-dots login-dots-tl" />
-          <div className="login-blob" />
-          <div className="login-card">
-            <div className="login-header">
-              <img src="/logo.png" alt="QuickDuka" className="login-logo-img" />
-              <p
-                style={{
-                  color: "var(--accent)",
-                  fontWeight: 700,
-                  fontSize: 13,
-                }}
-              >
-                🔐 Admin Access
-              </p>
-            </div>
-            <form onSubmit={handleLogin} className="login-form" noValidate>
-              <div className="field-group">
-                <label>Admin Email</label>
-                <div className="input-icon-wrap">
-                  <input
-                    type="email"
-                    placeholder="admin@email.com"
-                    value={loginId}
-                    onChange={(e) => setLoginId(e.target.value)}
-                    autoComplete="username"
-                    required
-                  />
-                </div>
+          <div className="login-page">
+            <div className="login-dots login-dots-tl" />
+            <div className="login-blob" />
+            <div className="login-card">
+              <div className="login-header">
+                <img
+                  src="/logo.png"
+                  alt="QuickDuka"
+                  className="login-logo-img"
+                />
+                <p
+                  style={{
+                    color: "var(--accent)",
+                    fontWeight: 700,
+                    fontSize: 13,
+                  }}
+                >
+                  🔐 Admin Access
+                </p>
               </div>
-              <div className="field-group">
-                <label>Password</label>
-                <div className="input-icon-wrap">
-                  <input
-                    type={showPw ? "text" : "password"}
-                    placeholder="Admin password"
-                    value={loginPw}
-                    onChange={(e) => setLoginPw(e.target.value)}
-                    autoComplete="current-password"
-                    required
-                  />
+              <form onSubmit={handleLogin} className="login-form" noValidate>
+                <div className="field-group">
+                  <label>Admin Email</label>
+                  <div className="input-icon-wrap">
+                    <input
+                      type="email"
+                      placeholder="admin@email.com"
+                      value={loginId}
+                      onChange={(e) => setLoginId(e.target.value)}
+                      autoComplete="username"
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="field-group">
+                  <label>Password</label>
+                  <div className="input-icon-wrap">
+                    <input
+                      type={showPw ? "text" : "password"}
+                      placeholder="Admin password"
+                      value={loginPw}
+                      onChange={(e) => setLoginPw(e.target.value)}
+                      autoComplete="current-password"
+                      required
+                    />
+                    <button
+                      type="button"
+                      className="pw-reveal"
+                      onClick={() => setShowPw((v) => !v)}
+                    >
+                      <FontAwesomeIcon icon={showPw ? faEyeSlash : faEye} />
+                    </button>
+                  </div>
+                </div>
+                {loginErr && <div className="login-error">{loginErr}</div>}
+                <div className="login-form-actions">
                   <button
-                    type="button"
-                    className="pw-reveal"
-                    onClick={() => setShowPw((v) => !v)}
+                    type="submit"
+                    className="btn-login"
+                    disabled={loggingIn}
                   >
-                    <FontAwesomeIcon icon={showPw ? faEyeSlash : faEye} />
+                    {loggingIn ? "Signing in..." : "Sign In to Admin"}
                   </button>
                 </div>
-              </div>
-              {loginErr && <div className="login-error">{loginErr}</div>}
-              <div className="login-form-actions">
-                <button
-                  type="submit"
-                  className="btn-login"
-                  disabled={loggingIn}
-                >
-                  {loggingIn ? "Signing in..." : "Sign In to Admin"}
-                </button>
-              </div>
-            </form>
+              </form>
+            </div>
           </div>
-        </div>
-        <AppFooter />
+          <AppFooter />
         </>
       );
     }
@@ -729,189 +749,193 @@ export default function App() {
 
     return (
       <>
-      <div className="login-page">
-        <div className="login-dots login-dots-tl" />
-        <div className="login-dots login-dots-br" />
-        <div className="login-blob" />
+        <div className="login-page">
+          <div className="login-dots login-dots-tl" />
+          <div className="login-dots login-dots-br" />
+          <div className="login-blob" />
 
-        <div className="login-card">
-          <div className="login-header">
-            <img src="/logo.png" alt="QuickDuka" className="login-logo-img" />
-            <p>Manage your sales. Grow your business.</p>
-          </div>
+          <div className="login-card">
+            <div className="login-header">
+              <img src="/logo.png" alt="QuickDuka" className="login-logo-img" />
+              <p>Manage your sales. Grow your business.</p>
+            </div>
 
-          {view === "login" && (
-            <>
-              <form onSubmit={handleLogin} className="login-form" noValidate>
-                <div className="field-group">
-                  <label>Email or Phone Number</label>
-                  <div className="input-icon-wrap">
-                    <div className="input-icon-box">
-                      <FontAwesomeIcon icon={faUser} />
-                    </div>
-                    <input
-                      type="text"
-                      placeholder="email@example.com or 0712 345 678"
-                      value={loginId}
-                      onChange={(e) => setLoginId(e.target.value)}
-                      autoComplete="username"
-                      required
-                    />
-                  </div>
-                </div>
-                <div className="field-group">
-                  <label>Password</label>
-                  <div className="input-icon-wrap">
-                    <div className="input-icon-box">
-                      <FontAwesomeIcon icon={faLock} />
-                    </div>
-                    <input
-                      type={showPw ? "text" : "password"}
-                      placeholder="Your password"
-                      value={loginPw}
-                      onChange={(e) => setLoginPw(e.target.value)}
-                      autoComplete="current-password"
-                      required
-                    />
-                    <button
-                      type="button"
-                      className="pw-reveal"
-                      onClick={() => setShowPw((v) => !v)}
-                    >
-                      <FontAwesomeIcon icon={showPw ? faEyeSlash : faEye} />
-                    </button>
-                  </div>
-                </div>
-                {loginErr && <div className="login-error">{loginErr}</div>}
-                <div className="login-form-actions">
-                  <button
-                    type="submit"
-                    className="btn-login"
-                    disabled={loggingIn}
-                  >
-                    {loggingIn ? "Signing in..." : "Sign In"}
-                  </button>
-                </div>
-              </form>
-
-              <div className="forgot-pw-wrap">
-                <button
-                  className="forgot-pw-btn"
-                  onClick={() => {
-                    setView("reset");
-                    setResetInput(loginId);
-                    setResetStatus("idle");
-                    setResetMsg("");
-                  }}
-                >
-                  Forgot your password?
-                </button>
-              </div>
-
-              <div className="login-divider">New to QuickDuka?</div>
-              <button
-                className="btn-register"
-                onClick={() => setView("register")}
-              >
-                Start Free 1-Month Trial
-              </button>
-
-              <div className="login-divider" style={{ marginTop: 14 }}>Earn by referring businesses?</div>
-              <button
-                className="btn-register"
-                style={{
-                  background: "transparent",
-                  border: "1.5px solid var(--accent)",
-                  color: "var(--accent)",
-                }}
-                onClick={() => setView("referrer")}
-              >
-                🤝 Register as a Referrer
-              </button>
-            </>
-          )}
-
-          {view === "reset" && (
-            <div>
-              <button className="reset-back" onClick={() => setView("login")}>
-                <FontAwesomeIcon icon={faChevronLeft} /> Back to Sign In
-              </button>
-              {resetStatus !== "sent" ? (
-                <>
-                  <h2 className="reset-title">Reset Password</h2>
-                  <p className="reset-subtitle">
-                    Enter your email or registered phone. We will send a reset
-                    link to your email.
-                  </p>
-                  <form
-                    onSubmit={handleResetPassword}
-                    className="login-form"
-                    noValidate
-                  >
-                    <div className="field-group">
-                      <label>Email or Phone</label>
-                      <div className="input-icon-wrap">
-                        <div className="input-icon-box">
-                          <FontAwesomeIcon icon={faEnvelope} />
-                        </div>
-                        <input
-                          type="text"
-                          placeholder="email@example.com or 0712 345 678"
-                          value={resetInput}
-                          onChange={(e) => setResetInput(e.target.value)}
-                          required
-                        />
+            {view === "login" && (
+              <>
+                <form onSubmit={handleLogin} className="login-form" noValidate>
+                  <div className="field-group">
+                    <label>Email or Phone Number</label>
+                    <div className="input-icon-wrap">
+                      <div className="input-icon-box">
+                        <FontAwesomeIcon icon={faUser} />
                       </div>
+                      <input
+                        type="text"
+                        placeholder="email@example.com or 0712 345 678"
+                        value={loginId}
+                        onChange={(e) => setLoginId(e.target.value)}
+                        autoComplete="username"
+                        required
+                      />
                     </div>
-                    {resetMsg && (
-                      <div
-                        className={
-                          resetStatus === "error"
-                            ? "login-error"
-                            : "login-success"
-                        }
+                  </div>
+                  <div className="field-group">
+                    <label>Password</label>
+                    <div className="input-icon-wrap">
+                      <div className="input-icon-box">
+                        <FontAwesomeIcon icon={faLock} />
+                      </div>
+                      <input
+                        type={showPw ? "text" : "password"}
+                        placeholder="Your password"
+                        value={loginPw}
+                        onChange={(e) => setLoginPw(e.target.value)}
+                        autoComplete="current-password"
+                        required
+                      />
+                      <button
+                        type="button"
+                        className="pw-reveal"
+                        onClick={() => setShowPw((v) => !v)}
                       >
-                        {resetMsg}
-                      </div>
-                    )}
+                        <FontAwesomeIcon icon={showPw ? faEyeSlash : faEye} />
+                      </button>
+                    </div>
+                  </div>
+                  {loginErr && <div className="login-error">{loginErr}</div>}
+                  <div className="login-form-actions">
                     <button
                       type="submit"
                       className="btn-login"
-                      disabled={resetStatus === "sending"}
+                      disabled={loggingIn}
                     >
-                      {resetStatus === "sending"
-                        ? "Sending..."
-                        : "Send Reset Link"}
+                      {loggingIn ? "Signing in..." : "Sign In"}
                     </button>
-                  </form>
-                </>
-              ) : (
-                <div className="reset-sent">
-                  <div className="reset-sent-icon">
-                    <FontAwesomeIcon icon={faCheckCircle} />
                   </div>
-                  <p style={{ fontWeight: 700, fontSize: 16, marginBottom: 8 }}>
-                    Check your inbox.
-                  </p>
-                  <p className="reset-sent-msg">
-                    A reset link was sent to{" "}
-                    <span className="reset-sent-email">{resetEmail}</span>.
-                    Check your spam folder if you don't see it.
-                  </p>
+                </form>
+
+                <div className="forgot-pw-wrap">
                   <button
                     className="forgot-pw-btn"
-                    style={{ marginTop: 20, display: "block" }}
-                    onClick={() => setView("login")}
+                    onClick={() => {
+                      setView("reset");
+                      setResetInput(loginId);
+                      setResetStatus("idle");
+                      setResetMsg("");
+                    }}
                   >
-                    Back to Sign In
+                    Forgot your password?
                   </button>
                 </div>
-              )}
-            </div>
-          )}
+
+                <div className="login-divider">New to QuickDuka?</div>
+                <button
+                  className="btn-register"
+                  onClick={() => setView("register")}
+                >
+                  Start Free 1-Month Trial
+                </button>
+
+                <div className="login-divider" style={{ marginTop: 14 }}>
+                  Earn by referring businesses?
+                </div>
+                <button
+                  className="btn-register"
+                  style={{
+                    background: "transparent",
+                    border: "1.5px solid var(--accent)",
+                    color: "var(--accent)",
+                  }}
+                  onClick={() => setView("referrer")}
+                >
+                  🤝 Register as a Referrer
+                </button>
+              </>
+            )}
+
+            {view === "reset" && (
+              <div>
+                <button className="reset-back" onClick={() => setView("login")}>
+                  <FontAwesomeIcon icon={faChevronLeft} /> Back to Sign In
+                </button>
+                {resetStatus !== "sent" ? (
+                  <>
+                    <h2 className="reset-title">Reset Password</h2>
+                    <p className="reset-subtitle">
+                      Enter your email or registered phone. We will send a reset
+                      link to your email.
+                    </p>
+                    <form
+                      onSubmit={handleResetPassword}
+                      className="login-form"
+                      noValidate
+                    >
+                      <div className="field-group">
+                        <label>Email or Phone</label>
+                        <div className="input-icon-wrap">
+                          <div className="input-icon-box">
+                            <FontAwesomeIcon icon={faEnvelope} />
+                          </div>
+                          <input
+                            type="text"
+                            placeholder="email@example.com or 0712 345 678"
+                            value={resetInput}
+                            onChange={(e) => setResetInput(e.target.value)}
+                            required
+                          />
+                        </div>
+                      </div>
+                      {resetMsg && (
+                        <div
+                          className={
+                            resetStatus === "error"
+                              ? "login-error"
+                              : "login-success"
+                          }
+                        >
+                          {resetMsg}
+                        </div>
+                      )}
+                      <button
+                        type="submit"
+                        className="btn-login"
+                        disabled={resetStatus === "sending"}
+                      >
+                        {resetStatus === "sending"
+                          ? "Sending..."
+                          : "Send Reset Link"}
+                      </button>
+                    </form>
+                  </>
+                ) : (
+                  <div className="reset-sent">
+                    <div className="reset-sent-icon">
+                      <FontAwesomeIcon icon={faCheckCircle} />
+                    </div>
+                    <p
+                      style={{ fontWeight: 700, fontSize: 16, marginBottom: 8 }}
+                    >
+                      Check your inbox.
+                    </p>
+                    <p className="reset-sent-msg">
+                      A reset link was sent to{" "}
+                      <span className="reset-sent-email">{resetEmail}</span>.
+                      Check your spam folder if you don't see it.
+                    </p>
+                    <button
+                      className="forgot-pw-btn"
+                      style={{ marginTop: 20, display: "block" }}
+                      onClick={() => setView("login")}
+                    >
+                      Back to Sign In
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
-      </div>
-      <AppFooter />
+        <AppFooter />
       </>
     );
   }
