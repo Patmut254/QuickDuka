@@ -104,12 +104,15 @@ body {
 .login-page {
   min-height: 100vh;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   background: linear-gradient(160deg, #eef7f1 0%, #f5faf6 40%, #ffffff 100%);
   position: relative;
-  overflow: hidden;
+  overflow-x: hidden;
   padding: 40px 20px;
+  box-sizing: border-box;
+  width: 100%;
 }
 
 /* ─── 3D GRADIENT DOT FIELD ──────────────────────────────────────────────────
@@ -2296,6 +2299,36 @@ a[href^="tel:"]:hover {
   .charts-grid {
     grid-template-columns: 1fr;
   }
+
+  /* ── Login page mobile fixes ── */
+  .login-page {
+    padding: 24px 16px 0;
+    min-height: calc(100vh - 0px);
+    justify-content: flex-start;
+  }
+
+  /* Dots use fixed positioning — on mobile constrain them */
+  .login-dots {
+    position: absolute;
+    width: 100%;
+    max-width: 100vw;
+    overflow: hidden;
+  }
+
+  .login-blob {
+    position: absolute;
+    width: 300px;
+    height: 300px;
+  }
+
+  /* Referrer page */
+  .ref-reg-page {
+    padding-top: 16px;
+  }
+
+  .ref-reg-card {
+    max-width: 100%;
+  }
 }
 
 @media (max-width: 480px) {
@@ -4448,12 +4481,14 @@ a[href^="tel:"]:hover {
 }
 
 /* ── Global footer copyright ── */
+/* ═══════════════════════════════════════════════════════════
+   APP FOOTER — SINGLE AUTHORITATIVE DEFINITION
+   Desktop: fixed bar offset by sidebar width inside app-shell.
+   Auth pages (login/register): static text below the card.
+   Mobile: always static, never floating.
+   ═══════════════════════════════════════════════════════════ */
+
 .app-footer {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -4461,60 +4496,75 @@ a[href^="tel:"]:hover {
   border-top: 1px solid var(--border);
   color: var(--muted);
   font-size: 11px;
-  z-index: 50;
   letter-spacing: 0.02em;
   pointer-events: none;
+  /* Default: static — sits naturally in document flow */
+  position: static;
+  height: 28px;
+  width: 100%;
 }
 
-/* Add bottom padding to main-content and login-page so footer doesn't overlap */
-.main-content {
-  padding-bottom: 36px !important;
+/* Inside the logged-in shell only → fixed at bottom */
+.app-shell .app-footer {
+  position: fixed;
+  bottom: 0;
+  left: var(--sidebar-w);
+  right: 0;
+  height: 28px;
+  z-index: 50;
 }
 
-.login-page {
-  padding-bottom: 36px !important;
+/* Auth pages (login / register / referrer) → static below content */
+.login-page + .app-footer,
+.app-footer:not(.app-shell .app-footer) {
+  position: static;
+  height: auto;
+  padding: 10px 0;
+  border-top: 1px solid var(--border);
+  background: transparent;
+  font-size: 11px;
+  text-align: center;
 }
+
+/* Main content needs padding so fixed footer doesn't overlap */
+.app-shell .main-content {
+  padding-bottom: 36px;
+}
+
 /* ─── FIXES: REPORT CARDS SQUARE (no border-radius) ──── */
 .report-card {
   border-radius: 0 !important;
 }
 
-/* ─── FIXES: FOOTER POSITIONING ─────────────────────── */
-.app-footer {
-  left: 0;
-  right: 0;
-}
-
-/* On desktop, offset footer by sidebar width */
-.app-footer-offset {
-  left: var(--sidebar-w);
-}
-
+/* ─── MOBILE OVERRIDES ───────────────────────────────── */
 @media (max-width: 768px) {
-  .app-footer-offset {
-    left: 0 !important;
-  }
-  /* Ensure footer doesn't overlap mobile nav */
-  .app-footer {
-    position: static;
-    bottom: auto;
-    font-size: 10px;
-    z-index: 90;
-    margin-top: 12px;
-  }
-  /* Inside login-page, footer should be static not fixed */
-  .login-page .app-footer {
-    position: static;
-    margin-top: 16px;
-    border-top: 1px solid var(--border);
-    background: transparent;
-  }
+  /* On mobile, even inside app-shell, footer goes ABOVE mobile nav bar */
   .app-shell .app-footer {
-    position: fixed;
-    bottom: 62px;
+    display: none; /* hide fixed footer — mobile nav bar replaces it */
   }
+
+  /* Auth pages — just sit at the very bottom, static */
+  .app-footer {
+    position: static !important;
+    height: auto !important;
+    padding: 10px 0 !important;
+    font-size: 10px !important;
+    background: transparent !important;
+    border-top: 1px solid var(--border) !important;
+    text-align: center !important;
+  }
+
+  /* No extra bottom padding needed on login page */
+  .login-page {
+    padding-bottom: 0 !important;
+  }
+
   .app-shell {
-    padding-bottom: 86px !important;
+    padding-bottom: 62px !important;
+  }
+
+  .main-content {
+    padding-bottom: 0 !important;
   }
 }
 
@@ -5139,15 +5189,18 @@ a[href^="tel:"]:hover {
    ═══════════════════════════════════════════════════════════ */
 
 .ref-reg-page {
-  padding-bottom: 48px;
+  padding-bottom: 0;
+  justify-content: flex-start;
+  padding-top: 32px;
 }
 
 .ref-page-footer {
   text-align: center;
   font-size: 11px;
   color: var(--muted);
-  padding: 16px 0 8px;
+  padding: 16px 0 12px;
   letter-spacing: 0.02em;
+  width: 100%;
 }
 
 /* Card sizing */
@@ -6106,21 +6159,192 @@ a[href^="tel:"]:hover {
 }
 
 /* ═══════════════════════════════════════════════════════════
-   LOGIN PAGE — FOOTER FIX ON MOBILE
+   CREDITS — STATS ROW (collected / written off / total)
    ═══════════════════════════════════════════════════════════ */
 
-@media (max-width: 768px) {
-  .app-footer {
-    position: static !important;
-    height: auto;
-    padding: 8px 0;
-    margin-top: 12px;
-    border-top: 1px solid var(--border);
+.credits-stats-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.credits-stat-box {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 16px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--bg2);
+}
+
+.credits-stat-green {
+  border-color: var(--green-lt);
+  background: var(--green-bg);
+}
+
+.credits-stat-red {
+  border-color: #f5a5a5;
+  background: var(--red-bg);
+}
+
+.credits-stat-neutral {
+  border-color: var(--border2);
+  background: var(--bg3);
+}
+
+.credits-stat-icon {
+  font-size: 18px;
+  flex-shrink: 0;
+  opacity: 0.75;
+}
+
+.credits-stat-green .credits-stat-icon { color: var(--green); }
+.credits-stat-red    .credits-stat-icon { color: var(--red); }
+.credits-stat-neutral .credits-stat-icon { color: var(--muted); }
+
+.credits-stat-label {
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin-bottom: 3px;
+}
+
+.credits-stat-val {
+  font-size: 15px;
+  font-weight: 800;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--text);
+}
+
+.credits-stat-green .credits-stat-val { color: var(--green); }
+.credits-stat-red   .credits-stat-val { color: var(--red); }
+
+@media (max-width: 600px) {
+  .credits-stats-row {
+    grid-template-columns: 1fr;
   }
-  /* But keep fixed inside the actual logged-in shell */
-  .app-shell ~ .app-footer,
-  .app-footer-offset {
-    left: 0 !important;
-  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   CREDITS — AMOUNT CHIPS ON CARD
+   ═══════════════════════════════════════════════════════════ */
+
+.credit-amounts-col {
+  text-align: right;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.credit-chip {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 20px;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.credit-chip-green {
+  background: var(--green-bg);
+  color: var(--green);
+  border: 1px solid var(--green-lt);
+}
+
+.credit-chip-red {
+  background: var(--red-bg);
+  color: var(--red);
+  border: 1px solid #f5a5a5;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   CREDITS — CLOSED NOTE (bad debt multi-line)
+   ═══════════════════════════════════════════════════════════ */
+
+.credit-closed-note-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-bottom: 8px;
+}
+
+.credit-closed-note {
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   CREDITS — PAYMENT MODAL META TABLE
+   ═══════════════════════════════════════════════════════════ */
+
+.credit-modal-meta {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin-bottom: 14px;
+  overflow: hidden;
+}
+
+.credit-modal-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+
+.credit-modal-row:last-child {
+  border-bottom: none;
+}
+
+.credit-modal-row span {
+  color: var(--muted);
+}
+
+.credit-modal-row-highlight {
+  background: var(--red-bg);
+}
+
+.credit-modal-row-highlight span {
+  color: var(--red);
+  font-weight: 700;
+}
+
+.text-green { color: var(--green) !important; }
+.text-red   { color: var(--red)   !important; }
+
+/* ═══════════════════════════════════════════════════════════
+   CREDITS — PAYMENT PREVIEW PILL
+   ═══════════════════════════════════════════════════════════ */
+
+.credit-pay-preview {
+  margin-top: 12px;
+  padding: 9px 13px;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.credit-pay-clear {
+  background: var(--green-bg);
+  border: 1px solid var(--green-lt);
+  color: var(--green);
+}
+
+.credit-pay-partial {
+  background: var(--orange-bg);
+  border: 1px solid #f5c898;
+  color: var(--orange);
 }
 

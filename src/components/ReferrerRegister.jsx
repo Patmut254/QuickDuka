@@ -62,15 +62,15 @@ export default function ReferrerRegister({ onBack }) {
             <h2 className="ref-success-title">Application Submitted!</h2>
             <p className="ref-success-sub">
               Thank you, <strong>{form.fullName}</strong>. We'll review your application
-              and reach out within 1–3 business days.
+              and reach out within 1–7 business days.
             </p>
             <div className="ref-earnings-summary">
               <div className="ref-earnings-row">
-                <span className="ref-earn-label">First payment per customer</span>
+                <span className="ref-earn-label">First payment per customer - Month 2</span>
                 <span className="ref-earn-val">KES 50</span>
               </div>
               <div className="ref-earnings-row">
-                <span className="ref-earn-label">Months 2–6 per customer</span>
+                <span className="ref-earn-label">Months 3–7 per customer</span>
                 <span className="ref-earn-val">KES 20<span className="ref-earn-sub">/mo</span></span>
               </div>
               <div className="ref-earnings-row ref-earnings-total">
@@ -95,20 +95,30 @@ export default function ReferrerRegister({ onBack }) {
 
       <div className="login-card ref-reg-card">
         <div className="ref-reg-header">
-          <img src="/logo.png" alt="QuickDuka" className="login-logo-img" style={{ height: 48 }} />
+          <img
+            src="/logo.png"
+            alt="QuickDuka"
+            className="login-logo-img"
+            style={{ height: 48 }}
+          />
           <h1 className="ref-reg-title">Become a Referrer</h1>
-          <p className="ref-reg-sub">Earn money by bringing businesses onto QuickDuka</p>
+          <p className="ref-reg-sub">
+            Earn money by bringing businesses onto QuickDuka
+          </p>
+          <p className="ref-reg-sub">
+            Note: Month 1 is free for every customer.
+          </p>
         </div>
 
         <div className="ref-earn-strip">
           <div className="ref-earn-strip-item">
             <span className="ref-earn-strip-val">KES 50</span>
-            <span className="ref-earn-strip-lbl">First payment</span>
+            <span className="ref-earn-strip-lbl">First payment in Month 2</span>
           </div>
           <div className="ref-earn-strip-divider" />
           <div className="ref-earn-strip-item">
             <span className="ref-earn-strip-val">KES 20</span>
-            <span className="ref-earn-strip-lbl">Months 2–6</span>
+            <span className="ref-earn-strip-lbl">Months 3–7</span>
           </div>
           <div className="ref-earn-strip-divider" />
           <div className="ref-earn-strip-item">
@@ -117,74 +127,132 @@ export default function ReferrerRegister({ onBack }) {
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="login-form ref-reg-form" noValidate>
+        <form
+          onSubmit={handleSubmit}
+          className="login-form ref-reg-form"
+          noValidate
+        >
           <div className="ref-section-label">Personal Details</div>
 
           <div className="field-group">
-            <label>Full Name <span className="ref-required">*</span></label>
+            <label>
+              Full Name <span className="ref-required">*</span>
+            </label>
             <div className="input-icon-wrap">
-              <div className="input-icon-box"><FontAwesomeIcon icon={faUser} /></div>
-              <input placeholder="Your full name" value={form.fullName}
-                onChange={(e) => set("fullName", e.target.value)} />
+              <div className="input-icon-box">
+                <FontAwesomeIcon icon={faUser} />
+              </div>
+              <input
+                placeholder="Your full name"
+                value={form.fullName}
+                onChange={(e) => set("fullName", e.target.value)}
+              />
             </div>
           </div>
 
           <div className="form-row-2">
             <div className="field-group">
-              <label>Phone Number <span className="ref-required">*</span></label>
+              <label>
+                Phone Number <span className="ref-required">*</span>
+              </label>
               <div className="input-icon-wrap">
-                <div className="input-icon-box"><FontAwesomeIcon icon={faPhone} /></div>
-                <input type="tel" placeholder="07xx xxx xxx" value={form.phone}
-                  onChange={(e) => set("phone", e.target.value)} />
+                <div className="input-icon-box">
+                  <FontAwesomeIcon icon={faPhone} />
+                </div>
+                <input
+                  type="tel"
+                  placeholder="07xx xxx xxx"
+                  value={form.phone}
+                  onChange={(e) => set("phone", e.target.value)}
+                />
               </div>
             </div>
             <div className="field-group">
-              <label>Email Address <span className="ref-required">*</span></label>
+              <label>
+                Email Address <span className="ref-required">*</span>
+              </label>
               <div className="input-icon-wrap">
-                <div className="input-icon-box"><FontAwesomeIcon icon={faEnvelope} /></div>
-                <input type="email" placeholder="you@example.com" value={form.email}
-                  onChange={(e) => set("email", e.target.value)} />
+                <div className="input-icon-box">
+                  <FontAwesomeIcon icon={faEnvelope} />
+                </div>
+                <input
+                  type="email"
+                  placeholder="you@example.com"
+                  value={form.email}
+                  onChange={(e) => set("email", e.target.value)}
+                />
               </div>
             </div>
           </div>
 
           <div className="form-row-2">
             <div className="field-group">
-              <label>ID Number <span className="ref-optional">(optional)</span></label>
+              <label>
+                ID Number <span className="ref-optional">(optional)</span>
+              </label>
               <div className="input-icon-wrap">
-                <div className="input-icon-box"><FontAwesomeIcon icon={faIdCard} /></div>
-                <input placeholder="National ID" value={form.idNumber}
-                  onChange={(e) => set("idNumber", e.target.value)} />
+                <div className="input-icon-box">
+                  <FontAwesomeIcon icon={faIdCard} />
+                </div>
+                <input
+                  placeholder="National ID"
+                  value={form.idNumber}
+                  onChange={(e) => set("idNumber", e.target.value)}
+                />
               </div>
             </div>
             <div className="field-group">
-              <label>County / Area <span className="ref-optional">(optional)</span></label>
+              <label>
+                County / Area <span className="ref-optional">(optional)</span>
+              </label>
               <div className="input-icon-wrap">
-                <div className="input-icon-box"><FontAwesomeIcon icon={faLocationDot} /></div>
-                <input placeholder="e.g. Nairobi" value={form.county}
-                  onChange={(e) => set("county", e.target.value)} />
+                <div className="input-icon-box">
+                  <FontAwesomeIcon icon={faLocationDot} />
+                </div>
+                <input
+                  placeholder="e.g. Nairobi"
+                  value={form.county}
+                  onChange={(e) => set("county", e.target.value)}
+                />
               </div>
             </div>
           </div>
 
           <div className="ref-section-label">M-Pesa Details</div>
-          <p className="ref-section-hint">Earnings will be sent to this number.</p>
+          <p className="ref-section-hint">
+            Earnings will be sent to this number.
+          </p>
 
           <div className="form-row-2">
             <div className="field-group">
-              <label>M-Pesa Name <span className="ref-optional">(optional)</span></label>
+              <label>
+                M-Pesa Name <span className="ref-optional">(optional)</span>
+              </label>
               <div className="input-icon-wrap">
-                <div className="input-icon-box"><FontAwesomeIcon icon={faPiggyBank} /></div>
-                <input placeholder="Name on M-Pesa" value={form.mpesaName}
-                  onChange={(e) => set("mpesaName", e.target.value)} />
+                <div className="input-icon-box">
+                  <FontAwesomeIcon icon={faPiggyBank} />
+                </div>
+                <input
+                  placeholder="Name on M-Pesa"
+                  value={form.mpesaName}
+                  onChange={(e) => set("mpesaName", e.target.value)}
+                />
               </div>
             </div>
             <div className="field-group">
-              <label>M-Pesa Phone <span className="ref-required">*</span></label>
+              <label>
+                M-Pesa Phone <span className="ref-required">*</span>
+              </label>
               <div className="input-icon-wrap">
-                <div className="input-icon-box"><FontAwesomeIcon icon={faPhone} /></div>
-                <input type="tel" placeholder="07xx xxx xxx" value={form.mpesaPhone}
-                  onChange={(e) => set("mpesaPhone", e.target.value)} />
+                <div className="input-icon-box">
+                  <FontAwesomeIcon icon={faPhone} />
+                </div>
+                <input
+                  type="tel"
+                  placeholder="07xx xxx xxx"
+                  value={form.mpesaPhone}
+                  onChange={(e) => set("mpesaPhone", e.target.value)}
+                />
               </div>
             </div>
           </div>
@@ -192,40 +260,67 @@ export default function ReferrerRegister({ onBack }) {
           <div className="ref-section-label">Background</div>
 
           <div className="field-group">
-            <label>Why would you make a good referrer? <span className="ref-optional">(optional)</span></label>
-            <textarea className="ref-textarea"
+            <label>
+              Why would you make a good referrer?{" "}
+              <span className="ref-optional">(optional)</span>
+            </label>
+            <textarea
+              className="ref-textarea"
               placeholder="e.g. I work with shop owners in Gikomba and have strong relationships..."
-              value={form.experience} onChange={(e) => set("experience", e.target.value)} rows={3} />
+              value={form.experience}
+              onChange={(e) => set("experience", e.target.value)}
+              rows={3}
+            />
           </div>
 
           <div className="field-group">
-            <label>Upload CV <span className="ref-optional">(optional)</span></label>
+            <label>
+              Upload CV <span className="ref-optional">(optional)</span>
+            </label>
             <label className="ref-upload-btn">
-              <FontAwesomeIcon icon={faFileArrowUp} className="ref-upload-icon" />
+              <FontAwesomeIcon
+                icon={faFileArrowUp}
+                className="ref-upload-icon"
+              />
               <span className="ref-upload-text">
                 {form.cvFileName || "Click to attach CV (PDF or Word)"}
               </span>
-              <input type="file" accept=".pdf,.doc,.docx" onChange={handleCvChange}
-                style={{ display: "none" }} />
+              <input
+                type="file"
+                accept=".pdf,.doc,.docx"
+                onChange={handleCvChange}
+                style={{ display: "none" }}
+              />
             </label>
           </div>
 
           <div className="ref-section-label">Confirmation</div>
 
           <div className="field-group">
-            <label>Are you willing to earn commissions per customer? <span className="ref-required">*</span></label>
+            <label>
+              Are you willing to earn commissions per customer?{" "}
+              <span className="ref-required">*</span>
+            </label>
             <div className="ref-radio-row">
               {[
                 { val: "yes", emoji: "✅", label: "Yes, I'm in!" },
-                { val: "no",  emoji: "❌", label: "Not interested" },
+                { val: "no", emoji: "❌", label: "Not interested" },
               ].map(({ val, emoji, label }) => (
-                <label key={val}
-                  className={`ref-radio-option${form.willingToEarn === val ? " selected" : ""}`}>
-                  <input type="radio" name="willing" value={val}
+                <label
+                  key={val}
+                  className={`ref-radio-option${form.willingToEarn === val ? " selected" : ""}`}
+                >
+                  <input
+                    type="radio"
+                    name="willing"
+                    value={val}
                     checked={form.willingToEarn === val}
                     onChange={() => set("willingToEarn", val)}
-                    style={{ display: "none" }} />
-                  <span>{emoji} {label}</span>
+                    style={{ display: "none" }}
+                  />
+                  <span>
+                    {emoji} {label}
+                  </span>
                 </label>
               ))}
             </div>
@@ -233,15 +328,26 @@ export default function ReferrerRegister({ onBack }) {
 
           <div className="ref-notice">
             <FontAwesomeIcon icon={faCircleInfo} className="ref-notice-icon" />
-            <span>Once approved, you'll be added to our system and can start referring customers immediately.</span>
+            <span>
+              Once approved, you'll be added to our system and can start
+              referring customers immediately.
+            </span>
           </div>
 
           {error && <div className="login-error">{error}</div>}
 
           <button type="submit" className="btn-login" disabled={saving}>
-            {saving
-              ? "Submitting..."
-              : <><FontAwesomeIcon icon={faHandshake} style={{ marginRight: 8 }} />Submit Application</>}
+            {saving ? (
+              "Submitting..."
+            ) : (
+              <>
+                <FontAwesomeIcon
+                  icon={faHandshake}
+                  style={{ marginRight: 8 }}
+                />
+                Submit Application
+              </>
+            )}
           </button>
         </form>
 
@@ -252,7 +358,9 @@ export default function ReferrerRegister({ onBack }) {
         </div>
       </div>
 
-      <div className="ref-page-footer">© 2026 QuickDuka. All rights reserved.</div>
+      <div className="ref-page-footer">
+        © 2026 QuickDuka. All rights reserved.
+      </div>
     </div>
   );
 }

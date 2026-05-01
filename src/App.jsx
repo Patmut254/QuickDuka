@@ -562,6 +562,7 @@ export default function App() {
   if (isAdminRoute) {
     if (!user) {
       return (
+        <>
         <div className="login-page">
           <div className="login-dots login-dots-tl" />
           <div className="login-blob" />
@@ -625,6 +626,8 @@ export default function App() {
             </form>
           </div>
         </div>
+        <AppFooter />
+        </>
       );
     }
 
@@ -725,8 +728,8 @@ export default function App() {
     }
 
     return (
+      <>
       <div className="login-page">
-        <AppFooter />
         <div className="login-dots login-dots-tl" />
         <div className="login-dots login-dots-br" />
         <div className="login-blob" />
@@ -908,6 +911,8 @@ export default function App() {
           )}
         </div>
       </div>
+      <AppFooter />
+      </>
     );
   }
 
