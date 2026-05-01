@@ -177,7 +177,7 @@ const T = {
     purchases: "Purchases",
     expenses: "Expenses",
     losses: "Losses",
-    stock: "Stock",
+    stock: "MyStock",
     reports: "Reports",
     history: "History",
     profile: "Profile",
