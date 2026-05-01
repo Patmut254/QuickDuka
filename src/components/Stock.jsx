@@ -4,7 +4,7 @@ import { useCollection } from "../hooks/useCollection";
 import { Toast, useToast } from "./Toast";
 import AlertDialog from "./AlertDialog";
 
-export default function stock() {
+export default function Stock() {
   const { items, loading, addItem, deleteItem, updateItem } =
     useCollection("stock");
   const { toast, showToast } = useToast();

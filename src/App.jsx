@@ -48,7 +48,7 @@ import Expenses from "./components/Expenses";
 import Reports from "./components/Reports";
 import History from "./components/History";
 import Credits from "./components/Credits";
-import stock from "./components/stock";
+import Stock from "./components/Stock";
 import Register from "./components/Register";
 import ReferrerRegister from "./components/ReferrerRegister";
 import SubscriptionWall from "./components/SubscriptionWall";
@@ -437,7 +437,7 @@ function AppShell({ user, profile, theme, toggleTheme }) {
           {activeTab === "purchases" && <Purchases />}
           {activeTab === "expenses" && <Expenses />}
           {activeTab === "losses" && <Losses />}
-          {activeTab === "stock" && <stock />}
+          {activeTab === "stock" && <Stock />}
           {activeTab === "reports" && <Reports />}
           {activeTab === "history" && <History />}
           {activeTab === "profile" && (
