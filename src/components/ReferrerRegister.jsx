@@ -106,7 +106,7 @@ export default function ReferrerRegister({ onBack }) {
             Earn money by bringing businesses onto QuickDuka
           </p>
           <p className="ref-reg-sub">
-            Note: Month 1 is free for every customer.
+            <b>Note: Month 1 is free for every customer.</b>
           </p>
         </div>
 

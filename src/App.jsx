@@ -816,12 +816,14 @@ export default function App() {
                   </button>
                 </div>
 
-                <div className="login-divider">New to QuickDuka?</div>
+                <div className="login-divider">
+                  New to QuickDuka? (Start Free 1-Month Trial)
+                </div>
                 <button
                   className="btn-register"
                   onClick={() => setView("register")}
                 >
-                  Start Free 1-Month Trial
+                  Create Account
                 </button>
 
                 <div className="login-divider" style={{ marginTop: 14 }}>
