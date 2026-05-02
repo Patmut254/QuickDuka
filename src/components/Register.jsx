@@ -39,6 +39,8 @@ function AppFooter() {
 
 const db = getFirestore();
 
+const STEPS = ["Account", "Business", "Done"];
+
 function TrialBadge() {
   return (
     <div className="trial-badge-popup">
