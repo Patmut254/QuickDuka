@@ -1,13 +1,19 @@
 /* eslint-disable react-hooks/set-state-in-effect */
-// useCatalogue — real-time listener for the current user's stock/catalogue items.
+// useStock — real-time listener for the current user's stock/stock items.
 // Used by Sales, Credits, Purchases, and Expenses to auto-populate dropdowns.
 import { useState, useEffect } from "react";
 import { db, auth } from "../firebase";
-import { collection, query, where, orderBy, onSnapshot } from "firebase/firestore";
+import {
+  collection,
+  query,
+  where,
+  orderBy,
+  onSnapshot,
+} from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 
-export function useCatalogue() {
-  const [catalogue, setCatalogue] = useState([]);
+export function useStock() {
+  const [stock, setStock] = useState([]);
   const [uid, setUid] = useState(null);
 
   useEffect(() => {
@@ -16,7 +22,10 @@ export function useCatalogue() {
   }, []);
 
   useEffect(() => {
-    if (!uid) { setCatalogue([]); return; }
+    if (!uid) {
+      setStock([]);
+      return;
+    }
 
     const q = query(
       collection(db, "stock"),
@@ -24,14 +33,18 @@ export function useCatalogue() {
       orderBy("name", "asc"),
     );
 
-    const unsub = onSnapshot(q, (snap) => {
-      setCatalogue(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
-    }, (err) => {
-      console.error("Catalogue listener error:", err.message);
-    });
+    const unsub = onSnapshot(
+      q,
+      (snap) => {
+        setStock(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+      },
+      (err) => {
+        console.error("Stock listener error:", err.message);
+      },
+    );
 
     return unsub;
   }, [uid]);
 
-  return catalogue; // array of { id, name, price, unit, notes }
+  return stock; // array of { id, name, price, unit, notes }
 }

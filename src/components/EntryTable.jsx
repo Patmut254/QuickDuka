@@ -93,8 +93,12 @@ export default function EntryTable({
       />
 
       <div className="table-toolbar">
+        <label htmlFor="table-search" className="sr-only">{t.search}</label>
         <input
+          id="table-search"
+          name="table-search"
           className="search-input"
+          autoComplete="off"
           placeholder={"🔍 " + t.search}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -133,6 +137,7 @@ export default function EntryTable({
                         c.type === "select" ? (
                           <select
                             className="inline-edit"
+                            name={`edit-${c.key}`}
                             value={editData[c.key] || ""}
                             onChange={(e) =>
                               setEditData({
@@ -150,6 +155,8 @@ export default function EntryTable({
                         ) : (
                           <input
                             className="inline-edit"
+                            name={`edit-${c.key}`}
+                            autoComplete="off"
                             type={c.inputType || "text"}
                             value={editData[c.key] ?? ""}
                             onChange={(e) =>

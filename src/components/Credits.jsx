@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useCollection } from "../hooks/useCollection";
-import { useCatalogue } from "../hooks/useCatalogue";
+import { useStock } from "../hooks/useStock";
 import { useLang } from "../LangContext";
 import { db, auth } from "../firebase";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
@@ -31,7 +31,7 @@ export default function Credits() {
     deleteItem,
     updateItem,
   } = useCollection("credits");
-  const catalogue = useCatalogue();
+  const stock = useStock();
   const { toast, showToast } = useToast();
 
   const emptyForm = {
@@ -357,12 +357,12 @@ export default function Credits() {
                   onChange={(e) => setForm({ ...form, phone: e.target.value })}
                 />
               </div>
-              {catalogue.length > 0 && (
+              {stock.length > 0 && (
                 <div className="field-group">
-                  <label>{t.pickCatalogue}</label>
+                  <label>{t.pickStock}</label>
                   <select
                     onChange={(e) => {
-                      const found = catalogue.find(
+                      const found = stock.find(
                         (c) => c.name === e.target.value,
                       );
                       setForm((f) => ({
@@ -377,7 +377,7 @@ export default function Credits() {
                     value={form.itemTaken}
                   >
                     <option value="">{t.selectItem}</option>
-                    {catalogue.map((c) => (
+                    {stock.map((c) => (
                       <option key={c.id} value={c.name}>
                         {c.name}
                         {c.price != null

@@ -94,15 +94,18 @@ export default function Stock() {
         </button>
       </div>
 
-      <div className="stock-hint">📦 {t.catalogueHint}</div>
+      <div className="stock-hint">📦 {t.stockHint}</div>
 
       {showForm && (
         <form className="entry-form" onSubmit={handleSubmit}>
-          <h3>{t.addToCatalogue}</h3>
+          <h3>{t.addToStock}</h3>
           <div className="form-grid">
             <div className="field-group">
-              <label>{t.itemName} *</label>
+              <label htmlFor="stock-name">{t.itemName} *</label>
               <input
+                id="stock-name"
+                name="stock-name"
+                autoComplete="off"
                 placeholder={t.itemNamePh}
                 value={form.name}
                 onChange={set("name")}
@@ -110,9 +113,12 @@ export default function Stock() {
               />
             </div>
             <div className="field-group">
-              <label>{t.price}</label>
+              <label htmlFor="stock-price">{t.price}</label>
               <input
+                id="stock-price"
+                name="stock-price"
                 type="number"
+                autoComplete="off"
                 min="0"
                 step="0.01"
                 placeholder={t.pricePh}
@@ -121,16 +127,22 @@ export default function Stock() {
               />
             </div>
             <div className="field-group">
-              <label>{t.unit}</label>
+              <label htmlFor="stock-unit">{t.unit}</label>
               <input
+                id="stock-unit"
+                name="stock-unit"
+                autoComplete="off"
                 placeholder={t.unitPh}
                 value={form.unit}
                 onChange={set("unit")}
               />
             </div>
             <div className="field-group full-width">
-              <label>{t.notes}</label>
+              <label htmlFor="stock-notes">{t.notes}</label>
               <input
+                id="stock-notes"
+                name="stock-notes"
+                autoComplete="off"
                 placeholder="..."
                 value={form.notes}
                 onChange={set("notes")}
@@ -146,7 +158,7 @@ export default function Stock() {
               ? t.saving
               : status === "saved"
                 ? t.saved
-                : t.addToCatalogue}
+                : t.addToStock}
           </button>
         </form>
       )}
@@ -157,7 +169,13 @@ export default function Stock() {
           className="field-group"
           style={{ maxWidth: 300, marginBottom: 16 }}
         >
+          <label htmlFor="stock-search" className="sr-only">
+            {t.searchItems}
+          </label>
           <input
+            id="stock-search"
+            name="stock-search"
+            autoComplete="off"
             placeholder={"🔍 " + t.searchItems}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -170,9 +188,7 @@ export default function Stock() {
         <div className="table-loading">Inapakia... / Loading...</div>
       ) : filtered.length === 0 ? (
         <div className="empty-state">
-          {search
-            ? t.noItemsSearch
-            : t.noItems}
+          {search ? t.noItemsSearch : t.noItems}
         </div>
       ) : (
         <div className="stock-grid">
@@ -187,7 +203,9 @@ export default function Stock() {
                       {item.unit ? ` / ${item.unit}` : ""}
                     </span>
                   ) : (
-                    <span className="price-variable">Bei inabadilika / Price varies</span>
+                    <span className="price-variable">
+                      Bei inabadilika / Price varies
+                    </span>
                   )}
                 </div>
               </div>
@@ -236,17 +254,23 @@ export default function Stock() {
               style={{ marginTop: 16 }}
             >
               <div className="field-group">
-                <label>{t.itemName} *</label>
+                <label htmlFor="edit-stock-name">{t.itemName} *</label>
                 <input
+                  id="edit-stock-name"
+                  name="edit-stock-name"
+                  autoComplete="off"
                   value={editForm.name}
                   onChange={setEdit("name")}
                   required
                 />
               </div>
               <div className="field-group">
-                <label>{t.price}</label>
+                <label htmlFor="edit-stock-price">{t.price}</label>
                 <input
+                  id="edit-stock-price"
+                  name="edit-stock-price"
                   type="number"
+                  autoComplete="off"
                   min="0"
                   step="0.01"
                   placeholder={t.pricePh}
@@ -255,16 +279,25 @@ export default function Stock() {
                 />
               </div>
               <div className="field-group">
-                <label>{t.unit}</label>
+                <label htmlFor="edit-stock-unit">{t.unit}</label>
                 <input
+                  id="edit-stock-unit"
+                  name="edit-stock-unit"
+                  autoComplete="off"
                   placeholder={t.unitPh}
                   value={editForm.unit}
                   onChange={setEdit("unit")}
                 />
               </div>
               <div className="field-group">
-                <label>{t.notes}</label>
-                <input value={editForm.notes} onChange={setEdit("notes")} />
+                <label htmlFor="edit-stock-notes">{t.notes}</label>
+                <input
+                  id="edit-stock-notes"
+                  name="edit-stock-notes"
+                  autoComplete="off"
+                  value={editForm.notes}
+                  onChange={setEdit("notes")}
+                />
               </div>
               <div className="alert-actions">
                 <button
@@ -287,7 +320,9 @@ export default function Stock() {
         open={!!deleteTarget}
         title={t.removeItem}
         message={
-          deleteTarget ? `Ondoa "${deleteTarget.name}" kutoka kwenye orodha yako? / Remove "${deleteTarget.name}" from your list?` : ""
+          deleteTarget
+            ? `Ondoa "${deleteTarget.name}" kutoka kwenye orodha yako? / Remove "${deleteTarget.name}" from your list?`
+            : ""
         }
         onCancel={() => setDeleteTarget(null)}
         onConfirm={async () => {

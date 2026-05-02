@@ -581,9 +581,11 @@ export default function App() {
               </div>
               <form onSubmit={handleLogin} className="login-form" noValidate>
                 <div className="field-group">
-                  <label>Admin Email</label>
+                  <label htmlFor="admin-email">Admin Email</label>
                   <div className="input-icon-wrap">
                     <input
+                      id="admin-email"
+                      name="admin-email"
                       type="email"
                       placeholder="admin@email.com"
                       value={loginId}
@@ -594,9 +596,11 @@ export default function App() {
                   </div>
                 </div>
                 <div className="field-group">
-                  <label>Password</label>
+                  <label htmlFor="admin-password">Password</label>
                   <div className="input-icon-wrap">
                     <input
+                      id="admin-password"
+                      name="admin-password"
                       type={showPw ? "text" : "password"}
                       placeholder="Admin password"
                       value={loginPw}
@@ -744,12 +748,14 @@ export default function App() {
               <>
                 <form onSubmit={handleLogin} className="login-form" noValidate>
                   <div className="field-group">
-                    <label>Email or Phone Number</label>
+                    <label htmlFor="login-id">Email or Phone Number</label>
                     <div className="input-icon-wrap">
                       <div className="input-icon-box">
                         <FontAwesomeIcon icon={faUser} />
                       </div>
                       <input
+                        id="login-id"
+                        name="login-id"
                         type="text"
                         placeholder="email@example.com or 0712 345 678"
                         value={loginId}
@@ -760,12 +766,14 @@ export default function App() {
                     </div>
                   </div>
                   <div className="field-group">
-                    <label>Password</label>
+                    <label htmlFor="login-password">Password</label>
                     <div className="input-icon-wrap">
                       <div className="input-icon-box">
                         <FontAwesomeIcon icon={faLock} />
                       </div>
                       <input
+                        id="login-password"
+                        name="login-password"
                         type={showPw ? "text" : "password"}
                         placeholder="Your password"
                         value={loginPw}
@@ -851,13 +859,16 @@ export default function App() {
                       noValidate
                     >
                       <div className="field-group">
-                        <label>Email or Phone</label>
+                        <label htmlFor="reset-input">Email or Phone</label>
                         <div className="input-icon-wrap">
                           <div className="input-icon-box">
                             <FontAwesomeIcon icon={faEnvelope} />
                           </div>
                           <input
+                            id="reset-input"
+                            name="reset-input"
                             type="text"
+                            autoComplete="username"
                             placeholder="email@example.com or 0712 345 678"
                             value={resetInput}
                             onChange={(e) => setResetInput(e.target.value)}
