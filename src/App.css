@@ -4707,10 +4707,19 @@ a[href^="tel:"]:hover {
   }
   .user-badge,
   .user-badge-btn {
-    display: block !important;
-    max-width: 90px;
+    display: flex !important;
+    align-items: center;
+    gap: 4px;
+    max-width: 120px;
     font-size: 11px;
     padding: 4px 8px;
+  }
+  .user-badge-name {
+    display: inline;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 70px;
   }
   .lang-toggle-btn {
     flex-shrink: 0;
@@ -4727,9 +4736,18 @@ a[href^="tel:"]:hover {
 }
 
 @media (max-width: 420px) {
+  .user-badge-name {
+    display: none !important;
+  }
   .user-badge,
   .user-badge-btn {
-    display: none !important;
+    display: flex !important;
+    padding: 5px 8px;
+    min-width: 32px;
+    justify-content: center;
+  }
+  .user-badge-icon-mobile {
+    font-size: 16px;
   }
 }
 

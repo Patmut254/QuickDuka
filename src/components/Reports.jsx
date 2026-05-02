@@ -79,7 +79,7 @@ export default function Reports() {
       const p = purchases.filter(inR).reduce((a, b) => a + (Number(b.amount) || 0), 0);
       const e = expenses.filter(inR).reduce((a, b) => a + (Number(b.amount) || 0), 0);
       const l = losses.filter(inR).reduce((a, b) => a + (Number(b.amount) || 0), 0);
-      months.push({ month: label, "Mauzo/Sales": s, "Manunuzi/Purchases": p, "Gharama/Expenses": e, "Hasara/Losses": l, "Faida/Profit": s - p - e - l });
+      months.push({ month: label, [t.sales]: s, [t.purchases]: p, [t.expenses]: e, [t.losses]: l, [t.netProfitLabel]: s - p - e - l });
     }
     return months;
   }, [sales, purchases, expenses]);
@@ -95,11 +95,11 @@ export default function Reports() {
 
       <div className="report-summary-cards">
         {[
-          { label: "Mauzo / Sales",    value: ms,     color: "#22c55e" },
-          { label: "Manunuzi / Purchases", value: mp,     color: "#f97316" },
-          { label: "Gharama / Expenses",  value: me,     color: "#a855f7" },
-          { label: "Hasara / Losses",    value: ml,     color: "#ef4444" },
-          { label: t.netProfitLabel,value: mProfit, color: mProfit >= 0 ? "#22c55e" : "#ef4444" },
+          { label: t.totalSales,     value: ms,     color: "#22c55e" },
+          { label: t.totalPurchases, value: mp,     color: "#f97316" },
+          { label: t.totalExpenses,  value: me,     color: "#a855f7" },
+          { label: t.totalLosses,    value: ml,     color: "#ef4444" },
+          { label: t.netProfitLabel, value: mProfit, color: mProfit >= 0 ? "#22c55e" : "#ef4444" },
           { label: t.netProfitLabel + " %", value: `${margin}%`, color: mProfit >= 0 ? "#3b82f6" : "#ef4444", raw: true },
         ].map(c => (
           <div className="report-card" key={c.label} style={{ borderLeft: `3px solid ${c.color}` }}>
@@ -121,10 +121,10 @@ export default function Reports() {
               <YAxis tick={{ fill: "#9ca3af", fontSize: 12 }} tickFormatter={v => v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v} />
               <Tooltip contentStyle={{ background: "#1a1a2e", border: "1px solid #333", color: "#fff" }} formatter={v => `KES ${v.toLocaleString()}`} />
               <Legend wrapperStyle={{ color: "#ccc" }} />
-              <Bar dataKey="Mauzo/Sales"          fill="#22c55e" radius={[3, 3, 0, 0]} />
-              <Bar dataKey="Manunuzi/Purchases"    fill="#f97316" radius={[3, 3, 0, 0]} />
-              <Bar dataKey="Gharama/Expenses"      fill="#a855f7" radius={[3, 3, 0, 0]} />
-              <Bar dataKey="Hasara/Losses"         fill="#ef4444" radius={[3, 3, 0, 0]} />
+              <Bar dataKey={t.sales}          fill="#22c55e" radius={[3, 3, 0, 0]} />
+              <Bar dataKey={t.purchases}    fill="#f97316" radius={[3, 3, 0, 0]} />
+              <Bar dataKey={t.expenses}      fill="#a855f7" radius={[3, 3, 0, 0]} />
+              <Bar dataKey={t.losses}         fill="#ef4444" radius={[3, 3, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>

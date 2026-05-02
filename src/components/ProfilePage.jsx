@@ -60,7 +60,7 @@ export default function ProfilePage({ user, profile }) {
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
     } catch (err) {
-      setError("{t.failedSaveProfile}");
+      setError(t.failedSaveProfile);
       console.error(err);
     }
     setSaving(false);
@@ -74,7 +74,7 @@ export default function ProfilePage({ user, profile }) {
           <FontAwesomeIcon icon={faCircleUser} />
         </div>
         <div>
-          <div className="profile-name">{profile?.businessName || "{t.businessName}"}</div>
+          <div className="profile-name">{profile?.businessName || t.businessName}</div>
           <div className="profile-role">{profile?.ownerName || user?.email}</div>
         </div>
       </div>
@@ -83,7 +83,7 @@ export default function ProfilePage({ user, profile }) {
         {/* Business info */}
         <div className="info-card" style={{ marginBottom: 14 }}>
           <h2>
-            <span className="fa-icon"><FontAwesomeIcon icon={faStore} /></span> Taarifa za Biashara / Business Details
+            <span className="fa-icon"><FontAwesomeIcon icon={faStore} /></span> {t.businessDetails}
           </h2>
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             <div className="form-row-2">
@@ -124,7 +124,7 @@ export default function ProfilePage({ user, profile }) {
         {/* Shop location */}
         <div className="info-card" style={{ marginBottom: 14 }}>
           <h2>
-            <span className="fa-icon"><FontAwesomeIcon icon={faMapMarkerAlt} /></span> Mahali pa Duka / Shop Location
+            <span className="fa-icon"><FontAwesomeIcon icon={faMapMarkerAlt} /></span> {t.shopLocation}
           </h2>
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             <div className="form-row-2">
@@ -180,7 +180,7 @@ export default function ProfilePage({ user, profile }) {
         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
           <button type="submit" className="profile-save-btn" disabled={saving}>
             <FontAwesomeIcon icon={faFloppyDisk} />
-            {saving ? "{t.saving}" : "{t.saveProfile}"}
+            {saving ? t.saving : t.saveProfile}
           </button>
           {saved && (
             <span className="profile-save-success">

@@ -70,12 +70,12 @@ export default function Credits() {
         payments: [],
         dateIssued: form.date,
       });
-      showToast("Credit recorded!");
+      showToast(t.saved);
       setForm(emptyForm);
       setShowForm(false);
     } catch (err) {
       console.error(err);
-      showToast("Save failed", "error");
+      showToast(t.failedSave, "error");
     }
     setSaving(false);
   };
@@ -121,11 +121,9 @@ export default function Credits() {
       });
 
       if (isFullyPaid) {
-        showToast("Debt cleared! Payment recorded in Sales ✓");
+        showToast(t.paidSales);
       } else {
-        showToast(
-          `KES ${actualAmount.toLocaleString()} recorded in Sales. KES ${(payingCredit.totalAmount - newPaid).toLocaleString()} still outstanding.`,
-        );
+        showToast(t.partialPay(actualAmount.toLocaleString(), (payingCredit.totalAmount - newPaid).toLocaleString()));
       }
 
       setPayingCredit(null);
@@ -133,7 +131,7 @@ export default function Credits() {
       setPayNote("");
     } catch (err) {
       console.error(err);
-      showToast("Payment failed", "error");
+      showToast(t.failedSave, "error");
     }
   };
 
@@ -176,7 +174,7 @@ export default function Credits() {
       setBadDebtTarget(null);
     } catch (err) {
       console.error(err);
-      showToast("Failed to mark as bad debt", "error");
+      showToast(t.failedSave, "error");
       setBadDebtTarget(null);
     }
   };
@@ -889,7 +887,7 @@ export default function Credits() {
         onConfirm={async () => {
           if (deleteTarget) {
             await deleteItem(deleteTarget.id);
-            showToast("Credit deleted");
+            showToast(t.deletedToast);
             setDeleteTarget(null);
           }
         }}

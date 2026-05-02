@@ -122,7 +122,7 @@ export default function History() {
       showToast(t.restored, "success");
     } catch (error) {
       console.error("Restore failed:", error);
-      showToast("Imeshindwa kurudisha rekodi. / Failed to restore record.", "error");
+      showToast(t.failedSave, "error");
     }
   };
 
@@ -140,7 +140,7 @@ export default function History() {
       showToast(t.historyCleared, "success");
     } catch (error) {
       console.error("Clear history failed:", error);
-      showToast("Failed to clear history.", "error");
+      showToast(t.failedDelete, "error");
     } finally {
       setClearing(false);
     }

@@ -367,7 +367,7 @@ function AppShell({ user, profile, theme, toggleTheme }) {
             <div className="top-bar-right">
               {showExpWarn && (
                 <span className="expiry-warning-badge">
-                  Expires in {daysLeft}d
+                  {t.expiresIn(daysLeft)}
                 </span>
               )}
               <button
@@ -387,12 +387,13 @@ function AppShell({ user, profile, theme, toggleTheme }) {
               <button
                 className="user-badge user-badge-btn"
                 onClick={() => setActiveTab("profile")}
-                title="Go to Profile"
+                title={t.profile}
               >
-                {profile?.ownerName || profile?.businessName || user.email}
+                <FontAwesomeIcon icon={faCircleUser} className="user-badge-icon-mobile" />
+                <span className="user-badge-name">{profile?.ownerName || profile?.businessName || user.email}</span>
               </button>
               <button className="logout-inline" onClick={() => signOut(auth)}>
-                Sign out
+                {t.signOut}
               </button>
             </div>
           </header>
@@ -816,14 +817,12 @@ export default function App() {
                   </button>
                 </div>
 
-                <div className="login-divider">
-                  New to QuickDuka? (Start Free 1-Month Trial)
-                </div>
+                <div className="login-divider">New to QuickDuka?</div>
                 <button
                   className="btn-register"
                   onClick={() => setView("register")}
                 >
-                  Create Account
+                  Start Free 1-Month Trial
                 </button>
 
                 <div className="login-divider" style={{ marginTop: 14 }}>
