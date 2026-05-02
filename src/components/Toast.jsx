@@ -24,7 +24,7 @@ export function Toast({ toast }) {
     clearTimeout(timerRef.current);
     timerRef.current = setTimeout(() => setShow(false), 3000);
     return () => clearTimeout(timerRef.current);
-  }, [toast, toast.id]);
+  }, [toast, toast?.id]); // ← use optional chaining so null toast doesn't crash
 
   if (!show || !toast) return null;
 
@@ -35,6 +35,6 @@ export function Toast({ toast }) {
       <span className="toast-icon">{icons[toast.type] || "✅"}</span>
       <span>{toast.message}</span>
     </div>,
-    document.body
+    document.body,
   );
 }
