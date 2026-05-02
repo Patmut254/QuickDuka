@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/preserve-manual-memoization */
 import { useState, useMemo } from "react";
 import { useCollection } from "../hooks/useCollection";
 import { useLang } from "../LangContext";

@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 // useCatalogue — real-time listener for the current user's stock/catalogue items.
 // Used by Sales, Credits, Purchases, and Expenses to auto-populate dropdowns.
 import { useState, useEffect } from "react";

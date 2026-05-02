@@ -8,7 +8,7 @@
   padding: 0;
 }
 
-/* ─── LIGHT THEME ─────────────────────────────────────── */
+/* LIGHT THEME  */
 :root {
   --bg: #f4f6f4;
   --bg2: #ffffff;
@@ -36,7 +36,7 @@
   --radius-lg: 14px;
 }
 
-/* ─── DARK THEME ──────────────────────────────────────── */
+/* DARK THEME */
 [data-theme="dark"] {
   --bg: #0a0a0a;
   --bg2: #141414;
@@ -80,7 +80,7 @@ body {
     color 0.25s;
 }
 
-/* ─── SPLASH ──────────────────────────────────────────── */
+/* SPLASH */
 .splash {
   height: 100vh;
   display: flex;
@@ -101,8 +101,8 @@ body {
   font-size: 13px;
 }
 
-/* ─── LOGIN PAGE ─────────────────────────────────────── */
-/* ── Login page — Daraja-style open layout (no card, form floats on page) ── */
+/* LOGIN PAGE  */
+/* Login page — Daraja-style open layout (no card, form floats on page) */
 .login-page {
   min-height: 100vh;
   display: flex;
@@ -117,11 +117,11 @@ body {
   width: 100%;
 }
 
-/* ─── 3D GRADIENT DOT FIELD ──────────────────────────────────────────────────
+/* 3D GRADIENT DOT FIELD 
    Dots shrink and become transparent towards the LEFT (where the form is),
    and are fullest / most vibrant on the RIGHT. In full-screen, an SVG-like
    perspective effect is achieved via CSS mask + radial gradients stacked.
-   ────────────────────────────────────────────────────────────────────────── */
+   */
 .login-dots {
   position: fixed;
   pointer-events: none;
@@ -560,7 +560,7 @@ body {
   word-break: break-all;
 }
 
-/* ─── FIELD GROUP ─────────────────────────────────────── */
+/* FIELD GROUP  */
 .field-group {
   display: flex;
   flex-direction: column;
@@ -626,14 +626,14 @@ body {
   gap: 14px;
 }
 
-/* ─── APP SHELL ──────────────────────────────────────── */
+/* APP SHELL */
 .app-shell {
   display: flex;
   height: 100vh;
   overflow: hidden;
 }
 
-/* ─── SIDEBAR ────────────────────────────────────────── */
+/* SIDEBAR */
 .sidebar {
   width: var(--sidebar-w);
   background: var(--bg2);
@@ -817,12 +817,12 @@ body {
   border-color: var(--red);
 }
 
-/* ─── MOBILE NAV BAR ─────────────────────────────────── */
+/* MOBILE NAV BAR */
 .mobile-bar {
   display: none;
 }
 
-/* ─── MAIN AREA ──────────────────────────────────────── */
+/* MAIN AREA */
 .main-content {
   flex: 1;
   display: flex;
@@ -940,7 +940,7 @@ body {
   padding: 22px;
 }
 
-/* ─── BUTTONS ────────────────────────────────────────── */
+/* BUTTONS */
 .btn-primary {
   background: var(--accent);
   color: #fff;
@@ -1000,7 +1000,7 @@ body {
   background: #a81a1a;
 }
 
-/* ─── DASHBOARD ──────────────────────────────────────── */
+/* DASHBOARD */
 .dashboard {
   display: flex;
   flex-direction: column;
@@ -1150,7 +1150,7 @@ body {
   flex-shrink: 0;
 }
 
-/* ─── MODULE HEADER ──────────────────────────────────── */
+/* MODULE HEADER */
 .module-header {
   display: flex;
   align-items: center;
@@ -1192,7 +1192,7 @@ body {
   color: var(--red) !important;
 }
 
-/* ─── ENTRY FORM ─────────────────────────────────────── */
+/* ENTRY FORM  */
 .entry-form {
   background: var(--bg2);
   border: 1px solid var(--border);
@@ -1224,7 +1224,7 @@ body {
   grid-column: 1 / -1;
 }
 
-/* ─── TABLE ──────────────────────────────────────────── */
+/* TABLE */
 .entry-table-wrap {
   background: var(--bg2);
   border: 1px solid var(--border);
@@ -1477,7 +1477,7 @@ body {
   color: var(--border2);
 }
 
-/* ─── TOAST ──────────────────────────────────────────── */
+/* TOAST */
 .toast {
   position: fixed;
   bottom: 22px;
@@ -1517,7 +1517,7 @@ body {
   }
 }
 
-/* ─── REPORTS ────────────────────────────────────────── */
+/* REPORTS */
 .reports-controls {
   display: flex;
   align-items: center;
@@ -1620,7 +1620,7 @@ body {
   color: var(--red);
 }
 
-/* ─── CREDITS ────────────────────────────────────────── */
+/* CREDITS */
 .credit-status-paid {
   color: var(--green);
   font-weight: 700;
@@ -1664,7 +1664,7 @@ body {
   background: var(--green-lt);
 }
 
-/* ─── MODAL ──────────────────────────────────────────── */
+/* MODAL */
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -1702,7 +1702,7 @@ body {
   justify-content: flex-end;
 }
 
-/* ─── SUBSCRIPTION WALL ──────────────────────────────── */
+/* SUBSCRIPTION WALL */
 .sub-wall {
   min-height: 100vh;
   display: flex;
@@ -1995,7 +1995,7 @@ body {
   border-color: var(--red);
 }
 
-/* ─── INFO PAGES (Contact, FAQ, Privacy) ─────────────── */
+/* INFO PAGES (Contact, FAQ, Privacy) */
 .info-page {
   max-width: 700px;
   margin: 0 auto;
@@ -2166,7 +2166,7 @@ body {
   color: var(--green);
 }
 
-/* ─── PHONE LINKS ────────────────────────────────────── */
+/* PHONE LINKS  */
 a[href^="tel:"] {
   color: var(--green);
   font-weight: 600;
@@ -2178,7 +2178,7 @@ a[href^="tel:"]:hover {
   text-decoration: underline;
 }
 
-/* ─── ADMIN ──────────────────────────────────────────── */
+/* ADMIN */
 .admin-tabs {
   display: flex;
   gap: 8px;
@@ -2258,14 +2258,14 @@ a[href^="tel:"]:hover {
   border: 1px solid #f5c898;
 }
 
-/* ─── REGISTER ───────────────────────────────────────── */
+/* REGISTER */
 .register-form {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 
-/* ─── RESPONSIVE ─────────────────────────────────────── */
+/* RESPONSIVE  */
 @media (max-width: 960px) {
   .summary-cards {
     grid-template-columns: repeat(3, 1fr);
@@ -2399,7 +2399,7 @@ a[href^="tel:"]:hover {
     grid-template-columns: 1fr;
   }
 
-  /* ── Login page mobile fixes ── */
+  /* Login page mobile fixes */
   .login-page {
     padding: 24px 16px 0;
     min-height: calc(100vh - 0px);
@@ -2465,7 +2465,7 @@ a[href^="tel:"]:hover {
   }
 }
 
-/* ─── OTP / REGISTER ─────────────────────────────────── */
+/* OTP / REGISTER */
 .reg-step-bar {
   display: flex;
   align-items: center;
@@ -2674,7 +2674,7 @@ a[href^="tel:"]:hover {
   word-break: break-all;
 }
 
-/* ─── ADMIN PANEL — FULL STYLES ─────────────────────── */
+/* ADMIN PANEL — FULL STYLES */
 .admin-stats-row {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -3024,7 +3024,7 @@ a[href^="tel:"]:hover {
   border-bottom: 1px solid var(--border);
 }
 
-/* ─── CREDITS PAGE BUTTONS FIX ───────────────────────── */
+/* CREDITS PAGE BUTTONS FIX */
 .credit-card-header {
   display: flex;
   justify-content: space-between;
@@ -3045,7 +3045,7 @@ a[href^="tel:"]:hover {
   margin-top: 10px;
 }
 
-/* ─── CONTACT FORM ───────────────────────────────────── */
+/* CONTACT FORM */
 .contact-form-wrap {
   display: flex;
   flex-direction: column;
@@ -3105,7 +3105,7 @@ a[href^="tel:"]:hover {
   font-size: 13px;
 }
 
-/* ─── PROFILE PAGE ───────────────────────────────────── */
+/* PROFILE PAGE */
 .profile-page {
   max-width: 600px;
 }
@@ -3184,7 +3184,7 @@ a[href^="tel:"]:hover {
   gap: 6px;
 }
 
-/* ─── MOBILE FIXES ───────────────────────────────────── */
+/* MOBILE FIXES */
 @media (max-width: 600px) {
   .admin-stats-row {
     grid-template-columns: repeat(2, 1fr);
@@ -3204,7 +3204,7 @@ a[href^="tel:"]:hover {
   }
 }
 
-/* ─── DARK MODE LOGIN PAGE ───────────────────────────── */
+/* DARK MODE LOGIN PAGE */
 [data-theme="dark"] .login-page {
   background: linear-gradient(160deg, #0a0a0a 0%, #101010 40%, #0a0a0a 100%);
 }
@@ -3232,7 +3232,7 @@ a[href^="tel:"]:hover {
   border: 1px solid #2a2a2a;
 }
 
-/* ─── DARK MODE SIDEBAR ──────────────────────────────── */
+/* DARK MODE SIDEBAR */
 [data-theme="dark"] .sidebar {
   background: #111111;
   border-right-color: #222;
@@ -3250,7 +3250,7 @@ a[href^="tel:"]:hover {
   background: #0a2015;
 }
 
-/* ─── DARK MODE CARDS / SECTIONS ────────────────────── */
+/* DARK MODE CARDS / SECTIONS */
 [data-theme="dark"] .summary-card,
 [data-theme="dark"] .chart-section,
 [data-theme="dark"] .recent-section,
@@ -3296,7 +3296,7 @@ a[href^="tel:"]:hover {
   border-top-color: #222;
 }
 
-/* ─── DARK MODE INPUTS ───────────────────────────────── */
+/* DARK MODE INPUTS */
 [data-theme="dark"] .field-group input,
 [data-theme="dark"] .field-group select,
 [data-theme="dark"] .field-group textarea,
@@ -3313,7 +3313,7 @@ a[href^="tel:"]:hover {
   border-color: #333;
 }
 
-/* ─── DARK MODE OTP DIGITS ───────────────────────────── */
+/* DARK MODE OTP DIGITS */
 [data-theme="dark"] .otp-digit {
   background: #1a1a1a;
   border-color: #333;
@@ -3324,7 +3324,7 @@ a[href^="tel:"]:hover {
   border-color: var(--accent);
 }
 
-/* ─── DARK MODE MODULE HEADERS ───────────────────────── */
+/* DARK MODE MODULE HEADERS */
 [data-theme="dark"] .module-header {
   background: transparent;
 }
@@ -3333,12 +3333,12 @@ a[href^="tel:"]:hover {
   color: #f0f0f0;
 }
 
-/* ─── REMOVE BOX SHADOWS EVERYWHERE IN DARK ─────────── */
+/* REMOVE BOX SHADOWS EVERYWHERE IN DARK */
 [data-theme="dark"] * {
   box-shadow: none !important;
 }
 
-/* ─── CREDITS CARD LAYOUT FIX ────────────────────────── */
+/* CREDITS CARD LAYOUT FIX */
 .credit-card {
   background: var(--bg2);
   border: 1px solid var(--border);
@@ -3494,7 +3494,7 @@ a[href^="tel:"]:hover {
   background: var(--green-lt);
 }
 
-/* ─── LANGUAGE TOGGLE ──────────────────────────────────────── */
+/* LANGUAGE TOGGLE */
 .sidebar-lang-toggle {
   display: flex;
   align-items: center;
@@ -3538,7 +3538,7 @@ a[href^="tel:"]:hover {
   color: var(--green);
 }
 
-/* ─── ADMIN PANEL REDESIGN ─────────────────────────────────── */
+/* ADMIN PANEL REDESIGN */
 .admin-panel-wrap {
   padding: 0;
 }
@@ -4202,7 +4202,7 @@ a[href^="tel:"]:hover {
   max-width: 100%;
 }
 
-/* ─── ADMIN ADD/DELETE MODALS ──────────────────────────────── */
+/* ADMIN ADD/DELETE MODALS */
 .admin-add-btn {
   display: flex;
   align-items: center;
@@ -4515,7 +4515,7 @@ a[href^="tel:"]:hover {
   opacity: 0.7;
 }
 
-/* ─── TRIAL BADGE POPUP (top-right on register page) ─────────────────────── */
+/* TRIAL BADGE POPUP (top-right on register page) */
 .trial-badge-popup {
   position: fixed;
   top: 20px;
@@ -4587,7 +4587,7 @@ a[href^="tel:"]:hover {
   margin: 0 auto 14px;
 }
 
-/* ── Global footer copyright ── */
+/* Global footer copyright */
 /* ═══════════════════════════════════════════════════════════
    APP FOOTER — SINGLE AUTHORITATIVE DEFINITION
    Desktop: fixed bar offset by sidebar width inside app-shell.
@@ -4638,12 +4638,12 @@ a[href^="tel:"]:hover {
   padding-bottom: 36px;
 }
 
-/* ─── FIXES: REPORT CARDS SQUARE (no border-radius) ──── */
+/* FIXES: REPORT CARDS SQUARE (no border-radius) */
 .report-card {
   border-radius: 0 !important;
 }
 
-/* ─── MOBILE OVERRIDES ───────────────────────────────── */
+/* MOBILE OVERRIDES */
 @media (max-width: 768px) {
   /* On mobile, even inside app-shell, footer goes ABOVE mobile nav bar */
   .app-shell .app-footer {
@@ -4675,7 +4675,7 @@ a[href^="tel:"]:hover {
   }
 }
 
-/* ─── FIXES: USER BADGE AS CLICKABLE BUTTON ─────────── */
+/* FIXES: USER BADGE AS CLICKABLE BUTTON */
 .user-badge-btn {
   cursor: pointer;
   border: none;
@@ -4691,7 +4691,7 @@ a[href^="tel:"]:hover {
   border-color: var(--green);
 }
 
-/* ─── FIXES: TOP BAR MOBILE ──────────────────────────── */
+/* FIXES: TOP BAR MOBILE */
 @media (max-width: 768px) {
   .top-bar-right {
     gap: 6px;
@@ -4733,7 +4733,7 @@ a[href^="tel:"]:hover {
   }
 }
 
-/* ─── FIXES: MOBILE NAV — ADMIN VISIBLE ─────────────── */
+/* FIXES: MOBILE NAV — ADMIN VISIBLE */
 .mobile-bar {
   scrollbar-width: none;
 }
@@ -4742,7 +4742,7 @@ a[href^="tel:"]:hover {
   min-width: 52px;
 }
 
-/* ─── FIXES: HISTORY PAGE ────────────────────────────── */
+/* FIXES: HISTORY PAGE */
 .history-page {
   max-width: 100%;
 }
@@ -4921,17 +4921,17 @@ a[href^="tel:"]:hover {
   }
 }
 
-/* ─── FIXES: CREDITS SUMMARY CARDS MATCH DASHBOARD ───── */
+/* FIXES: CREDITS SUMMARY CARDS MATCH DASHBOARD */
 .credits-summary .summary-card {
   border-radius: 0;
 }
 
-/* ─── FIXES: INFO PAGE TABS ──────────────────────────── */
+/* FIXES: INFO PAGE TABS */
 .info-page > div > button {
   border-radius: 0;
 }
 
-/* ─── FIXES: MOBILE PROFILE IN TOP BAR ──────────────── */
+/* FIXES: MOBILE PROFILE IN TOP BAR */
 @media (max-width: 768px) {
   .page-title {
     font-size: 13px;
@@ -4944,7 +4944,7 @@ a[href^="tel:"]:hover {
   }
 }
 
-/* ─── DARK MODE HISTORY ───────────────────────────────── */
+/* DARK MODE HISTORY */
 [data-theme="dark"] .history-card {
   background: #141414;
   border-color: #2a2a2a;
@@ -4955,7 +4955,7 @@ a[href^="tel:"]:hover {
   border-color: #333;
 }
 
-/* ─── FIXES: ADMIN PANEL MOBILE ─────────────────────── */
+/* FIXES: ADMIN PANEL MOBILE */
 @media (max-width: 768px) {
   .admin-stats-row {
     grid-template-columns: repeat(2, 1fr);
@@ -4976,14 +4976,14 @@ a[href^="tel:"]:hover {
   }
 }
 
-/* ─── FIXES: CONTACT FORM MOBILE ─────────────────────── */
+/* FIXES: CONTACT FORM MOBILE */
 @media (max-width: 600px) {
   .contact-form-row {
     grid-template-columns: 1fr;
   }
 }
 
-/* ─── FIXES: PROFILE PAGE MOBILE ─────────────────────── */
+/* FIXES: PROFILE PAGE MOBILE */
 @media (max-width: 600px) {
   .profile-avatar-row {
     flex-direction: column;
@@ -4995,7 +4995,7 @@ a[href^="tel:"]:hover {
   }
 }
 
-/* ─── FIXES: CREDITS MOBILE ──────────────────────────── */
+/* FIXES: CREDITS MOBILE */
 @media (max-width: 600px) {
   .credits-summary {
     grid-template-columns: 1fr;
@@ -5009,21 +5009,21 @@ a[href^="tel:"]:hover {
   }
 }
 
-/* ─── FIXES: SUMMARY CARDS MOBILE ───────────────────── */
+/* FIXES: SUMMARY CARDS MOBILE */
 @media (max-width: 480px) {
   .summary-cards {
     grid-template-columns: 1fr 1fr;
   }
 }
 
-/* ─── FIXES: PAGE BODY MOBILE PADDING FOR FOOTER ─────── */
+/* FIXES: PAGE BODY MOBILE PADDING FOR FOOTER */
 @media (max-width: 768px) {
   .page-body {
     padding-bottom: 30px;
   }
 }
 
-/* ─── ALERT DIALOG ───────────────────────────────────── */
+/* ALERT DIALOG */
 .alert-overlay {
   position: fixed;
   inset: 0;
@@ -5227,23 +5227,23 @@ a[href^="tel:"]:hover {
   border-color: #383838;
 }
 
-/* ─── MODULE HEADER FIX ───────────────────────────────── */
+/* MODULE HEADER FIX */
 .module-header {
   border-radius: 0;
 }
 
-/* ─── REPORTS CARDS NO RADIUS ─────────────────────────── */
+/* REPORTS CARDS NO RADIUS */
 .report-card,
 .chart-card {
   border-radius: 0 !important;
 }
 
-/* ─── SIDEBAR NAV ITEM BORDER RADIUS FIX ─────────────── */
+/* SIDEBAR NAV ITEM BORDER RADIUS FIX */
 .nav-item {
   border-radius: 6px;
 }
 
-/* ─── TOP BAR SIGN OUT ALWAYS VISIBLE ─────────────────── */
+/* TOP BAR SIGN OUT ALWAYS VISIBLE  */
 @media (max-width: 360px) {
   .logout-inline {
     font-size: 10px;
@@ -5251,7 +5251,7 @@ a[href^="tel:"]:hover {
   }
 }
 
-/* ─── CREDIT CARD STATUS BADGES ─────────────────────── */
+/* CREDIT CARD STATUS BADGES */
 .credit-status-badge {
   font-size: 10px;
   font-weight: 800;
@@ -5261,7 +5261,7 @@ a[href^="tel:"]:hover {
   letter-spacing: 0.3px;
 }
 
-/* ─── CREDIT CARD STATES ────────────────────────────── */
+/* CREDIT CARD STATES */
 .credit-card-bad {
   border-color: #fca5a5 !important;
   border-width: 1px;
@@ -5274,7 +5274,7 @@ a[href^="tel:"]:hover {
   opacity: 0.85;
 }
 
-/* ─── CREDIT FLOW NOTE (shows where it went) ────────── */
+/* CREDIT FLOW NOTE (shows where it went) */
 .credit-closed-note {
   font-size: 12px;
   font-weight: 600;
@@ -5285,7 +5285,7 @@ a[href^="tel:"]:hover {
   margin-bottom: 2px;
 }
 
-/* ─── PAYMENT MODAL FLOW NOTE ───────────────────────── */
+/* PAYMENT MODAL FLOW NOTE */
 .credit-flow-note {
   background: var(--green-bg);
   border: 1px solid var(--green-lt);

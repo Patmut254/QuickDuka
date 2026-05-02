@@ -8,20 +8,40 @@ import { Toast, useToast } from "./Toast";
 import AlertDialog from "./AlertDialog";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  faPlus, faTimes, faPhone, faCalendar, faHandHoldingDollar,
-  faCheckCircle, faExclamationTriangle, faTrash, faThumbsDown,
-  faArrowRight, faMoneyBillWave, faChartBar,
+  faPlus,
+  faTimes,
+  faPhone,
+  faCalendar,
+  faHandHoldingDollar,
+  faCheckCircle,
+  faExclamationTriangle,
+  faTrash,
+  faThumbsDown,
+  faArrowRight,
+  faMoneyBillWave,
+  faChartBar,
 } from "@fortawesome/free-solid-svg-icons";
 
 export default function Credits() {
   const { t } = useLang();
-  const { items: credits, loading, addItem, deleteItem, updateItem } = useCollection("credits");
+  const {
+    items: credits,
+    loading,
+    addItem,
+    deleteItem,
+    updateItem,
+  } = useCollection("credits");
   const catalogue = useCatalogue();
   const { toast, showToast } = useToast();
 
   const emptyForm = {
     date: new Date().toISOString().split("T")[0],
-    customer: "", phone: "", itemTaken: "", dueDate: "", totalAmount: "", notes: "",
+    customer: "",
+    phone: "",
+    itemTaken: "",
+    dueDate: "",
+    totalAmount: "",
+    notes: "",
   };
 
   const [form, setForm] = useState(emptyForm);
@@ -36,7 +56,7 @@ export default function Credits() {
   const uid = auth.currentUser?.uid;
   const today = () => new Date().toISOString().split("T")[0];
 
-  // ── Save new credit ──────────────────────────────────────
+  // Save new credit
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (saving) return;
@@ -60,13 +80,14 @@ export default function Credits() {
     setSaving(false);
   };
 
-  // ── Record a payment ─────────────────────────────────────
+  // Record a payment
   // Every payment — partial or full — goes to Sales immediately.
   const handlePayment = async () => {
     const amount = parseFloat(payAmount);
     if (!amount || amount <= 0) return;
 
-    const remaining = (payingCredit.totalAmount || 0) - (payingCredit.paidAmount || 0);
+    const remaining =
+      (payingCredit.totalAmount || 0) - (payingCredit.paidAmount || 0);
     // Cap at remaining so you can't overpay
     const actualAmount = Math.min(amount, remaining);
     const newPaid = (payingCredit.paidAmount || 0) + actualAmount;
@@ -93,7 +114,8 @@ export default function Credits() {
         customer: payingCredit.customer,
         phone: payingCredit.phone || "",
         amount: actualAmount,
-        notes: `${isFullyPaid ? "Final payment — debt cleared." : "Partial payment."} Originally issued ${payingCredit.dateIssued}. ${payNote || ""}`.trim(),
+        notes:
+          `${isFullyPaid ? "Final payment — debt cleared." : "Partial payment."} Originally issued ${payingCredit.dateIssued}. ${payNote || ""}`.trim(),
         fromCredit: payingCredit.id,
         createdAt: serverTimestamp(),
       });
@@ -101,7 +123,9 @@ export default function Credits() {
       if (isFullyPaid) {
         showToast("Debt cleared! Payment recorded in Sales ✓");
       } else {
-        showToast(`KES ${actualAmount.toLocaleString()} recorded in Sales. KES ${(payingCredit.totalAmount - newPaid).toLocaleString()} still outstanding.`);
+        showToast(
+          `KES ${actualAmount.toLocaleString()} recorded in Sales. KES ${(payingCredit.totalAmount - newPaid).toLocaleString()} still outstanding.`,
+        );
       }
 
       setPayingCredit(null);
@@ -113,7 +137,7 @@ export default function Credits() {
     }
   };
 
-  // ── Mark as bad debt ─────────────────────────────────────
+  // Mark as bad debt
   // Only the REMAINING unpaid amount goes to Losses.
   // Already-paid amounts stay in Sales (recorded at payment time).
   const confirmBadDebt = async () => {
@@ -147,7 +171,7 @@ export default function Credits() {
       showToast(
         unpaid > 0
           ? `KES ${unpaid.toLocaleString()} imeandikwa / written off to Losses. ${credit.paidAmount > 0 ? `KES ${credit.paidAmount.toLocaleString()} already collected stays in Sales.` : ""}`
-          : "Marked as bad debt (nothing to write off — already fully collected)."
+          : "Marked as bad debt (nothing to write off — already fully collected).",
       );
       setBadDebtTarget(null);
     } catch (err) {
@@ -157,48 +181,69 @@ export default function Credits() {
     }
   };
 
-  // ── Helpers ──────────────────────────────────────────────
+  // Helpers
   const isOverdue = (c) => {
     if (!c.dueDate || c.status !== "outstanding") return false;
     return new Date(c.dueDate) < new Date();
   };
 
   const outstanding = credits.filter((c) => c.status === "outstanding");
-  const badDebts    = credits.filter((c) => c.status === "bad_debt");
-  const paid        = credits.filter((c) => c.status === "paid");
+  const badDebts = credits.filter((c) => c.status === "bad_debt");
+  const paid = credits.filter((c) => c.status === "paid");
 
   // Outstanding = only active unpaid debts (not bad debts — those are closed)
   const totalOutstanding = outstanding.reduce(
-    (a, c) => a + Math.max(0, (c.totalAmount || 0) - (c.paidAmount || 0)), 0
+    (a, c) => a + Math.max(0, (c.totalAmount || 0) - (c.paidAmount || 0)),
+    0,
   );
   // Total collected across all credits (paid + partial payments on outstanding + bad debts)
   const totalCollected = credits.reduce((a, c) => a + (c.paidAmount || 0), 0);
   // Total written off as bad debt
   const totalWrittenOff = badDebts.reduce(
-    (a, c) => a + Math.max(0, (c.badDebtAmount || (c.totalAmount || 0) - (c.paidAmount || 0))), 0
+    (a, c) =>
+      a +
+      Math.max(
+        0,
+        c.badDebtAmount || (c.totalAmount || 0) - (c.paidAmount || 0),
+      ),
+    0,
   );
   // Grand total of all credit ever issued
   const grandTotal = credits.reduce((a, c) => a + (c.totalAmount || 0), 0);
 
-  // ── Render ───────────────────────────────────────────────
+  // Render
   return (
     <div className="module-page">
       <Toast toast={toast} />
 
-      {/* ── Summary cards ── */}
+      {/* Summary cards */}
       <div className="credits-summary">
-        <div className="summary-card" style={{ borderTop: "3px solid var(--orange)" }}>
-          <div className="card-icon" style={{ background: "var(--orange-bg)", color: "var(--orange)" }}>
+        <div
+          className="summary-card"
+          style={{ borderTop: "3px solid var(--orange)" }}
+        >
+          <div
+            className="card-icon"
+            style={{ background: "var(--orange-bg)", color: "var(--orange)" }}
+          >
             <FontAwesomeIcon icon={faHandHoldingDollar} />
           </div>
           <div>
             <div className="card-label">Total Outstanding</div>
-            <div className="card-value orange">KES {totalOutstanding.toLocaleString()}</div>
+            <div className="card-value orange">
+              KES {totalOutstanding.toLocaleString()}
+            </div>
           </div>
         </div>
 
-        <div className="summary-card" style={{ borderTop: "3px solid var(--red)" }}>
-          <div className="card-icon" style={{ background: "var(--red-bg)", color: "var(--red)" }}>
+        <div
+          className="summary-card"
+          style={{ borderTop: "3px solid var(--red)" }}
+        >
+          <div
+            className="card-icon"
+            style={{ background: "var(--red-bg)", color: "var(--red)" }}
+          >
             <FontAwesomeIcon icon={faExclamationTriangle} />
           </div>
           <div>
@@ -207,8 +252,14 @@ export default function Credits() {
           </div>
         </div>
 
-        <div className="summary-card" style={{ borderTop: "3px solid var(--green)" }}>
-          <div className="card-icon" style={{ background: "var(--green-bg)", color: "var(--green)" }}>
+        <div
+          className="summary-card"
+          style={{ borderTop: "3px solid var(--green)" }}
+        >
+          <div
+            className="card-icon"
+            style={{ background: "var(--green-bg)", color: "var(--green)" }}
+          >
             <FontAwesomeIcon icon={faCheckCircle} />
           </div>
           <div>
@@ -218,32 +269,41 @@ export default function Credits() {
         </div>
       </div>
 
-      {/* ── Stats row — collected / written off / grand total ── */}
+      {/* Stats row — collected / written off / grand total */}
       <div className="credits-stats-row">
         <div className="credits-stat-box credits-stat-green">
-          <FontAwesomeIcon icon={faMoneyBillWave} className="credits-stat-icon" />
+          <FontAwesomeIcon
+            icon={faMoneyBillWave}
+            className="credits-stat-icon"
+          />
           <div>
             <div className="credits-stat-label">{t.totalCollected}</div>
-            <div className="credits-stat-val">KES {totalCollected.toLocaleString()}</div>
+            <div className="credits-stat-val">
+              KES {totalCollected.toLocaleString()}
+            </div>
           </div>
         </div>
         <div className="credits-stat-box credits-stat-red">
           <FontAwesomeIcon icon={faThumbsDown} className="credits-stat-icon" />
           <div>
             <div className="credits-stat-label">{t.writtenOff}</div>
-            <div className="credits-stat-val">KES {totalWrittenOff.toLocaleString()}</div>
+            <div className="credits-stat-val">
+              KES {totalWrittenOff.toLocaleString()}
+            </div>
           </div>
         </div>
         <div className="credits-stat-box credits-stat-neutral">
           <FontAwesomeIcon icon={faChartBar} className="credits-stat-icon" />
           <div>
             <div className="credits-stat-label">{t.allCredits}</div>
-            <div className="credits-stat-val">KES {grandTotal.toLocaleString()}</div>
+            <div className="credits-stat-val">
+              KES {grandTotal.toLocaleString()}
+            </div>
           </div>
         </div>
       </div>
 
-      {/* ── New Credit Button ── */}
+      {/* New Credit Button */}
       <div style={{ marginBottom: 16 }}>
         <button className="btn-primary" onClick={() => setShowForm(!showForm)}>
           <FontAwesomeIcon icon={showForm ? faTimes : faPlus} />
@@ -251,42 +311,67 @@ export default function Credits() {
         </button>
       </div>
 
-      {/* ── New Credit Form ── */}
+      {/* New Credit Form */}
       {showForm && (
         <div className="entry-form" style={{ marginBottom: 20 }}>
-          <h3><FontAwesomeIcon icon={faHandHoldingDollar} /> Record Credit / Debt</h3>
+          <h3>
+            <FontAwesomeIcon icon={faHandHoldingDollar} /> Record Credit / Debt
+          </h3>
           <form onSubmit={handleSubmit}>
             <div className="form-grid">
               <div className="field-group">
                 <label>{t.dateIssued}</label>
-                <input type="date" value={form.date}
-                  onChange={(e) => setForm({ ...form, date: e.target.value })} required />
+                <input
+                  type="date"
+                  value={form.date}
+                  onChange={(e) => setForm({ ...form, date: e.target.value })}
+                  required
+                />
               </div>
               <div className="field-group">
                 <label>{t.dueDate}</label>
-                <input type="date" value={form.dueDate}
-                  onChange={(e) => setForm({ ...form, dueDate: e.target.value })} />
+                <input
+                  type="date"
+                  value={form.dueDate}
+                  onChange={(e) =>
+                    setForm({ ...form, dueDate: e.target.value })
+                  }
+                />
               </div>
               <div className="field-group">
                 <label>{t.customerName}</label>
-                <input placeholder="e.g. John Kamau" value={form.customer}
-                  onChange={(e) => setForm({ ...form, customer: e.target.value })} required />
+                <input
+                  placeholder="e.g. John Kamau"
+                  value={form.customer}
+                  onChange={(e) =>
+                    setForm({ ...form, customer: e.target.value })
+                  }
+                  required
+                />
               </div>
               <div className="field-group">
                 <label>{t.phoneNumber}</label>
-                <input placeholder="07..." value={form.phone}
-                  onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+                <input
+                  placeholder="07..."
+                  value={form.phone}
+                  onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                />
               </div>
               {catalogue.length > 0 && (
                 <div className="field-group">
                   <label>{t.pickCatalogue}</label>
                   <select
                     onChange={(e) => {
-                      const found = catalogue.find(c => c.name === e.target.value);
-                      setForm(f => ({
+                      const found = catalogue.find(
+                        (c) => c.name === e.target.value,
+                      );
+                      setForm((f) => ({
                         ...f,
                         itemTaken: found ? found.name : e.target.value,
-                        totalAmount: found?.price != null ? String(found.price) : f.totalAmount,
+                        totalAmount:
+                          found?.price != null
+                            ? String(found.price)
+                            : f.totalAmount,
                       }));
                     }}
                     value={form.itemTaken}
@@ -294,7 +379,10 @@ export default function Credits() {
                     <option value="">{t.selectItem}</option>
                     {catalogue.map((c) => (
                       <option key={c.id} value={c.name}>
-                        {c.name}{c.price != null ? ` — KES ${Number(c.price).toLocaleString()}${c.unit ? `/${c.unit}` : ""}` : ""}
+                        {c.name}
+                        {c.price != null
+                          ? ` — KES ${Number(c.price).toLocaleString()}${c.unit ? `/${c.unit}` : ""}`
+                          : ""}
                       </option>
                     ))}
                   </select>
@@ -302,26 +390,46 @@ export default function Credits() {
               )}
               <div className="field-group">
                 <label>{t.itemTaken}</label>
-                <input placeholder={t.itemTakenPh} value={form.itemTaken}
-                  onChange={(e) => setForm({ ...form, itemTaken: e.target.value })} />
+                <input
+                  placeholder={t.itemTakenPh}
+                  value={form.itemTaken}
+                  onChange={(e) =>
+                    setForm({ ...form, itemTaken: e.target.value })
+                  }
+                />
               </div>
               <div className="field-group">
                 <label>{t.totalAmount}</label>
-                <input type="number" placeholder="0.00" value={form.totalAmount}
-                  onChange={(e) => setForm({ ...form, totalAmount: e.target.value })}
-                  required min="1" />
+                <input
+                  type="number"
+                  placeholder="0.00"
+                  value={form.totalAmount}
+                  onChange={(e) =>
+                    setForm({ ...form, totalAmount: e.target.value })
+                  }
+                  required
+                  min="1"
+                />
               </div>
               <div className="field-group full-width">
                 <label>{t.creditNotes}</label>
-                <textarea placeholder={t.creditNotesPh} value={form.notes}
-                  onChange={(e) => setForm({ ...form, notes: e.target.value })} rows={2} />
+                <textarea
+                  placeholder={t.creditNotesPh}
+                  value={form.notes}
+                  onChange={(e) => setForm({ ...form, notes: e.target.value })}
+                  rows={2}
+                />
               </div>
             </div>
             <div style={{ display: "flex", gap: 10 }}>
               <button type="submit" className="btn-primary" disabled={saving}>
                 {saving ? t.saving : t.saveCredit}
               </button>
-              <button type="button" className="btn-secondary" onClick={() => setShowForm(false)}>
+              <button
+                type="button"
+                className="btn-secondary"
+                onClick={() => setShowForm(false)}
+              >
                 Cancel
               </button>
             </div>
@@ -329,99 +437,140 @@ export default function Credits() {
         </div>
       )}
 
-      {/* ── Payment Modal ── */}
-      {payingCredit && (() => {
-        const remaining = (payingCredit.totalAmount || 0) - (payingCredit.paidAmount || 0);
-        const entered   = parseFloat(payAmount) || 0;
-        const actual    = Math.min(entered, remaining);
-        const willClear = actual >= remaining;
-        const afterPay  = remaining - actual;
+      {/* Payment Modal */}
+      {payingCredit &&
+        (() => {
+          const remaining =
+            (payingCredit.totalAmount || 0) - (payingCredit.paidAmount || 0);
+          const entered = parseFloat(payAmount) || 0;
+          const actual = Math.min(entered, remaining);
+          const willClear = actual >= remaining;
+          const afterPay = remaining - actual;
 
-        return (
-          <div className="modal-overlay" onClick={() => setPayingCredit(null)}>
-            <div className="modal-card" onClick={(e) => e.stopPropagation()}>
-              <h3><FontAwesomeIcon icon={faHandHoldingDollar} /> {t.recordPayment}</h3>
+          return (
+            <div
+              className="modal-overlay"
+              onClick={() => setPayingCredit(null)}
+            >
+              <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+                <h3>
+                  <FontAwesomeIcon icon={faHandHoldingDollar} />{" "}
+                  {t.recordPayment}
+                </h3>
 
-              <div className="credit-modal-meta">
-                <div className="credit-modal-row">
-                  <span>{t.customer2}</span>
-                  <strong>{payingCredit.customer}</strong>
-                </div>
-                <div className="credit-modal-row">
-                  <span>{t.totalCredit}</span>
-                  <strong>KES {(payingCredit.totalAmount || 0).toLocaleString()}</strong>
-                </div>
-                {(payingCredit.paidAmount || 0) > 0 && (
+                <div className="credit-modal-meta">
                   <div className="credit-modal-row">
-                    <span>{t.alreadyPaid}</span>
-                    <strong className="text-green">KES {payingCredit.paidAmount.toLocaleString()}</strong>
+                    <span>{t.customer2}</span>
+                    <strong>{payingCredit.customer}</strong>
+                  </div>
+                  <div className="credit-modal-row">
+                    <span>{t.totalCredit}</span>
+                    <strong>
+                      KES {(payingCredit.totalAmount || 0).toLocaleString()}
+                    </strong>
+                  </div>
+                  {(payingCredit.paidAmount || 0) > 0 && (
+                    <div className="credit-modal-row">
+                      <span>{t.alreadyPaid}</span>
+                      <strong className="text-green">
+                        KES {payingCredit.paidAmount.toLocaleString()}
+                      </strong>
+                    </div>
+                  )}
+                  <div className="credit-modal-row credit-modal-row-highlight">
+                    <span>{t.remaining}</span>
+                    <strong className="text-red">
+                      KES {remaining.toLocaleString()}
+                    </strong>
+                  </div>
+                </div>
+
+                <div className="credit-flow-note">
+                  <FontAwesomeIcon
+                    icon={faArrowRight}
+                    style={{ marginRight: 6 }}
+                  />
+                  Kila malipo — ya sehemu au yote — yanaenda moja kwa moja
+                  kwenye <strong>Mauzo / Sales</strong>
+                </div>
+
+                <div
+                  style={{ display: "flex", flexDirection: "column", gap: 12 }}
+                >
+                  <div className="field-group">
+                    <label>{t.amountPaid}</label>
+                    <input
+                      type="number"
+                      placeholder="0.00"
+                      value={payAmount}
+                      onChange={(e) => setPayAmount(e.target.value)}
+                      autoFocus
+                      min="1"
+                      max={remaining}
+                    />
+                  </div>
+                  <div className="field-group">
+                    <label>{t.paymentNote}</label>
+                    <input
+                      placeholder={t.paymentNotePh}
+                      value={payNote}
+                      onChange={(e) => setPayNote(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                {entered > 0 && (
+                  <div
+                    className={`credit-pay-preview ${willClear ? "credit-pay-clear" : "credit-pay-partial"}`}
+                  >
+                    {willClear ? (
+                      <>
+                        ✓ Deni limeisha — inahamia{" "}
+                        <strong>Mauzo / Sales</strong>
+                      </>
+                    ) : (
+                      <>
+                        KES {actual.toLocaleString()} →{" "}
+                        <strong>Mauzo / Sales</strong>
+                        &nbsp;·&nbsp; KES {afterPay.toLocaleString()} bado
+                        inadaiwa / still outstanding
+                      </>
+                    )}
                   </div>
                 )}
-                <div className="credit-modal-row credit-modal-row-highlight">
-                  <span>{t.remaining}</span>
-                  <strong className="text-red">KES {remaining.toLocaleString()}</strong>
-                </div>
-              </div>
 
-              <div className="credit-flow-note">
-                <FontAwesomeIcon icon={faArrowRight} style={{ marginRight: 6 }} />
-                Kila malipo — ya sehemu au yote — yanaenda moja kwa moja kwenye <strong>Mauzo / Sales</strong>
-              </div>
-
-              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                <div className="field-group">
-                  <label>{t.amountPaid}</label>
-                  <input
-                    type="number" placeholder="0.00" value={payAmount}
-                    onChange={(e) => setPayAmount(e.target.value)}
-                    autoFocus min="1" max={remaining}
-                  />
+                <div className="modal-actions">
+                  <button
+                    className="btn-secondary"
+                    onClick={() => {
+                      setPayingCredit(null);
+                      setPayAmount("");
+                      setPayNote("");
+                    }}
+                  >
+                    {t.cancel}
+                  </button>
+                  <button
+                    className="btn-primary"
+                    onClick={handlePayment}
+                    disabled={!payAmount || parseFloat(payAmount) <= 0}
+                  >
+                    Thibitisha Malipo / Confirm Payment
+                  </button>
                 </div>
-                <div className="field-group">
-                  <label>{t.paymentNote}</label>
-                  <input placeholder={t.paymentNotePh} value={payNote}
-                    onChange={(e) => setPayNote(e.target.value)} />
-                </div>
-              </div>
-
-              {entered > 0 && (
-                <div className={`credit-pay-preview ${willClear ? "credit-pay-clear" : "credit-pay-partial"}`}>
-                  {willClear ? (
-                    <>✓ Deni limeisha — inahamia <strong>Mauzo / Sales</strong></>
-                  ) : (
-                    <>
-                      KES {actual.toLocaleString()} → <strong>Mauzo / Sales</strong>
-                      &nbsp;·&nbsp; KES {afterPay.toLocaleString()} bado inadaiwa / still outstanding
-                    </>
-                  )}
-                </div>
-              )}
-
-              <div className="modal-actions">
-                <button className="btn-secondary" onClick={() => {
-                  setPayingCredit(null); setPayAmount(""); setPayNote("");
-                }}>
-                  {t.cancel}
-                </button>
-                <button
-                  className="btn-primary"
-                  onClick={handlePayment}
-                  disabled={!payAmount || parseFloat(payAmount) <= 0}
-                >
-                  Thibitisha Malipo / Confirm Payment
-                </button>
               </div>
             </div>
-          </div>
-        );
-      })()}
+          );
+        })()}
 
-      {/* ── Credit List ── */}
+      {/* Credit List */}
       {loading ? (
         <div className="table-loading">Loading credits...</div>
       ) : credits.length === 0 ? (
         <div className="empty-state">
-          <div className="empty-state-icon"><FontAwesomeIcon icon={faHandHoldingDollar} /></div>
+          <div className="empty-state-icon">
+            <FontAwesomeIcon icon={faHandHoldingDollar} />
+          </div>
           <div>{t.noCredits}</div>
           <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 4 }}>
             Tap New Credit to record a debt.
@@ -430,87 +579,150 @@ export default function Credits() {
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {credits.map((credit) => {
-            const remaining    = (credit.totalAmount || 0) - (credit.paidAmount || 0);
-            const pct          = credit.totalAmount > 0
-              ? Math.min(100, ((credit.paidAmount || 0) / credit.totalAmount) * 100)
-              : 0;
-            const overdue      = isOverdue(credit);
-            const isPaid       = credit.status === "paid";
-            const isBadDebt    = credit.status === "bad_debt";
+            const remaining =
+              (credit.totalAmount || 0) - (credit.paidAmount || 0);
+            const pct =
+              credit.totalAmount > 0
+                ? Math.min(
+                    100,
+                    ((credit.paidAmount || 0) / credit.totalAmount) * 100,
+                  )
+                : 0;
+            const overdue = isOverdue(credit);
+            const isPaid = credit.status === "paid";
+            const isBadDebt = credit.status === "bad_debt";
             const isOutstanding = credit.status === "outstanding";
-            const writtenOff   = credit.badDebtAmount
-              ?? Math.max(0, (credit.totalAmount || 0) - (credit.paidAmount || 0));
+            const writtenOff =
+              credit.badDebtAmount ??
+              Math.max(0, (credit.totalAmount || 0) - (credit.paidAmount || 0));
 
             return (
               <div
                 key={credit.id}
                 className={
                   "credit-card" +
-                  (isPaid    ? " credit-card-paid" : "") +
-                  (isBadDebt ? " credit-card-bad"  : "")
+                  (isPaid ? " credit-card-paid" : "") +
+                  (isBadDebt ? " credit-card-bad" : "")
                 }
-                style={overdue && isOutstanding ? { borderColor: "var(--red)", borderWidth: 2 } : {}}
+                style={
+                  overdue && isOutstanding
+                    ? { borderColor: "var(--red)", borderWidth: 2 }
+                    : {}
+                }
               >
                 {/* Header */}
                 <div className="credit-card-header">
                   <div className="credit-card-info">
-                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4, flexWrap: "wrap" }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 8,
+                        marginBottom: 4,
+                        flexWrap: "wrap",
+                      }}
+                    >
                       <div className="credit-customer">{credit.customer}</div>
                       {isPaid && (
-                        <span className="credit-status-badge"
-                          style={{ background: "var(--green-bg)", color: "var(--green)", borderColor: "#90d8a5" }}>
+                        <span
+                          className="credit-status-badge"
+                          style={{
+                            background: "var(--green-bg)",
+                            color: "var(--green)",
+                            borderColor: "#90d8a5",
+                          }}
+                        >
                           {t.paidSales}
                         </span>
                       )}
                       {isBadDebt && (
-                        <span className="credit-status-badge"
-                          style={{ background: "var(--red-bg)", color: "var(--red)", borderColor: "#f5a5a5" }}>
+                        <span
+                          className="credit-status-badge"
+                          style={{
+                            background: "var(--red-bg)",
+                            color: "var(--red)",
+                            borderColor: "#f5a5a5",
+                          }}
+                        >
                           {t.badDebtLabel}
                         </span>
                       )}
                       {overdue && isOutstanding && (
-                        <span className="credit-status-badge"
-                          style={{ background: "#fff3cd", color: "#856404", borderColor: "#ffc107" }}>
+                        <span
+                          className="credit-status-badge"
+                          style={{
+                            background: "#fff3cd",
+                            color: "#856404",
+                            borderColor: "#ffc107",
+                          }}
+                        >
                           {t.overdueLabel}
                         </span>
                       )}
                     </div>
-                    {credit.itemTaken && <div className="credit-desc">{credit.itemTaken}</div>}
-                    <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 4, alignItems: "center" }}>
+                    {credit.itemTaken && (
+                      <div className="credit-desc">{credit.itemTaken}</div>
+                    )}
+                    <div
+                      style={{
+                        display: "flex",
+                        gap: 12,
+                        flexWrap: "wrap",
+                        marginTop: 4,
+                        alignItems: "center",
+                      }}
+                    >
                       {credit.phone && (
-                        <a href={`tel:${credit.phone}`} className="credit-phone">
-                          <FontAwesomeIcon icon={faPhone} style={{ marginRight: 4, fontSize: 10 }} />
+                        <a
+                          href={`tel:${credit.phone}`}
+                          className="credit-phone"
+                        >
+                          <FontAwesomeIcon
+                            icon={faPhone}
+                            style={{ marginRight: 4, fontSize: 10 }}
+                          />
                           {credit.phone}
                         </a>
                       )}
                       <span className="credit-date">
-                        <FontAwesomeIcon icon={faCalendar} style={{ marginRight: 4, fontSize: 10 }} />
+                        <FontAwesomeIcon
+                          icon={faCalendar}
+                          style={{ marginRight: 4, fontSize: 10 }}
+                        />
                         Tarehe: {credit.dateIssued}
-                        {credit.dueDate && <>&nbsp;·&nbsp;Mwisho: {credit.dueDate}</>}
+                        {credit.dueDate && (
+                          <>&nbsp;·&nbsp;Mwisho: {credit.dueDate}</>
+                        )}
                       </span>
                     </div>
                   </div>
 
                   {/* Right side amounts */}
                   <div className="credit-amounts-col">
-                    <div className="credit-total">KES {(credit.totalAmount || 0).toLocaleString()}</div>
+                    <div className="credit-total">
+                      KES {(credit.totalAmount || 0).toLocaleString()}
+                    </div>
 
                     {/* Outstanding: show remaining */}
                     {isOutstanding && remaining > 0 && (
-                      <div className="credit-remaining">KES {remaining.toLocaleString()} imebaki / remaining</div>
+                      <div className="credit-remaining">
+                        KES {remaining.toLocaleString()} imebaki / remaining
+                      </div>
                     )}
 
                     {/* Collected amount (all statuses) */}
                     {(credit.paidAmount || 0) > 0 && (
                       <div className="credit-chip credit-chip-green">
-                        ✓ KES {credit.paidAmount.toLocaleString()} imekusanywa / collected
+                        ✓ KES {credit.paidAmount.toLocaleString()} imekusanywa /
+                        collected
                       </div>
                     )}
 
                     {/* Bad debt: show what was written off */}
                     {isBadDebt && writtenOff > 0 && (
                       <div className="credit-chip credit-chip-red">
-                        ✗ KES {writtenOff.toLocaleString()} imeandikwa / written off
+                        ✗ KES {writtenOff.toLocaleString()} imeandikwa / written
+                        off
                       </div>
                     )}
                   </div>
@@ -520,14 +732,18 @@ export default function Credits() {
                 {isOutstanding && credit.totalAmount > 0 && (
                   <div className="credit-progress-wrap">
                     <div className="credit-progress-bar">
-                      <div className="credit-progress-fill" style={{
-                        width: `${pct}%`,
-                        background: pct === 100
-                          ? "var(--green)"
-                          : pct > 50
-                            ? "var(--orange)"
-                            : "var(--red)",
-                      }} />
+                      <div
+                        className="credit-progress-fill"
+                        style={{
+                          width: `${pct}%`,
+                          background:
+                            pct === 100
+                              ? "var(--green)"
+                              : pct > 50
+                                ? "var(--orange)"
+                                : "var(--red)",
+                        }}
+                      />
                     </div>
                     <span className="credit-pct">{pct.toFixed(0)}%</span>
                   </div>
@@ -548,23 +764,45 @@ export default function Credits() {
 
                 {/* Closed-state notes */}
                 {isPaid && (
-                  <div className="credit-closed-note" style={{ color: "var(--green)" }}>
-                    <FontAwesomeIcon icon={faArrowRight} style={{ marginRight: 6 }} />
-                    Imekusanywa yote — imewekwa kwenye Mauzo tarehe {credit.lastPaymentDate || "completion"}
+                  <div
+                    className="credit-closed-note"
+                    style={{ color: "var(--green)" }}
+                  >
+                    <FontAwesomeIcon
+                      icon={faArrowRight}
+                      style={{ marginRight: 6 }}
+                    />
+                    Imekusanywa yote — imewekwa kwenye Mauzo tarehe{" "}
+                    {credit.lastPaymentDate || "completion"}
                   </div>
                 )}
                 {isBadDebt && (
                   <div className="credit-closed-note-wrap">
                     {(credit.paidAmount || 0) > 0 && (
-                      <div className="credit-closed-note" style={{ color: "var(--green)" }}>
-                        <FontAwesomeIcon icon={faArrowRight} style={{ marginRight: 6 }} />
-                        KES {credit.paidAmount.toLocaleString()} imekusanywa / imekusanywa — imewekwa Mauzo
+                      <div
+                        className="credit-closed-note"
+                        style={{ color: "var(--green)" }}
+                      >
+                        <FontAwesomeIcon
+                          icon={faArrowRight}
+                          style={{ marginRight: 6 }}
+                        />
+                        KES {credit.paidAmount.toLocaleString()} imekusanywa /
+                        imekusanywa — imewekwa Mauzo
                       </div>
                     )}
                     {writtenOff > 0 && (
-                      <div className="credit-closed-note" style={{ color: "var(--red)" }}>
-                        <FontAwesomeIcon icon={faArrowRight} style={{ marginRight: 6 }} />
-                        KES {writtenOff.toLocaleString()} imeandikwa / imeandikwa kwenye Hasara tarehe {credit.closedDate || "closure"}
+                      <div
+                        className="credit-closed-note"
+                        style={{ color: "var(--red)" }}
+                      >
+                        <FontAwesomeIcon
+                          icon={faArrowRight}
+                          style={{ marginRight: 6 }}
+                        />
+                        KES {writtenOff.toLocaleString()} imeandikwa /
+                        imeandikwa kwenye Hasara tarehe{" "}
+                        {credit.closedDate || "closure"}
                       </div>
                     )}
                   </div>
@@ -576,13 +814,23 @@ export default function Credits() {
                     <>
                       <button
                         className="btn-pay"
-                        onClick={() => { setPayingCredit(credit); setPayAmount(""); setPayNote(""); }}
+                        onClick={() => {
+                          setPayingCredit(credit);
+                          setPayAmount("");
+                          setPayNote("");
+                        }}
                       >
-                        <FontAwesomeIcon icon={faHandHoldingDollar} /> {t.payments}
+                        <FontAwesomeIcon icon={faHandHoldingDollar} />{" "}
+                        {t.payments}
                       </button>
                       <button
                         className="btn-secondary"
-                        style={{ fontSize: 12, padding: "7px 12px", color: "var(--red)", borderColor: "var(--red)" }}
+                        style={{
+                          fontSize: 12,
+                          padding: "7px 12px",
+                          color: "var(--red)",
+                          borderColor: "var(--red)",
+                        }}
                         onClick={() => setBadDebtTarget(credit)}
                       >
                         <FontAwesomeIcon icon={faThumbsDown} /> {t.badDebt}
@@ -591,7 +839,11 @@ export default function Credits() {
                   )}
                   <button
                     className="btn-danger"
-                    style={{ fontSize: 12, padding: "7px 12px", marginLeft: "auto" }}
+                    style={{
+                      fontSize: 12,
+                      padding: "7px 12px",
+                      marginLeft: "auto",
+                    }}
                     onClick={() => setDeleteTarget(credit)}
                   >
                     <FontAwesomeIcon icon={faTrash} /> {t.delete}
@@ -603,7 +855,7 @@ export default function Credits() {
         </div>
       )}
 
-      {/* ── Bad Debt confirm ── */}
+      {/* Bad Debt confirm */}
       <AlertDialog
         open={!!badDebtTarget}
         title={t.writeOff}
@@ -622,7 +874,7 @@ export default function Credits() {
         onConfirm={confirmBadDebt}
       />
 
-      {/* ── Delete confirm ── */}
+      {/* Delete confirm */}
       <AlertDialog
         open={!!deleteTarget}
         title="Delete this credit record?"

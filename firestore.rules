@@ -2,13 +2,13 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // ── Admin gets full access ──────────────────────────────
+    // Admin gets full access 
     function isAdmin() {
       return request.auth != null &&
              request.auth.token.email == "anitapatrick025@gmail.com";
     }
 
-    // ── users collection ────────────────────────────────────
+    // users collection 
     // Admin can read ALL user documents (needed for admin panel)
     // Each user can only read/write their own document
     match /users/{userId} {
@@ -22,7 +22,7 @@ service cloud.firestore {
       }
     }
 
-    // ── Business data collections (sales, purchases, etc.) ──
+    // Business data collections (sales, purchases, etc.) 
     // Users can only access their own data
     // Admin can read everything
     match /{collection}/{docId} {

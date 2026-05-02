@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 import { useState, useEffect } from "react";
 import { auth } from "./firebase";
 import {
@@ -65,7 +66,7 @@ import "./App.css";
 const db = getFirestore();
 const GRACE_DAYS = 2;
 
-// ── Subscription gate ──────────────────────────────────────
+// Subscription gate
 // Admin emails bypass this entirely (handled separately).
 // trial  → active for 30 days from signup + grace
 // active → active until expiry + grace
@@ -96,7 +97,7 @@ function isSubscriptionActive(profile) {
   return false;
 }
 
-// ── Phone / email → Firebase Auth email ───────────────────
+// Phone / email → Firebase Auth email
 async function resolveLoginEmail(input) {
   const trimmed = input.trim();
   if (/^(\+?254|07|011|01)/.test(trimmed)) {
@@ -121,7 +122,7 @@ async function resolveLoginEmail(input) {
   return trimmed;
 }
 
-// ── Online / Offline Banner ─────────────────────────────
+// Online / Offline Banner
 function OnlineStatus() {
   const [online, setOnline] = useState(true);
   useEffect(() => {
@@ -160,7 +161,7 @@ function OnlineStatus() {
   );
 }
 
-// ── Footer ─────────────────────────────────────────────────
+// Footer
 function AppFooter({ offset }) {
   return (
     <div className={`app-footer${offset ? " app-footer-offset" : ""}`}>
@@ -169,8 +170,8 @@ function AppFooter({ offset }) {
   );
 }
 
-// ── Translations ───────────────────────────────────────────
-// ── App Shell ──────────────────────────────────────────────
+// Translations
+// App Shell
 function AppShell({ user, profile, theme, toggleTheme }) {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [lang, setLang] = useState(
@@ -251,184 +252,188 @@ function AppShell({ user, profile, theme, toggleTheme }) {
 
   return (
     <LangContext.Provider value={{ lang, t }}>
-    <div className="app-shell">
-      <OnlineStatus />
-      <AppFooter offset={true} />
+      <div className="app-shell">
+        <OnlineStatus />
+        <AppFooter offset={true} />
 
-      {/* ── Sidebar (desktop) ──────────────────────────────── */}
-      <aside className="sidebar">
-        {/* Brand */}
-        <div className="sidebar-brand">
-          <img src="/logo-icon.png" alt="QuickDuka" />
-          <span className="brand-name">QuickDuka</span>
-        </div>
+        {/* Sidebar (desktop) */}
+        <aside className="sidebar">
+          {/* Brand */}
+          <div className="sidebar-brand">
+            <img src="/logo-icon.png" alt="QuickDuka" />
+            <span className="brand-name">QuickDuka</span>
+          </div>
 
-        {/* Business name */}
-        {profile?.businessName && (
-          <div className="sidebar-biz-name">{profile.businessName}</div>
-        )}
+          {/* Business name */}
+          {profile?.businessName && (
+            <div className="sidebar-biz-name">{profile.businessName}</div>
+          )}
 
-        {/* Nav — scrollable, fills available space */}
-        <nav className="sidebar-nav">
-          {mainTabs.map((tab) => (
+          {/* Nav — scrollable, fills available space */}
+          <nav className="sidebar-nav">
+            {mainTabs.map((tab) => (
+              <button
+                key={tab.id}
+                className={"nav-item" + (activeTab === tab.id ? " active" : "")}
+                onClick={() => setActiveTab(tab.id)}
+              >
+                <span className="nav-icon">
+                  <FontAwesomeIcon icon={tab.icon} />
+                </span>
+                <span className="nav-label">{tab.label}</span>
+                {tab.badge && (
+                  <span
+                    className={`nav-badge ${tab.badgeClass || ""}`}
+                    style={tab.badgeStyle}
+                  >
+                    {tab.badge}
+                  </span>
+                )}
+              </button>
+            ))}
+
+            <div className="sidebar-divider" />
+            <div className="sidebar-section-label">{t.info}</div>
+
+            {infoTabs.map((tab) => (
+              <button
+                key={tab.id}
+                className={"nav-item" + (activeTab === tab.id ? " active" : "")}
+                onClick={() => setActiveTab(tab.id)}
+              >
+                <span className="nav-icon">
+                  <FontAwesomeIcon icon={tab.icon} />
+                </span>
+                <span className="nav-label">{tab.label}</span>
+              </button>
+            ))}
+          </nav>
+
+          {/* Subscription expiry chip — always visible above footer buttons */}
+          {!admin && expiryDate && (
+            <div className="sidebar-sub-info">
+              <span
+                className={daysLeft <= 5 ? "sub-expiry-warn" : "sub-expiry-ok"}
+              >
+                {daysLeft > 0
+                  ? t.expiresIn(daysLeft)
+                  : daysLeft === 0
+                    ? t.expiresToday
+                    : t.expired}
+              </span>
+            </div>
+          )}
+
+          {/* Language toggle — always visible */}
+          <button
+            className="sidebar-lang-toggle"
+            onClick={toggleLang}
+            title="Switch language / Badilisha lugha"
+          >
+            {lang === "en" ? "🇰🇪 Swahili" : "🇬🇧 English"}
+          </button>
+
+          {/* Sign out — always visible, never clipped */}
+          <button className="logout-btn" onClick={() => signOut(auth)}>
+            <FontAwesomeIcon icon={faRightFromBracket} /> {t.signOut}
+          </button>
+        </aside>
+
+        {/* Mobile bottom nav */}
+        <div className="mobile-bar">
+          {mobileTabs.map((tab) => (
             <button
               key={tab.id}
-              className={"nav-item" + (activeTab === tab.id ? " active" : "")}
+              className={"mobile-tab" + (activeTab === tab.id ? " active" : "")}
               onClick={() => setActiveTab(tab.id)}
             >
-              <span className="nav-icon">
+              <span className="mobile-tab-icon">
                 <FontAwesomeIcon icon={tab.icon} />
               </span>
-              <span className="nav-label">{tab.label}</span>
-              {tab.badge && (
-                <span
-                  className={`nav-badge ${tab.badgeClass || ""}`}
-                  style={tab.badgeStyle}
-                >
-                  {tab.badge}
+              <span>{tab.label}</span>
+            </button>
+          ))}
+        </div>
+
+        {/* Main content */}
+        <main className="main-content">
+          <header className="top-bar">
+            <div className="page-title">
+              <span className="page-title-icon">
+                <FontAwesomeIcon icon={currentTab?.icon || faChartLine} />
+              </span>
+              {currentTab?.label}
+            </div>
+            <div className="top-bar-right">
+              {showExpWarn && (
+                <span className="expiry-warning-badge">
+                  Expires in {daysLeft}d
                 </span>
               )}
-            </button>
-          ))}
+              <button
+                className="lang-toggle-btn"
+                onClick={toggleLang}
+                title="Switch language"
+              >
+                {lang === "en" ? "SW" : "EN"}
+              </button>
+              <button
+                className="theme-toggle"
+                onClick={toggleTheme}
+                title="Toggle light/dark mode"
+              >
+                <FontAwesomeIcon icon={theme === "dark" ? faSun : faMoon} />
+              </button>
+              <button
+                className="user-badge user-badge-btn"
+                onClick={() => setActiveTab("profile")}
+                title="Go to Profile"
+              >
+                {profile?.ownerName || profile?.businessName || user.email}
+              </button>
+              <button className="logout-inline" onClick={() => signOut(auth)}>
+                Sign out
+              </button>
+            </div>
+          </header>
 
-          <div className="sidebar-divider" />
-          <div className="sidebar-section-label">{t.info}</div>
-
-          {infoTabs.map((tab) => (
-            <button
-              key={tab.id}
-              className={"nav-item" + (activeTab === tab.id ? " active" : "")}
-              onClick={() => setActiveTab(tab.id)}
-            >
-              <span className="nav-icon">
-                <FontAwesomeIcon icon={tab.icon} />
-              </span>
-              <span className="nav-label">{tab.label}</span>
-            </button>
-          ))}
-        </nav>
-
-        {/* Subscription expiry chip — always visible above footer buttons */}
-        {!admin && expiryDate && (
-          <div className="sidebar-sub-info">
-            <span
-              className={daysLeft <= 5 ? "sub-expiry-warn" : "sub-expiry-ok"}
-            >
-              {daysLeft > 0
-                ? t.expiresIn(daysLeft)
-                : daysLeft === 0
-                  ? t.expiresToday
-                  : t.expired}
-            </span>
-          </div>
-        )}
-
-        {/* Language toggle — always visible */}
-        <button
-          className="sidebar-lang-toggle"
-          onClick={toggleLang}
-          title="Switch language / Badilisha lugha"
-        >
-          {lang === "en" ? "🇰🇪 Swahili" : "🇬🇧 English"}
-        </button>
-
-        {/* Sign out — always visible, never clipped */}
-        <button className="logout-btn" onClick={() => signOut(auth)}>
-          <FontAwesomeIcon icon={faRightFromBracket} /> {t.signOut}
-        </button>
-      </aside>
-
-      {/* ── Mobile bottom nav ──────────────────────────────── */}
-      <div className="mobile-bar">
-        {mobileTabs.map((tab) => (
-          <button
-            key={tab.id}
-            className={"mobile-tab" + (activeTab === tab.id ? " active" : "")}
-            onClick={() => setActiveTab(tab.id)}
-          >
-            <span className="mobile-tab-icon">
-              <FontAwesomeIcon icon={tab.icon} />
-            </span>
-            <span>{tab.label}</span>
-          </button>
-        ))}
-      </div>
-
-      {/* ── Main content ───────────────────────────────────── */}
-      <main className="main-content">
-        <header className="top-bar">
-          <div className="page-title">
-            <span className="page-title-icon">
-              <FontAwesomeIcon icon={currentTab?.icon || faChartLine} />
-            </span>
-            {currentTab?.label}
-          </div>
-          <div className="top-bar-right">
-            {showExpWarn && (
-              <span className="expiry-warning-badge">
-                Expires in {daysLeft}d
-              </span>
+          <div className="page-body">
+            {activeTab === "dashboard" && (
+              <Dashboard setActiveTab={setActiveTab} />
             )}
-            <button
-              className="lang-toggle-btn"
-              onClick={toggleLang}
-              title="Switch language"
-            >
-              {lang === "en" ? "SW" : "EN"}
-            </button>
-            <button
-              className="theme-toggle"
-              onClick={toggleTheme}
-              title="Toggle light/dark mode"
-            >
-              <FontAwesomeIcon icon={theme === "dark" ? faSun : faMoon} />
-            </button>
-            <button
-              className="user-badge user-badge-btn"
-              onClick={() => setActiveTab("profile")}
-              title="Go to Profile"
-            >
-              {profile?.ownerName || profile?.businessName || user.email}
-            </button>
-            <button className="logout-inline" onClick={() => signOut(auth)}>
-              Sign out
-            </button>
+            {activeTab === "sales" && <Sales />}
+            {activeTab === "credits" && <Credits />}
+            {activeTab === "purchases" && <Purchases />}
+            {activeTab === "expenses" && <Expenses />}
+            {activeTab === "losses" && <Losses />}
+            {activeTab === "stock" && <Stock />}
+            {activeTab === "reports" && <Reports />}
+            {activeTab === "history" && <History />}
+            {activeTab === "profile" && (
+              <ProfilePage user={user} profile={profile} />
+            )}
+            {activeTab === "admin" && admin && <AdminPanel />}
+            {activeTab === "referrer-dashboard" && isReferrer && (
+              <ReferrerDashboard
+                referrerName={
+                  profile?.referrerName ||
+                  profile?.ownerName ||
+                  profile?.businessName
+                }
+                referrerId={profile?.referrerId}
+              />
+            )}
+            {activeTab === "contact" && <ContactPage />}
+            {activeTab === "faq" && <FAQPage />}
+            {activeTab === "privacy" && <PrivacyPage />}
           </div>
-        </header>
-
-        <div className="page-body">
-          {activeTab === "dashboard" && (
-            <Dashboard setActiveTab={setActiveTab} />
-          )}
-          {activeTab === "sales" && <Sales />}
-          {activeTab === "credits" && <Credits />}
-          {activeTab === "purchases" && <Purchases />}
-          {activeTab === "expenses" && <Expenses />}
-          {activeTab === "losses" && <Losses />}
-          {activeTab === "stock" && <Stock />}
-          {activeTab === "reports" && <Reports />}
-          {activeTab === "history" && <History />}
-          {activeTab === "profile" && (
-            <ProfilePage user={user} profile={profile} />
-          )}
-          {activeTab === "admin" && admin && <AdminPanel />}
-          {activeTab === "referrer-dashboard" && isReferrer && (
-            <ReferrerDashboard
-              referrerName={profile?.referrerName || profile?.ownerName || profile?.businessName}
-              referrerId={profile?.referrerId}
-            />
-          )}
-          {activeTab === "contact" && <ContactPage />}
-          {activeTab === "faq" && <FAQPage />}
-          {activeTab === "privacy" && <PrivacyPage />}
-        </div>
-      </main>
-    </div>
+        </main>
+      </div>
     </LangContext.Provider>
   );
 }
 
-// ── Root App ───────────────────────────────────────────────
+// Root App
 export default function App() {
   const [user, setUser] = useState(undefined); // undefined = still checking
   const [view, setView] = useState("login"); // "login" | "register" | "reset" | "referrer"
@@ -467,7 +472,7 @@ export default function App() {
 
   const toggleTheme = () => setTheme((t) => (t === "dark" ? "light" : "dark"));
 
-  // ── Login ──────────────────────────────────────────────
+  // Login
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoggingIn(true);
@@ -481,7 +486,7 @@ export default function App() {
     setLoggingIn(false);
   };
 
-  // ── Password reset ─────────────────────────────────────
+  // Password reset
   const handleResetPassword = async (e) => {
     e.preventDefault();
     if (resetStatus === "sending") return;
@@ -539,7 +544,7 @@ export default function App() {
     }
   };
 
-  // ── Splash — Firebase still checking auth ──────────────
+  // Splash — Firebase still checking auth
   if (user === undefined) {
     return (
       <div className="splash">
@@ -549,7 +554,7 @@ export default function App() {
     );
   }
 
-  // ── Admin route: yoursite.com/#/admin ──────────────────
+  // Admin route: yoursite.com/#/admin
   if (isAdminRoute) {
     if (!user) {
       return (
@@ -707,7 +712,7 @@ export default function App() {
     );
   }
 
-  // ── Not logged in (regular app) ────────────────────────
+  // Not logged in (regular app)
   if (!user) {
     if (view === "register") {
       return (
@@ -837,7 +842,8 @@ export default function App() {
                   <>
                     <h2 className="reset-title">Reset Password</h2>
                     <p className="reset-subtitle">
-                      Enter your email or registered phone. We will send a reset link to your email.
+                      Enter your email or registered phone. We will send a reset
+                      link to your email.
                     </p>
                     <form
                       onSubmit={handleResetPassword}
@@ -914,7 +920,7 @@ export default function App() {
     );
   }
 
-  // ── Admin bypasses all profile / subscription checks ───
+  // Admin bypasses all profile / subscription checks
   if (isAdmin(user)) {
     return (
       <AppShell
@@ -926,7 +932,7 @@ export default function App() {
     );
   }
 
-  // ── Profile loading ────────────────────────────────────
+  // Profile loading
   if (profileLoading) {
     return (
       <div className="splash">
@@ -936,7 +942,7 @@ export default function App() {
     );
   }
 
-  // ── Profile not found after timeout ───────────────────
+  // Profile not found after timeout
   if (!profile) {
     if (profileNotFound) {
       return (
@@ -1002,7 +1008,7 @@ export default function App() {
     );
   }
 
-  // ── Subscription gate — no bypass for regular users ───
+  // Subscription gate — no bypass for regular users
   if (!isSubscriptionActive(profile)) {
     return (
       <>

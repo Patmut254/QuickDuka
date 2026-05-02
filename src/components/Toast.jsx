@@ -1,3 +1,5 @@
+/* eslint-disable react-hooks/set-state-in-effect */
+/* eslint-disable react-refresh/only-export-components */
 import { useEffect, useState, useRef } from "react";
 import { createPortal } from "react-dom";
 
@@ -22,7 +24,7 @@ export function Toast({ toast }) {
     clearTimeout(timerRef.current);
     timerRef.current = setTimeout(() => setShow(false), 3000);
     return () => clearTimeout(timerRef.current);
-  }, [toast?.id]);
+  }, [toast, toast.id]);
 
   if (!show || !toast) return null;
 
