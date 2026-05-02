@@ -342,7 +342,7 @@ export default function Register({ onBack }) {
                 </div>
                 <input
                   type="email"
-                  placeholder="you@example.com"
+                  placeholder="example@gmail.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   autoComplete="email"
@@ -354,21 +354,21 @@ export default function Register({ onBack }) {
             </div>
 
             <div className="field-group">
-              <label>Phone Number</label>
+              <label>Phone Number*</label>
               <div className="input-icon-wrap">
                 <div className="input-icon-box">
                   <FontAwesomeIcon icon={faPhone} />
                 </div>
                 <input
                   type="tel"
-                  placeholder="0712 345 678"
+                  placeholder="07xxxxxxxx"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   autoComplete="tel"
                 />
               </div>
               <span className="field-hint">
-                Optional — useful later for M-Pesa and support.
+                Useful later for M-Pesa and support.
               </span>
             </div>
 
