@@ -343,7 +343,7 @@ export const T = {
     purchases:    "Manunuzi",
     expenses:     "Gharama",
     losses:       "Hasara",
-    stock:        "Katalogi",
+    stock:        "Bidhaa Zako",
     reports:      "Ripoti",
     history:      "Historia",
     profile:      "Wasifu",
