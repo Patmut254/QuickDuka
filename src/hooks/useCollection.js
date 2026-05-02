@@ -7,7 +7,6 @@ import {
   deleteDoc,
   doc,
   query,
-  orderBy,
   serverTimestamp,
   updateDoc,
   getDocs,
@@ -61,17 +60,22 @@ export function useCollection(collectionName) {
 
     setLoading(true);
 
-    const q = query(
-      collection(db, collectionName),
-      where("userId", "==", uid),
-      orderBy("createdAt", "desc"),
-    );
+    // No orderBy here — sorting client-side avoids needing a composite
+    // Firestore index for every collection (userId + createdAt).
+    const q = query(collection(db, collectionName), where("userId", "==", uid));
 
     // Real-time listener — updates immediately without any reload
     const unsub = onSnapshot(
       q,
       (snap) => {
-        setItems(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+        const docs = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+        // Sort newest-first by createdAt (Firestore Timestamp or missing)
+        docs.sort((a, b) => {
+          const ta = a.createdAt?.toMillis?.() ?? 0;
+          const tb = b.createdAt?.toMillis?.() ?? 0;
+          return tb - ta;
+        });
+        setItems(docs);
         setLoading(false);
       },
       (err) => {
@@ -139,7 +143,7 @@ export function useCollection(collectionName) {
     await Promise.all(deletes);
   };
 
-  // silentDelete 
+  // silentDelete
   // Deletes a single doc WITHOUT writing an audit log entry.
   // Used by History.jsx to remove individual log entries.
   const silentDelete = async (id) => {
