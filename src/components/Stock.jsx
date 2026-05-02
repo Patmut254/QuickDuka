@@ -1,10 +1,12 @@
 /* eslint-disable react-hooks/rules-of-hooks */
 import { useState } from "react";
 import { useCollection } from "../hooks/useCollection";
+import { useLang } from "../LangContext";
 import { Toast, useToast } from "./Toast";
 import AlertDialog from "./AlertDialog";
 
 export default function Stock() {
+  const { t } = useLang();
   const { items, loading, addItem, deleteItem, updateItem } =
     useCollection("stock");
   const { toast, showToast } = useToast();
@@ -76,7 +78,7 @@ export default function Stock() {
 
       <div className="module-header">
         <div className="module-stat">
-          <span className="stat-label">Total Items</span>
+          <span className="stat-label">{t.totalItems}</span>
           <span className="stat-value" style={{ color: "var(--accent)" }}>
             {items.length}
           </span>
@@ -88,52 +90,48 @@ export default function Stock() {
             setStatus("idle");
           }}
         >
-          {showForm ? "✕ Cancel" : "+ Add Item"}
+          {showForm ? "✕ " + t.cancel : "+ " + t.addItem}
         </button>
       </div>
 
-      <div className="stock-hint">
-        📦 Your product and item list. Set a price if it is fixed (e.g. Queen
-        cake KES 500/kg), or leave blank to enter the price manually when
-        recording a sale.
-      </div>
+      <div className="stock-hint">📦 {t.catalogueHint}</div>
 
       {showForm && (
         <form className="entry-form" onSubmit={handleSubmit}>
-          <h3>Add Item to Stock</h3>
+          <h3>{t.addToCatalogue}</h3>
           <div className="form-grid">
             <div className="field-group">
-              <label>Item / Product Name *</label>
+              <label>{t.itemName} *</label>
               <input
-                placeholder="e.g. Sukuma wiki, Cake, Bread..."
+                placeholder={t.itemNamePh}
                 value={form.name}
                 onChange={set("name")}
                 required
               />
             </div>
             <div className="field-group">
-              <label>Price (KES) — Optional</label>
+              <label>{t.price}</label>
               <input
                 type="number"
                 min="0"
                 step="0.01"
-                placeholder="Leave blank if price varies"
+                placeholder={t.pricePh}
                 value={form.price}
                 onChange={set("price")}
               />
             </div>
             <div className="field-group">
-              <label>Unit — Optional</label>
+              <label>{t.unit}</label>
               <input
-                placeholder="e.g. bunch, kg, piece, packet"
+                placeholder={t.unitPh}
                 value={form.unit}
                 onChange={set("unit")}
               />
             </div>
             <div className="field-group full-width">
-              <label>Notes</label>
+              <label>{t.notes}</label>
               <input
-                placeholder="Optional notes"
+                placeholder="..."
                 value={form.notes}
                 onChange={set("notes")}
               />
@@ -145,10 +143,10 @@ export default function Stock() {
             disabled={status !== "idle"}
           >
             {status === "saving"
-              ? "Saving..."
+              ? t.saving
               : status === "saved"
-                ? "✅ Saved!"
-                : "Add to stock"}
+                ? t.saved
+                : t.addToCatalogue}
           </button>
         </form>
       )}
@@ -160,7 +158,7 @@ export default function Stock() {
           style={{ maxWidth: 300, marginBottom: 16 }}
         >
           <input
-            placeholder="🔍 Search items..."
+            placeholder={"🔍 " + t.searchItems}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -169,12 +167,12 @@ export default function Stock() {
 
       {/* List */}
       {loading ? (
-        <div className="table-loading">Loading...</div>
+        <div className="table-loading">Inapakia... / Loading...</div>
       ) : filtered.length === 0 ? (
         <div className="empty-state">
           {search
-            ? "No items match your search."
-            : "No items yet. Add your products or services above."}
+            ? t.noItemsSearch
+            : t.noItems}
         </div>
       ) : (
         <div className="stock-grid">
@@ -189,7 +187,7 @@ export default function Stock() {
                       {item.unit ? ` / ${item.unit}` : ""}
                     </span>
                   ) : (
-                    <span className="price-variable">Price varies</span>
+                    <span className="price-variable">Bei inabadilika / Price varies</span>
                   )}
                 </div>
               </div>
@@ -209,7 +207,7 @@ export default function Stock() {
                     });
                   }}
                 >
-                  ✏️ Edit
+                  ✏️ Hariri / Edit
                 </button>
                 <button
                   className="delete-btn"
@@ -231,14 +229,14 @@ export default function Stock() {
             style={{ maxWidth: 420 }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="alert-title">✏️ Edit Item</div>
+            <div className="alert-title">✏️ Hariri Bidhaa / Edit Item</div>
             <form
               onSubmit={handleEdit}
               className="login-form"
               style={{ marginTop: 16 }}
             >
               <div className="field-group">
-                <label>Item Name *</label>
+                <label>{t.itemName} *</label>
                 <input
                   value={editForm.name}
                   onChange={setEdit("name")}
@@ -246,26 +244,26 @@ export default function Stock() {
                 />
               </div>
               <div className="field-group">
-                <label>Price (KES)</label>
+                <label>{t.price}</label>
                 <input
                   type="number"
                   min="0"
                   step="0.01"
-                  placeholder="Leave blank if varies"
+                  placeholder={t.pricePh}
                   value={editForm.price}
                   onChange={setEdit("price")}
                 />
               </div>
               <div className="field-group">
-                <label>Unit</label>
+                <label>{t.unit}</label>
                 <input
-                  placeholder="e.g. kg, piece"
+                  placeholder={t.unitPh}
                   value={editForm.unit}
                   onChange={setEdit("unit")}
                 />
               </div>
               <div className="field-group">
-                <label>Notes</label>
+                <label>{t.notes}</label>
                 <input value={editForm.notes} onChange={setEdit("notes")} />
               </div>
               <div className="alert-actions">
@@ -274,10 +272,10 @@ export default function Stock() {
                   className="btn-cancel-sm"
                   onClick={() => setEditTarget(null)}
                 >
-                  Cancel
+                  Funga / Cancel
                 </button>
                 <button type="submit" className="btn-primary">
-                  Save Changes
+                  Hifadhi Mabadiliko / Save Changes
                 </button>
               </div>
             </form>
@@ -287,17 +285,17 @@ export default function Stock() {
 
       <AlertDialog
         open={!!deleteTarget}
-        title="Remove from stock?"
+        title={t.removeItem}
         message={
-          deleteTarget ? `Remove "${deleteTarget.name}" from your list?` : ""
+          deleteTarget ? `Ondoa "${deleteTarget.name}" kutoka kwenye orodha yako? / Remove "${deleteTarget.name}" from your list?` : ""
         }
         onCancel={() => setDeleteTarget(null)}
         onConfirm={async () => {
           await deleteItem(deleteTarget.id, deleteTarget);
-          showToast("Item removed.");
+          showToast(t.itemRemoved);
           setDeleteTarget(null);
         }}
-        confirmLabel="Remove"
+        confirmLabel={t.removeConfirm}
         danger
       />
     </div>

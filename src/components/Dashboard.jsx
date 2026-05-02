@@ -4,6 +4,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faMoneyBillTrendUp, faCartPlus, faReceipt, faArrowTrendUp, faArrowTrendDown, faTriangleExclamation } from "@fortawesome/free-solid-svg-icons";
 import { useMemo } from "react";
 import { useCollection } from "../hooks/useCollection";
+import { useLang } from "../LangContext";
 import {
   AreaChart,
   Area,
@@ -23,6 +24,7 @@ import {
 } from "date-fns";
 
 export default function Dashboard({ setActiveTab }) {
+  const { t } = useLang();
   const { items: sales }     = useCollection("sales");
   const { items: purchases } = useCollection("purchases");
   const { items: expenses }  = useCollection("expenses");
@@ -68,17 +70,17 @@ export default function Dashboard({ setActiveTab }) {
   }, [now, sales, purchases, expenses, losses]);
 
   const cards = [
-    { label: "Sales This Month",     value: totalSales,     color: "#22c55e", icon: faMoneyBillTrendUp },
-    { label: "Purchases This Month", value: totalPurchases, color: "#f97316", icon: faCartPlus },
-    { label: "Expenses This Month",  value: totalExpenses,  color: "#a855f7", icon: faReceipt },
-    { label: "Losses This Month",    value: totalLosses,    color: "#ef4444", icon: faTriangleExclamation },
-    { label: "Net Profit",           value: profit,         color: profit >= 0 ? "#22c55e" : "#ef4444", icon: profit >= 0 ? faArrowTrendUp : faArrowTrendDown },
+    { label: t.salesThisMonth,     value: totalSales,     color: "#22c55e", icon: faMoneyBillTrendUp },
+    { label: t.purchasesThisMonth, value: totalPurchases, color: "#f97316", icon: faCartPlus },
+    { label: t.expensesThisMonth,  value: totalExpenses,  color: "#a855f7", icon: faReceipt },
+    { label: t.lossesThisMonth,    value: totalLosses,    color: "#ef4444", icon: faTriangleExclamation },
+    { label: t.netProfitLabel,           value: profit,         color: profit >= 0 ? "#22c55e" : "#ef4444", icon: profit >= 0 ? faArrowTrendUp : faArrowTrendDown },
   ];
 
   const recent = [
-    ...sales.slice(0, 3).map((s) => ({ ...s, type: "Sale" })),
-    ...purchases.slice(0, 2).map((p) => ({ ...p, type: "Purchase" })),
-    ...expenses.slice(0, 2).map((e) => ({ ...e, type: "Expense" })),
+    ...sales.slice(0, 3).map((s) => ({ ...s, type: "sale" })),
+    ...purchases.slice(0, 2).map((p) => ({ ...p, type: "purchase" })),
+    ...expenses.slice(0, 2).map((e) => ({ ...e, type: "expense" })),
   ]
     .sort((a, b) => {
       const da = a.date
@@ -168,21 +170,21 @@ export default function Dashboard({ setActiveTab }) {
 
       <div className="recent-section">
         <div className="section-header">
-          <h2>Recent Activity</h2>
+          <h2>{t.recentActivity}</h2>
           <button className="link-btn" onClick={() => setActiveTab("reports")}>
             View Reports →
           </button>
         </div>
         {recent.length === 0 ? (
           <div className="empty-state">
-            No transactions yet. Start by adding sales, purchases or expenses.
+            {t.noTransactions}
           </div>
         ) : (
           <div className="recent-list">
             {recent.map((item, i) => (
               <div className="recent-row" key={i}>
                 <div className="recent-icon">
-                  <FontAwesomeIcon icon={item.type === "Sale" ? faMoneyBillTrendUp : item.type === "Purchase" ? faCartPlus : faReceipt} />
+                  <FontAwesomeIcon icon={item.type === "sale" ? faMoneyBillTrendUp : item.type === "purchase" ? faCartPlus : faReceipt} />
                 </div>
                 <div className="recent-info">
                   <div className="recent-desc">
@@ -192,16 +194,16 @@ export default function Dashboard({ setActiveTab }) {
                       item.type}
                   </div>
                   <div className="recent-meta">
-                    {item.type} · {item.date || "-"}
+                    {item.type === "sale" ? t.sales : item.type === "purchase" ? t.purchases : t.expenses} · {item.date || "-"}
                   </div>
                 </div>
                 <div
                   className="recent-amount"
                   style={{
-                    color: item.type === "Sale" ? "#22c55e" : "#f97316",
+                    color: item.type === "sale" ? "#22c55e" : "#f97316",
                   }}
                 >
-                  {item.type === "Sale" ? "+" : "-"}KES{" "}
+                  {item.type === "sale" ? "+" : "-"}KES{" "}
                   {Number(item.amount).toLocaleString()}
                 </div>
               </div>

@@ -14,8 +14,10 @@ import {
 import { db } from "../firebase";
 import { doc, updateDoc } from "firebase/firestore";
 import { kenyaCounties } from "../data/kenyaLocations";
+import { useLang } from "../LangContext";
 
 export default function ProfilePage({ user, profile }) {
+  const { t } = useLang();
   const [form, setForm] = useState({
     businessName:  profile?.businessName  || "",
     ownerName:     profile?.ownerName     || "",
@@ -58,7 +60,7 @@ export default function ProfilePage({ user, profile }) {
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
     } catch (err) {
-      setError("Failed to save. Please try again.");
+      setError("{t.failedSaveProfile}");
       console.error(err);
     }
     setSaving(false);
@@ -72,7 +74,7 @@ export default function ProfilePage({ user, profile }) {
           <FontAwesomeIcon icon={faCircleUser} />
         </div>
         <div>
-          <div className="profile-name">{profile?.businessName || "Your Business"}</div>
+          <div className="profile-name">{profile?.businessName || "{t.businessName}"}</div>
           <div className="profile-role">{profile?.ownerName || user?.email}</div>
         </div>
       </div>
@@ -81,35 +83,35 @@ export default function ProfilePage({ user, profile }) {
         {/* Business info */}
         <div className="info-card" style={{ marginBottom: 14 }}>
           <h2>
-            <span className="fa-icon"><FontAwesomeIcon icon={faStore} /></span> Business Details
+            <span className="fa-icon"><FontAwesomeIcon icon={faStore} /></span> Taarifa za Biashara / Business Details
           </h2>
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             <div className="form-row-2">
               <div className="field-group">
-                <label>Business Name</label>
+                <label>{t.businessName}</label>
                 <div className="input-icon-wrap">
                   <div className="input-icon-box"><FontAwesomeIcon icon={faStore} /></div>
-                  <input type="text" name="businessName" placeholder="e.g. Wanjiru General Store" value={form.businessName} onChange={handleChange} />
+                  <input type="text" name="businessName" placeholder={t.businessNamePh} value={form.businessName} onChange={handleChange} />
                 </div>
               </div>
               <div className="field-group">
-                <label>Owner Name</label>
+                <label>{t.ownerName}</label>
                 <div className="input-icon-wrap">
                   <div className="input-icon-box"><FontAwesomeIcon icon={faUser} /></div>
-                  <input type="text" name="ownerName" placeholder="Your full name" value={form.ownerName} onChange={handleChange} />
+                  <input type="text" name="ownerName" placeholder={t.ownerNamePh} value={form.ownerName} onChange={handleChange} />
                 </div>
               </div>
             </div>
             <div className="form-row-2">
               <div className="field-group">
-                <label>Phone Number</label>
+                <label>{t.phone}</label>
                 <div className="input-icon-wrap">
                   <div className="input-icon-box"><FontAwesomeIcon icon={faPhone} /></div>
-                  <input type="tel" name="phone" placeholder="07... / 011... / +254..." value={form.phone} onChange={handleChange} />
+                  <input type="tel" name="phone" placeholder={t.phonePh} value={form.phone} onChange={handleChange} />
                 </div>
               </div>
               <div className="field-group">
-                <label>Email (Login)</label>
+                <label>{t.emailLogin}</label>
                 <div className="input-icon-wrap">
                   <div className="input-icon-box"><FontAwesomeIcon icon={faEnvelope} /></div>
                   <input type="email" value={profile?.realEmail || user?.email || ""} disabled style={{ opacity: .65, cursor: "not-allowed" }} />
@@ -122,53 +124,53 @@ export default function ProfilePage({ user, profile }) {
         {/* Shop location */}
         <div className="info-card" style={{ marginBottom: 14 }}>
           <h2>
-            <span className="fa-icon"><FontAwesomeIcon icon={faMapMarkerAlt} /></span> Shop Location
+            <span className="fa-icon"><FontAwesomeIcon icon={faMapMarkerAlt} /></span> Mahali pa Duka / Shop Location
           </h2>
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             <div className="form-row-2">
               <div className="field-group">
-                <label>Shop / Stall Number</label>
+                <label>{t.shopNumber}</label>
                 <div className="input-icon-wrap">
                   <div className="input-icon-box"><FontAwesomeIcon icon={faHashtag} /></div>
-                  <input type="text" name="shopNumber" placeholder="e.g. Shop 12, Stall B3" value={form.shopNumber} onChange={handleChange} />
+                  <input type="text" name="shopNumber" placeholder={t.shopNumberPh} value={form.shopNumber} onChange={handleChange} />
                 </div>
               </div>
               <div className="field-group">
-                <label>Building / Market Name</label>
+                <label>{t.buildingName}</label>
                 <div className="input-icon-wrap">
                   <div className="input-icon-box"><FontAwesomeIcon icon={faStore} /></div>
-                  <input type="text" name="buildingName" placeholder="e.g. Gikomba Market" value={form.buildingName} onChange={handleChange} />
+                  <input type="text" name="buildingName" placeholder={t.buildingNamePh} value={form.buildingName} onChange={handleChange} />
                 </div>
               </div>
             </div>
             <div className="form-row-2">
               <div className="field-group">
-                <label>County</label>
+                <label>{t.county}</label>
                 <select name="county" value={form.county} onChange={e => { handleChange(e); setForm(p => ({ ...p, subcounty: "" })); }}>
-                  <option value="">Select County</option>
+                  <option value="">{t.selectCounty}</option>
                   {kenyaCounties.map(c => <option key={c.county} value={c.county}>{c.county}</option>)}
                 </select>
               </div>
               {subcounties.length > 0 && (
                 <div className="field-group">
-                  <label>Sub-county</label>
+                  <label>{t.subcounty}</label>
                   <select name="subcounty" value={form.subcounty} onChange={handleChange}>
-                    <option value="">Select</option>
+                    <option value="">{t.selectSubcounty}</option>
                     {subcounties.map(s => <option key={s} value={s}>{s}</option>)}
                   </select>
                 </div>
               )}
             </div>
             <div className="field-group">
-              <label>Location / Town</label>
+              <label>{t.town}</label>
               <div className="input-icon-wrap">
                 <div className="input-icon-box"><FontAwesomeIcon icon={faMapMarkerAlt} /></div>
-                <input type="text" name="town" placeholder="e.g. Nakuru Town, CBD, Gikomba" value={form.town} onChange={handleChange} />
+                <input type="text" name="town" placeholder={t.townPh} value={form.town} onChange={handleChange} />
               </div>
             </div>
             <div className="field-group">
-              <label>Additional Notes (Directions / Landmark)</label>
-              <textarea name="notes" placeholder="e.g. Next to Equity Bank, ground floor" value={form.notes} onChange={handleChange} rows={2} />
+              <label>{t.additionalNotes}</label>
+              <textarea name="notes" placeholder={t.additionalNotesPh} value={form.notes} onChange={handleChange} rows={2} />
             </div>
           </div>
         </div>
@@ -178,11 +180,11 @@ export default function ProfilePage({ user, profile }) {
         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
           <button type="submit" className="profile-save-btn" disabled={saving}>
             <FontAwesomeIcon icon={faFloppyDisk} />
-            {saving ? "Saving..." : "Save Profile"}
+            {saving ? "{t.saving}" : "{t.saveProfile}"}
           </button>
           {saved && (
             <span className="profile-save-success">
-              <FontAwesomeIcon icon={faCheckCircle} /> Saved!
+              <FontAwesomeIcon icon={faCheckCircle} /> {t.profileSaved}
             </span>
           )}
         </div>

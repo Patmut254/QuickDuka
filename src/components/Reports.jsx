@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { useCollection } from "../hooks/useCollection";
+import { useLang } from "../LangContext";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
   ResponsiveContainer, PieChart, Pie, Cell, Legend as PieLegend
@@ -9,6 +10,7 @@ import { format, parseISO, startOfMonth, endOfMonth, isWithinInterval } from "da
 const COLORS = ["#22c55e", "#f97316", "#a855f7", "#3b82f6", "#ec4899", "#14b8a6"];
 
 export default function Reports() {
+  const { t } = useLang();
   const { items: sales } = useCollection("sales");
   const { items: purchases } = useCollection("purchases");
   const { items: expenses } = useCollection("expenses");
@@ -76,7 +78,7 @@ export default function Reports() {
       const p = purchases.filter(inR).reduce((a, b) => a + (Number(b.amount) || 0), 0);
       const e = expenses.filter(inR).reduce((a, b) => a + (Number(b.amount) || 0), 0);
       const l = losses.filter(inR).reduce((a, b) => a + (Number(b.amount) || 0), 0);
-      months.push({ month: label, Sales: s, Purchases: p, Expenses: e, Losses: l, Profit: s - p - e - l });
+      months.push({ month: label, "Mauzo/Sales": s, "Manunuzi/Purchases": p, "Gharama/Expenses": e, "Hasara/Losses": l, "Faida/Profit": s - p - e - l });
     }
     return months;
   }, [sales, purchases, expenses]);
@@ -84,7 +86,7 @@ export default function Reports() {
   return (
     <div className="reports-page">
       <div className="reports-controls">
-        <label>Month</label>
+        <label>{t.month}</label>
         <select value={selectedMonth} onChange={e => setSelectedMonth(e.target.value)} className="month-select">
           {monthOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
         </select>
@@ -92,12 +94,12 @@ export default function Reports() {
 
       <div className="report-summary-cards">
         {[
-          { label: "Sales",         value: ms,     color: "#22c55e" },
-          { label: "Purchases",      value: mp,     color: "#f97316" },
-          { label: "Expenses",       value: me,     color: "#a855f7" },
-          { label: "Losses",         value: ml,     color: "#ef4444" },
-          { label: "Net Profit",     value: mProfit, color: mProfit >= 0 ? "#22c55e" : "#ef4444" },
-          { label: "Profit Margin",  value: `${margin}%`, color: mProfit >= 0 ? "#3b82f6" : "#ef4444", raw: true },
+          { label: "Mauzo / Sales",    value: ms,     color: "#22c55e" },
+          { label: "Manunuzi / Purchases", value: mp,     color: "#f97316" },
+          { label: "Gharama / Expenses",  value: me,     color: "#a855f7" },
+          { label: "Hasara / Losses",    value: ml,     color: "#ef4444" },
+          { label: t.netProfitLabel,value: mProfit, color: mProfit >= 0 ? "#22c55e" : "#ef4444" },
+          { label: t.netProfitLabel + " %", value: `${margin}%`, color: mProfit >= 0 ? "#3b82f6" : "#ef4444", raw: true },
         ].map(c => (
           <div className="report-card" key={c.label} style={{ borderLeft: `3px solid ${c.color}` }}>
             <div className="rc-label">{c.label}</div>
@@ -110,7 +112,7 @@ export default function Reports() {
 
       <div className="charts-grid">
         <div className="chart-card">
-          <h3>Monthly Comparison (6 months)</h3>
+          <h3>{t.monthlyComparison}</h3>
           <ResponsiveContainer width="100%" height={250}>
             <BarChart data={barData} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#2a2a3a" />
@@ -118,18 +120,18 @@ export default function Reports() {
               <YAxis tick={{ fill: "#9ca3af", fontSize: 12 }} tickFormatter={v => v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v} />
               <Tooltip contentStyle={{ background: "#1a1a2e", border: "1px solid #333", color: "#fff" }} formatter={v => `KES ${v.toLocaleString()}`} />
               <Legend wrapperStyle={{ color: "#ccc" }} />
-              <Bar dataKey="Sales"     fill="#22c55e" radius={[3, 3, 0, 0]} />
-              <Bar dataKey="Purchases" fill="#f97316" radius={[3, 3, 0, 0]} />
-              <Bar dataKey="Expenses"  fill="#a855f7" radius={[3, 3, 0, 0]} />
-              <Bar dataKey="Losses"    fill="#ef4444" radius={[3, 3, 0, 0]} />
+              <Bar dataKey="Mauzo/Sales"          fill="#22c55e" radius={[3, 3, 0, 0]} />
+              <Bar dataKey="Manunuzi/Purchases"    fill="#f97316" radius={[3, 3, 0, 0]} />
+              <Bar dataKey="Gharama/Expenses"      fill="#a855f7" radius={[3, 3, 0, 0]} />
+              <Bar dataKey="Hasara/Losses"         fill="#ef4444" radius={[3, 3, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
 
         <div className="chart-card">
-          <h3>Expense Breakdown - {monthOptions.find(o => o.value === selectedMonth)?.label}</h3>
+          <h3>{t.expenseBreakdown} — {monthOptions.find(o => o.value === selectedMonth)?.label}</h3>
           {expenseByCat.length === 0 ? (
-            <div className="empty-state">No expenses for this month.</div>
+            <div className="empty-state">{t.noExpensesMonth}</div>
           ) : (
             <ResponsiveContainer width="100%" height={260}>
               <PieChart margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
@@ -146,8 +148,8 @@ export default function Reports() {
 
       <div className="profit-indicator">
         <div className={`profit-badge ${mProfit >= 0 ? "profit" : "loss"}`}>
-          {mProfit >= 0 ? "✅ PROFITABLE" : "⚠️ LOSS"} - {monthOptions.find(o => o.value === selectedMonth)?.label}
-          <span> · Net {mProfit >= 0 ? "Profit" : "Loss"}: KES {Math.abs(mProfit).toLocaleString()}</span>
+          {mProfit >= 0 ? "✅ " + t.profitable : "⚠️ " + t.loss} - {monthOptions.find(o => o.value === selectedMonth)?.label}
+          <span> · {mProfit >= 0 ? t.netProfit : t.netLoss}: KES {Math.abs(mProfit).toLocaleString()}</span>
         </div>
       </div>
     </div>

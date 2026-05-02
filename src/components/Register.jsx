@@ -303,7 +303,7 @@ export default function Register({ onBack }) {
             {credError && <div className="login-error">{credError}</div>}
 
             <button type="submit" className="btn-login">
-              Continue <FontAwesomeIcon icon={faChevronRight} />
+              Endelea / Continue <FontAwesomeIcon icon={faChevronRight} />
             </button>
           </form>
         )}
@@ -359,7 +359,7 @@ export default function Register({ onBack }) {
               )}
             </div>
 
-            <div className="form-section-label">Referral (Optional)</div>
+            <div className="form-section-label">Nani Alikushauri? / Referral (Optional)</div>
             <div className="field-group">
               <label>Who referred you?</label>
               <select value={referrer} onChange={(e) => setReferrer(e.target.value)}>

@@ -58,6 +58,8 @@ import FAQPage from "./components/FAQPage";
 import PrivacyPage from "./components/PrivacyPage";
 import ProfilePage from "./components/ProfilePage";
 import Losses from "./components/Losses";
+import ReferrerDashboard from "./components/ReferrerDashboard";
+import { LangContext, T } from "./LangContext";
 import "./App.css";
 
 const db = getFirestore();
@@ -168,53 +170,6 @@ function AppFooter({ offset }) {
 }
 
 // ── Translations ───────────────────────────────────────────
-const T = {
-  en: {
-    dashboard: "Dashboard",
-    sales: "Sales",
-    credits: "Credits",
-    debt: "Debt",
-    purchases: "Purchases",
-    expenses: "Expenses",
-    losses: "Losses",
-    stock: "MyStock",
-    reports: "Reports",
-    history: "History",
-    profile: "Profile",
-    admin: "Admin",
-    contact: "Contact",
-    faq: "FAQ",
-    privacy: "Privacy",
-    info: "Info",
-    signOut: "Sign Out",
-    expiresIn: (d) => `${d}d left`,
-    expiresToday: "Expires today",
-    expired: "Expired",
-  },
-  sw: {
-    dashboard: "Dashibodi",
-    sales: "Mauzo",
-    credits: "Mikopo",
-    debt: "Deni",
-    purchases: "Manunuzi",
-    expenses: "Matumizi",
-    losses: "Hasara",
-    stock: "Katalogi",
-    reports: "Ripoti",
-    history: "Historia",
-    profile: "Wasifu",
-    admin: "Msimamizi",
-    contact: "Mawasiliano",
-    faq: "Maswali",
-    privacy: "Faragha",
-    info: "Habari",
-    signOut: "Toka",
-    expiresIn: (d) => `Siku ${d} zimebaki`,
-    expiresToday: "Inaisha leo",
-    expired: "Imekwisha",
-  },
-};
-
 // ── App Shell ──────────────────────────────────────────────
 function AppShell({ user, profile, theme, toggleTheme }) {
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -224,6 +179,7 @@ function AppShell({ user, profile, theme, toggleTheme }) {
 
   // isAdmin checks the Firebase Auth user email — reliable, doesn't need Firestore
   const admin = isAdmin(user);
+  const isReferrer = profile?.role === "referrer";
   const t = T[lang];
 
   const toggleLang = () => {
@@ -242,6 +198,17 @@ function AppShell({ user, profile, theme, toggleTheme }) {
             label: t.admin,
             icon: faSliders,
             badgeStyle: { background: "#f59e0b", color: "#000" },
+          },
+        ]
+      : []),
+    // Referrer dashboard tab
+    ...(isReferrer
+      ? [
+          {
+            id: "referrer-dashboard",
+            label: t.referrerDash,
+            icon: faUser,
+            badgeStyle: { background: "#22c55e", color: "#fff" },
           },
         ]
       : []),
@@ -283,6 +250,7 @@ function AppShell({ user, profile, theme, toggleTheme }) {
   const showExpWarn = daysLeft !== null && daysLeft <= 5 && daysLeft > 0;
 
   return (
+    <LangContext.Provider value={{ lang, t }}>
     <div className="app-shell">
       <OnlineStatus />
       <AppFooter offset={true} />
@@ -444,12 +412,19 @@ function AppShell({ user, profile, theme, toggleTheme }) {
             <ProfilePage user={user} profile={profile} />
           )}
           {activeTab === "admin" && admin && <AdminPanel />}
+          {activeTab === "referrer-dashboard" && isReferrer && (
+            <ReferrerDashboard
+              referrerName={profile?.referrerName || profile?.ownerName || profile?.businessName}
+              referrerId={profile?.referrerId}
+            />
+          )}
           {activeTab === "contact" && <ContactPage />}
           {activeTab === "faq" && <FAQPage />}
           {activeTab === "privacy" && <PrivacyPage />}
         </div>
       </main>
     </div>
+    </LangContext.Provider>
   );
 }
 
@@ -862,8 +837,7 @@ export default function App() {
                   <>
                     <h2 className="reset-title">Reset Password</h2>
                     <p className="reset-subtitle">
-                      Enter your email or registered phone. We will send a reset
-                      link to your email.
+                      Enter your email or registered phone. We will send a reset link to your email.
                     </p>
                     <form
                       onSubmit={handleResetPassword}

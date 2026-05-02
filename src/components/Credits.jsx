@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { useCollection } from "../hooks/useCollection";
+import { useCatalogue } from "../hooks/useCatalogue";
+import { useLang } from "../LangContext";
 import { db, auth } from "../firebase";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { Toast, useToast } from "./Toast";
@@ -12,7 +14,9 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 
 export default function Credits() {
+  const { t } = useLang();
   const { items: credits, loading, addItem, deleteItem, updateItem } = useCollection("credits");
+  const catalogue = useCatalogue();
   const { toast, showToast } = useToast();
 
   const emptyForm = {
@@ -142,7 +146,7 @@ export default function Credits() {
 
       showToast(
         unpaid > 0
-          ? `KES ${unpaid.toLocaleString()} written off to Losses. ${credit.paidAmount > 0 ? `KES ${credit.paidAmount.toLocaleString()} already collected stays in Sales.` : ""}`
+          ? `KES ${unpaid.toLocaleString()} imeandikwa / written off to Losses. ${credit.paidAmount > 0 ? `KES ${credit.paidAmount.toLocaleString()} already collected stays in Sales.` : ""}`
           : "Marked as bad debt (nothing to write off — already fully collected)."
       );
       setBadDebtTarget(null);
@@ -198,7 +202,7 @@ export default function Credits() {
             <FontAwesomeIcon icon={faExclamationTriangle} />
           </div>
           <div>
-            <div className="card-label">Unpaid Debts</div>
+            <div className="card-label">{t.unpaidDebts}</div>
             <div className="card-value red">{outstanding.length}</div>
           </div>
         </div>
@@ -208,7 +212,7 @@ export default function Credits() {
             <FontAwesomeIcon icon={faCheckCircle} />
           </div>
           <div>
-            <div className="card-label">Cleared</div>
+            <div className="card-label">{t.cleared}</div>
             <div className="card-value green">{paid.length}</div>
           </div>
         </div>
@@ -219,21 +223,21 @@ export default function Credits() {
         <div className="credits-stat-box credits-stat-green">
           <FontAwesomeIcon icon={faMoneyBillWave} className="credits-stat-icon" />
           <div>
-            <div className="credits-stat-label">Total Collected (in Sales)</div>
+            <div className="credits-stat-label">{t.totalCollected}</div>
             <div className="credits-stat-val">KES {totalCollected.toLocaleString()}</div>
           </div>
         </div>
         <div className="credits-stat-box credits-stat-red">
           <FontAwesomeIcon icon={faThumbsDown} className="credits-stat-icon" />
           <div>
-            <div className="credits-stat-label">Written Off (Bad Debts)</div>
+            <div className="credits-stat-label">{t.writtenOff}</div>
             <div className="credits-stat-val">KES {totalWrittenOff.toLocaleString()}</div>
           </div>
         </div>
         <div className="credits-stat-box credits-stat-neutral">
           <FontAwesomeIcon icon={faChartBar} className="credits-stat-icon" />
           <div>
-            <div className="credits-stat-label">All Credits Issued</div>
+            <div className="credits-stat-label">{t.allCredits}</div>
             <div className="credits-stat-val">KES {grandTotal.toLocaleString()}</div>
           </div>
         </div>
@@ -243,7 +247,7 @@ export default function Credits() {
       <div style={{ marginBottom: 16 }}>
         <button className="btn-primary" onClick={() => setShowForm(!showForm)}>
           <FontAwesomeIcon icon={showForm ? faTimes : faPlus} />
-          {showForm ? " Cancel" : " New Credit"}
+          {showForm ? " " + t.cancel : " " + t.newCredit}
         </button>
       </div>
 
@@ -254,45 +258,68 @@ export default function Credits() {
           <form onSubmit={handleSubmit}>
             <div className="form-grid">
               <div className="field-group">
-                <label>Date Issued</label>
+                <label>{t.dateIssued}</label>
                 <input type="date" value={form.date}
                   onChange={(e) => setForm({ ...form, date: e.target.value })} required />
               </div>
               <div className="field-group">
-                <label>Due Date (optional)</label>
+                <label>{t.dueDate}</label>
                 <input type="date" value={form.dueDate}
                   onChange={(e) => setForm({ ...form, dueDate: e.target.value })} />
               </div>
               <div className="field-group">
-                <label>Customer Name</label>
+                <label>{t.customerName}</label>
                 <input placeholder="e.g. John Kamau" value={form.customer}
                   onChange={(e) => setForm({ ...form, customer: e.target.value })} required />
               </div>
               <div className="field-group">
-                <label>Phone Number</label>
+                <label>{t.phoneNumber}</label>
                 <input placeholder="07..." value={form.phone}
                   onChange={(e) => setForm({ ...form, phone: e.target.value })} />
               </div>
+              {catalogue.length > 0 && (
+                <div className="field-group">
+                  <label>{t.pickCatalogue}</label>
+                  <select
+                    onChange={(e) => {
+                      const found = catalogue.find(c => c.name === e.target.value);
+                      setForm(f => ({
+                        ...f,
+                        itemTaken: found ? found.name : e.target.value,
+                        totalAmount: found?.price != null ? String(found.price) : f.totalAmount,
+                      }));
+                    }}
+                    value={form.itemTaken}
+                  >
+                    <option value="">{t.selectItem}</option>
+                    {catalogue.map((c) => (
+                      <option key={c.id} value={c.name}>
+                        {c.name}{c.price != null ? ` — KES ${Number(c.price).toLocaleString()}${c.unit ? `/${c.unit}` : ""}` : ""}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
               <div className="field-group">
-                <label>Item / Description</label>
-                <input placeholder="What was taken on credit?" value={form.itemTaken}
+                <label>{t.itemTaken}</label>
+                <input placeholder={t.itemTakenPh} value={form.itemTaken}
                   onChange={(e) => setForm({ ...form, itemTaken: e.target.value })} />
               </div>
               <div className="field-group">
-                <label>Total Amount (KES)</label>
+                <label>{t.totalAmount}</label>
                 <input type="number" placeholder="0.00" value={form.totalAmount}
                   onChange={(e) => setForm({ ...form, totalAmount: e.target.value })}
                   required min="1" />
               </div>
               <div className="field-group full-width">
-                <label>Notes (optional)</label>
-                <textarea placeholder="Any extra details..." value={form.notes}
+                <label>{t.creditNotes}</label>
+                <textarea placeholder={t.creditNotesPh} value={form.notes}
                   onChange={(e) => setForm({ ...form, notes: e.target.value })} rows={2} />
               </div>
             </div>
             <div style={{ display: "flex", gap: 10 }}>
               <button type="submit" className="btn-primary" disabled={saving}>
-                {saving ? "Saving..." : "Save Credit"}
+                {saving ? t.saving : t.saveCredit}
               </button>
               <button type="button" className="btn-secondary" onClick={() => setShowForm(false)}>
                 Cancel
@@ -313,37 +340,37 @@ export default function Credits() {
         return (
           <div className="modal-overlay" onClick={() => setPayingCredit(null)}>
             <div className="modal-card" onClick={(e) => e.stopPropagation()}>
-              <h3><FontAwesomeIcon icon={faHandHoldingDollar} /> Record Payment</h3>
+              <h3><FontAwesomeIcon icon={faHandHoldingDollar} /> {t.recordPayment}</h3>
 
               <div className="credit-modal-meta">
                 <div className="credit-modal-row">
-                  <span>Customer</span>
+                  <span>{t.customer2}</span>
                   <strong>{payingCredit.customer}</strong>
                 </div>
                 <div className="credit-modal-row">
-                  <span>Total credit</span>
+                  <span>{t.totalCredit}</span>
                   <strong>KES {(payingCredit.totalAmount || 0).toLocaleString()}</strong>
                 </div>
                 {(payingCredit.paidAmount || 0) > 0 && (
                   <div className="credit-modal-row">
-                    <span>Already paid</span>
+                    <span>{t.alreadyPaid}</span>
                     <strong className="text-green">KES {payingCredit.paidAmount.toLocaleString()}</strong>
                   </div>
                 )}
                 <div className="credit-modal-row credit-modal-row-highlight">
-                  <span>Remaining</span>
+                  <span>{t.remaining}</span>
                   <strong className="text-red">KES {remaining.toLocaleString()}</strong>
                 </div>
               </div>
 
               <div className="credit-flow-note">
                 <FontAwesomeIcon icon={faArrowRight} style={{ marginRight: 6 }} />
-                Every payment — partial or full — goes straight to <strong>Sales</strong>
+                Kila malipo — ya sehemu au yote — yanaenda moja kwa moja kwenye <strong>Mauzo / Sales</strong>
               </div>
 
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                 <div className="field-group">
-                  <label>Amount Being Paid (KES)</label>
+                  <label>{t.amountPaid}</label>
                   <input
                     type="number" placeholder="0.00" value={payAmount}
                     onChange={(e) => setPayAmount(e.target.value)}
@@ -351,8 +378,8 @@ export default function Credits() {
                   />
                 </div>
                 <div className="field-group">
-                  <label>Payment Note (optional)</label>
-                  <input placeholder="e.g. M-Pesa, Cash..." value={payNote}
+                  <label>{t.paymentNote}</label>
+                  <input placeholder={t.paymentNotePh} value={payNote}
                     onChange={(e) => setPayNote(e.target.value)} />
                 </div>
               </div>
@@ -360,11 +387,11 @@ export default function Credits() {
               {entered > 0 && (
                 <div className={`credit-pay-preview ${willClear ? "credit-pay-clear" : "credit-pay-partial"}`}>
                   {willClear ? (
-                    <>✓ This clears the full debt — moves to <strong>Sales</strong></>
+                    <>✓ Deni limeisha — inahamia <strong>Mauzo / Sales</strong></>
                   ) : (
                     <>
-                      KES {actual.toLocaleString()} → <strong>Sales</strong>
-                      &nbsp;·&nbsp; KES {afterPay.toLocaleString()} still outstanding
+                      KES {actual.toLocaleString()} → <strong>Mauzo / Sales</strong>
+                      &nbsp;·&nbsp; KES {afterPay.toLocaleString()} bado inadaiwa / still outstanding
                     </>
                   )}
                 </div>
@@ -374,14 +401,14 @@ export default function Credits() {
                 <button className="btn-secondary" onClick={() => {
                   setPayingCredit(null); setPayAmount(""); setPayNote("");
                 }}>
-                  Cancel
+                  {t.cancel}
                 </button>
                 <button
                   className="btn-primary"
                   onClick={handlePayment}
                   disabled={!payAmount || parseFloat(payAmount) <= 0}
                 >
-                  Confirm Payment
+                  Thibitisha Malipo / Confirm Payment
                 </button>
               </div>
             </div>
@@ -395,7 +422,7 @@ export default function Credits() {
       ) : credits.length === 0 ? (
         <div className="empty-state">
           <div className="empty-state-icon"><FontAwesomeIcon icon={faHandHoldingDollar} /></div>
-          <div>No credits recorded yet.</div>
+          <div>{t.noCredits}</div>
           <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 4 }}>
             Tap New Credit to record a debt.
           </div>
@@ -432,19 +459,19 @@ export default function Credits() {
                       {isPaid && (
                         <span className="credit-status-badge"
                           style={{ background: "var(--green-bg)", color: "var(--green)", borderColor: "#90d8a5" }}>
-                          ✓ PAID → Sales
+                          {t.paidSales}
                         </span>
                       )}
                       {isBadDebt && (
                         <span className="credit-status-badge"
                           style={{ background: "var(--red-bg)", color: "var(--red)", borderColor: "#f5a5a5" }}>
-                          ✗ BAD DEBT
+                          {t.badDebtLabel}
                         </span>
                       )}
                       {overdue && isOutstanding && (
                         <span className="credit-status-badge"
                           style={{ background: "#fff3cd", color: "#856404", borderColor: "#ffc107" }}>
-                          ⚠ OVERDUE
+                          {t.overdueLabel}
                         </span>
                       )}
                     </div>
@@ -458,8 +485,8 @@ export default function Credits() {
                       )}
                       <span className="credit-date">
                         <FontAwesomeIcon icon={faCalendar} style={{ marginRight: 4, fontSize: 10 }} />
-                        Issued: {credit.dateIssued}
-                        {credit.dueDate && <>&nbsp;·&nbsp;Due: {credit.dueDate}</>}
+                        Tarehe: {credit.dateIssued}
+                        {credit.dueDate && <>&nbsp;·&nbsp;Mwisho: {credit.dueDate}</>}
                       </span>
                     </div>
                   </div>
@@ -470,20 +497,20 @@ export default function Credits() {
 
                     {/* Outstanding: show remaining */}
                     {isOutstanding && remaining > 0 && (
-                      <div className="credit-remaining">KES {remaining.toLocaleString()} remaining</div>
+                      <div className="credit-remaining">KES {remaining.toLocaleString()} imebaki / remaining</div>
                     )}
 
                     {/* Collected amount (all statuses) */}
                     {(credit.paidAmount || 0) > 0 && (
                       <div className="credit-chip credit-chip-green">
-                        ✓ KES {credit.paidAmount.toLocaleString()} collected
+                        ✓ KES {credit.paidAmount.toLocaleString()} imekusanywa / collected
                       </div>
                     )}
 
                     {/* Bad debt: show what was written off */}
                     {isBadDebt && writtenOff > 0 && (
                       <div className="credit-chip credit-chip-red">
-                        ✗ KES {writtenOff.toLocaleString()} written off
+                        ✗ KES {writtenOff.toLocaleString()} imeandikwa / written off
                       </div>
                     )}
                   </div>
@@ -509,7 +536,7 @@ export default function Credits() {
                 {/* Payment history */}
                 {credit.payments?.length > 0 && (
                   <div className="credit-payment-history">
-                    <span className="credit-ph-label">Payments: </span>
+                    <span className="credit-ph-label">Malipo: </span>
                     {credit.payments.map((p, i) => (
                       <span key={i} className="credit-ph-item">
                         KES {p.amount.toLocaleString()} on {p.date}
@@ -523,7 +550,7 @@ export default function Credits() {
                 {isPaid && (
                   <div className="credit-closed-note" style={{ color: "var(--green)" }}>
                     <FontAwesomeIcon icon={faArrowRight} style={{ marginRight: 6 }} />
-                    Fully collected — recorded in Sales on {credit.lastPaymentDate || "completion"}
+                    Imekusanywa yote — imewekwa kwenye Mauzo tarehe {credit.lastPaymentDate || "completion"}
                   </div>
                 )}
                 {isBadDebt && (
@@ -531,13 +558,13 @@ export default function Credits() {
                     {(credit.paidAmount || 0) > 0 && (
                       <div className="credit-closed-note" style={{ color: "var(--green)" }}>
                         <FontAwesomeIcon icon={faArrowRight} style={{ marginRight: 6 }} />
-                        KES {credit.paidAmount.toLocaleString()} collected — recorded in Sales
+                        KES {credit.paidAmount.toLocaleString()} imekusanywa / imekusanywa — imewekwa Mauzo
                       </div>
                     )}
                     {writtenOff > 0 && (
                       <div className="credit-closed-note" style={{ color: "var(--red)" }}>
                         <FontAwesomeIcon icon={faArrowRight} style={{ marginRight: 6 }} />
-                        KES {writtenOff.toLocaleString()} written off to Losses on {credit.closedDate || "closure"}
+                        KES {writtenOff.toLocaleString()} imeandikwa / imeandikwa kwenye Hasara tarehe {credit.closedDate || "closure"}
                       </div>
                     )}
                   </div>
@@ -551,14 +578,14 @@ export default function Credits() {
                         className="btn-pay"
                         onClick={() => { setPayingCredit(credit); setPayAmount(""); setPayNote(""); }}
                       >
-                        <FontAwesomeIcon icon={faHandHoldingDollar} /> Pay
+                        <FontAwesomeIcon icon={faHandHoldingDollar} /> {t.payments}
                       </button>
                       <button
                         className="btn-secondary"
                         style={{ fontSize: 12, padding: "7px 12px", color: "var(--red)", borderColor: "var(--red)" }}
                         onClick={() => setBadDebtTarget(credit)}
                       >
-                        <FontAwesomeIcon icon={faThumbsDown} /> Bad Debt
+                        <FontAwesomeIcon icon={faThumbsDown} /> {t.badDebt}
                       </button>
                     </>
                   )}
@@ -567,7 +594,7 @@ export default function Credits() {
                     style={{ fontSize: 12, padding: "7px 12px", marginLeft: "auto" }}
                     onClick={() => setDeleteTarget(credit)}
                   >
-                    <FontAwesomeIcon icon={faTrash} /> Delete
+                    <FontAwesomeIcon icon={faTrash} /> {t.delete}
                   </button>
                 </div>
               </div>
@@ -579,7 +606,7 @@ export default function Credits() {
       {/* ── Bad Debt confirm ── */}
       <AlertDialog
         open={!!badDebtTarget}
-        title="Write off as bad debt?"
+        title={t.writeOff}
         message={
           badDebtTarget
             ? `Only the remaining KES ${Math.max(0, (badDebtTarget.totalAmount || 0) - (badDebtTarget.paidAmount || 0)).toLocaleString()} owed by "${badDebtTarget.customer}" will be written off to Losses.${
@@ -589,8 +616,8 @@ export default function Credits() {
               } This cannot be undone.`
             : ""
         }
-        confirmLabel="Yes, Write Off"
-        cancelLabel="Cancel"
+        confirmLabel={t.yesWriteOff}
+        cancelLabel="{t.cancel}"
         onCancel={() => setBadDebtTarget(null)}
         onConfirm={confirmBadDebt}
       />
@@ -604,8 +631,8 @@ export default function Credits() {
             ? `This will permanently remove the credit for "${deleteTarget.customer}". This cannot be undone.`
             : ""
         }
-        confirmLabel="Yes, Delete"
-        cancelLabel="Cancel"
+        confirmLabel="Ndio, Futa / Yes, Delete"
+        cancelLabel="{t.cancel}"
         onCancel={() => setDeleteTarget(null)}
         onConfirm={async () => {
           if (deleteTarget) {

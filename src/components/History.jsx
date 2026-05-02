@@ -1,41 +1,45 @@
 import { useState, useEffect } from "react";
 import { db } from "../firebase";
-import { collection, query, orderBy, limit, getDocs } from "firebase/firestore";
+import { collection, query, orderBy, limit, getDocs, onSnapshot } from "firebase/firestore";
 import { useCollection } from "../hooks/useCollection";
 import { Toast, useToast } from "./Toast";
 import AlertDialog from "./AlertDialog";
+import { useLang } from "../LangContext";
 
 const ACTION_COLORS = {
   CREATE: {
     bg: "#f0fdf4",
     border: "#86efac",
     text: "#16a34a",
-    label: "Added",
+    label: "actAdded",
   },
   UPDATE: {
     bg: "#eff6ff",
     border: "#93c5fd",
     text: "#1d4ed8",
-    label: "Edited",
+    label: "actEdited",
   },
   DELETE: {
     bg: "#fef2f2",
     border: "#fca5a5",
     text: "#dc2626",
-    label: "Deleted",
+    label: "actDeleted",
   },
   RESTORE: {
     bg: "#faf5ff",
     border: "#c4b5fd",
     text: "#7e22ce",
-    label: "Restored",
+    label: "actRestored",
   },
 };
 
 const COL_LABELS = {
-  sales: "Sales",
-  purchases: "Purchases",
-  expenses: "Expenses",
+  sales:     "sales",
+  purchases: "purchases",
+  expenses:  "expenses",
+  credits:   "credits",
+  losses:    "losses",
+  stock:     "stock",
 };
 
 function formatVal(obj) {
@@ -47,10 +51,10 @@ function formatVal(obj) {
   if (obj.description) parts.push(obj.description);
   if (obj.item) parts.push(obj.item);
   if (obj.category) parts.push(obj.category);
-  if (obj.customer) parts.push(`Customer: ${obj.customer}`);
-  if (obj.supplier) parts.push(`Supplier: ${obj.supplier}`);
+  if (obj.customer) parts.push(`Mteja: ${obj.customer}`);
+  if (obj.supplier) parts.push(`Muuzaji: ${obj.supplier}`);
   if (obj.amount) parts.push(`KES ${Number(obj.amount).toLocaleString()}`);
-  if (obj.notes) parts.push(`Notes: ${obj.notes}`);
+  if (obj.notes) parts.push(`Maelezo: ${obj.notes}`);
 
   return parts.join(" · ");
 }
@@ -75,6 +79,7 @@ function timeSince(ts) {
 }
 
 export default function History() {
+  const { t } = useLang();
   const [logs, setLogs] = useState([]);
   const [historyLoading, setHistoryLoading] = useState(true);
   const [filter, setFilter] = useState("ALL");
@@ -87,27 +92,22 @@ export default function History() {
   const { silentDelete: deleteLog, clearCollection } =
     useCollection("auditLog");
 
-  // ✅ FIXED: NO onSnapshot — safe fetch
+  // Real-time audit log listener
   useEffect(() => {
-    const fetchHistory = async () => {
-      try {
-        const q = query(
-          collection(db, "auditLog"),
-          orderBy("timestamp", "desc"),
-          limit(200),
-        );
-
-        const snap = await getDocs(q);
-
-        setLogs(snap.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
-        setHistoryLoading(false);
-      } catch (err) {
-        console.error("History fetch error:", err.message);
-        setHistoryLoading(false);
-      }
-    };
-
-    fetchHistory();
+    if (!db) return;
+    const q = query(
+      collection(db, "auditLog"),
+      orderBy("timestamp", "desc"),
+      limit(200),
+    );
+    const unsub = onSnapshot(q, (snap) => {
+      setLogs(snap.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
+      setHistoryLoading(false);
+    }, (err) => {
+      console.error("History fetch error:", err.message);
+      setHistoryLoading(false);
+    });
+    return unsub;
   }, []);
 
   const filtered =
@@ -119,16 +119,16 @@ export default function History() {
     try {
       await restoreItem(restoreTarget);
       setRestoreTarget(null);
-      showToast("Record restored successfully!", "success");
+      showToast(t.restored, "success");
     } catch (error) {
       console.error("Restore failed:", error);
-      showToast("Failed to restore record.", "error");
+      showToast("Imeshindwa kurudisha rekodi. / Failed to restore record.", "error");
     }
   };
 
   const handleClearHistory = async () => {
     const confirmed = window.confirm(
-      "Delete ALL history permanently? This cannot be undone.",
+      t.deleteHistory,
     );
 
     if (!confirmed) return;
@@ -137,7 +137,7 @@ export default function History() {
       setClearing(true);
       await clearCollection("auditLog");
       setLogs([]); // instant UI update
-      showToast("History cleared.", "success");
+      showToast(t.historyCleared, "success");
     } catch (error) {
       console.error("Clear history failed:", error);
       showToast("Failed to clear history.", "error");
@@ -152,17 +152,18 @@ export default function History() {
 
       <AlertDialog
         open={!!restoreTarget}
-        title="Restore this record?"
+        title={t.restoreRecord}
         message={
           restoreTarget
-            ? `This will re-add "${restoreTarget.description || ""}" back to ${
-                COL_LABELS[restoreTarget.collectionName] ||
-                restoreTarget.collectionName
+            ? `Hii itarudisha "${restoreTarget.description || ""}" kwenye ${
+                t[COL_LABELS[restoreTarget.collectionName]] || restoreTarget.collectionName|t[COL_LABELS[restoreTarget.collectionName]] || restoreTarget.collectionName
+              }. / This will re-add "${restoreTarget.description || ""}" back to ${
+                t[COL_LABELS[restoreTarget.collectionName]] || restoreTarget.collectionName|t[COL_LABELS[restoreTarget.collectionName]] || restoreTarget.collectionName
               }.`
             : ""
         }
-        confirmLabel="Yes, Restore"
-        cancelLabel="Cancel"
+        confirmLabel={t.confirmRestore}
+        cancelLabel={t.cancel}
         onConfirm={handleRestore}
         onCancel={() => setRestoreTarget(null)}
       />
@@ -175,14 +176,14 @@ export default function History() {
               className={`filter-pill${filter === f ? " active" : ""}`}
               onClick={() => setFilter(f)}
             >
-              {f === "ALL" ? "All Activity" : ACTION_COLORS[f]?.label || f}
+          {f === "ALL" ? t.allActivity : t[ACTION_COLORS[f]?.label] || f}
             </button>
           ))}
         </div>
 
         <div className="toolbar-right">
           <span className="table-count">
-            {filtered.length} event{filtered.length !== 1 ? "s" : ""}
+            {filtered.length}{filtered.length !== 1 ? "" : ""}
           </span>
 
           <button
@@ -190,16 +191,16 @@ export default function History() {
             disabled={clearing}
             className="btn-danger"
           >
-            {clearing ? "Clearing..." : "🗑 Clear All History"}
+            {clearing ? t.clearing : "🗑 " + t.clearHistory}
           </button>
         </div>
       </div>
 
       {historyLoading ? (
-        <div className="table-loading">Loading history...</div>
+        <div className="table-loading">{t.historyLoading}</div>
       ) : filtered.length === 0 ? (
         <div className="empty-state">
-          No activity recorded yet. Changes will appear here automatically.
+          {t.noHistory}
         </div>
       ) : (
         <div className="history-list">
@@ -218,7 +219,7 @@ export default function History() {
                       color: style.text,
                     }}
                   >
-                    {style.label}
+                    {t[style.label] || style.label}
                   </span>
 
                   <div className="history-info">
@@ -226,18 +227,18 @@ export default function History() {
 
                     <div className="history-meta">
                       <span className="history-col">
-                        {COL_LABELS[log.collectionName] || log.collectionName}
+                        {t[COL_LABELS[log.collectionName]] || log.collectionName}
                       </span>
 
                       {log.before && (
                         <span className="history-detail">
-                          Before: <em>{formatVal(log.before)}</em>
+                          {t.before}: <em>{formatVal(log.before)}</em>
                         </span>
                       )}
 
                       {log.after && log.action === "UPDATE" && (
                         <span className="history-detail">
-                          After: <em>{formatVal(log.after)}</em>
+                          {t.after}: <em>{formatVal(log.after)}</em>
                         </span>
                       )}
                     </div>
@@ -254,7 +255,7 @@ export default function History() {
                       className="btn-restore"
                       onClick={() => setRestoreTarget(log)}
                     >
-                      ↩ Restore
+                      {t.restore}
                     </button>
                   )}
 

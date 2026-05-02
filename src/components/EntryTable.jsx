@@ -1,5 +1,6 @@
 import { useState } from "react";
 import AlertDialog from "./AlertDialog";
+import { useLang } from "../LangContext";
 
 export default function EntryTable({
   items,
@@ -10,6 +11,7 @@ export default function EntryTable({
   emptyMessage,
   showToast,
 }) {
+  const { t } = useLang();
   const [search, setSearch] = useState("");
   const [editId, setEditId] = useState(null);
   const [editData, setEditData] = useState({});
@@ -47,7 +49,7 @@ export default function EntryTable({
       setEditId(null);
       setEditData({});
       setOriginalData({});
-      showToast && showToast("Record updated successfully!", "success");
+      showToast && showToast(t.updatedToast, "success");
     } catch (err) {
       console.error("Update failed:", err);
       showToast && showToast("Update failed. Please try again.", "error");
@@ -62,10 +64,10 @@ export default function EntryTable({
     try {
       await onDelete(deleteTarget.id, deleteTarget.item);
       showToast &&
-        showToast("Deleted. Restore it anytime from History.", "delete");
+        showToast(t.deletedToast, "delete");
     } catch (err) {
       console.error("Delete failed:", err);
-      showToast && showToast("Delete failed. Please try again.", "error");
+      showToast && showToast(t.failedDelete, "error");
     } finally {
       setDeleting(false);
       setDeleteTarget(null);
@@ -77,14 +79,14 @@ export default function EntryTable({
       <AlertDialog
         open={!!deleteTarget}
         danger
-        title="Delete this record?"
+        title={t.delete}
         message={
           deleteTarget
-            ? `You are about to delete "${deleteTarget.item?.description || deleteTarget.item?.item || deleteTarget.item?.category || "this record"}" - KES ${Number(deleteTarget.item?.amount || 0).toLocaleString()}. You can restore it from the History tab.`
+            ? `Unakaribia kufuta "${deleteTarget.item?.description || deleteTarget.item?.item || deleteTarget.item?.category || "this record"}" — KES ${Number(deleteTarget.item?.amount || 0).toLocaleString()}. Unaweza kuirejesha kwenye Historia. / You can restore it from the History tab.`
             : ""
         }
-        confirmLabel={deleting ? "Deleting..." : "Yes, Delete"}
-        cancelLabel="Cancel"
+        confirmLabel={deleting ? t.deleting : t.confirmDelete}
+        cancelLabel={t.cancel}
         onConfirm={confirmDelete}
         onCancel={() => !deleting && setDeleteTarget(null)}
       />
@@ -92,20 +94,20 @@ export default function EntryTable({
       <div className="table-toolbar">
         <input
           className="search-input"
-          placeholder="🔍 Search..."
+          placeholder={"🔍 " + t.search}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
         <span className="table-count">
-          {filtered.length} record{filtered.length !== 1 ? "s" : ""}
+          {filtered.length} {t.records}
         </span>
       </div>
 
       {loading ? (
-        <div className="table-loading">Loading...</div>
+        <div className="table-loading">{t.loading}</div>
       ) : filtered.length === 0 ? (
         <div className="empty-state">
-          {search ? "No results found." : emptyMessage}
+          {search ? t.noResults : emptyMessage}
         </div>
       ) : (
         <div className="table-scroll">
@@ -115,7 +117,7 @@ export default function EntryTable({
                 {columns.map((c) => (
                   <th key={c.key}>{c.label}</th>
                 ))}
-                <th>Actions</th>
+                <th>{t.actions}</th>
               </tr>
             </thead>
             <tbody>
@@ -172,7 +174,7 @@ export default function EntryTable({
                           onClick={saveEdit}
                           disabled={saving}
                         >
-                          {saving ? "Saving..." : "Save ✓"}
+                          {saving ? t.saving : t.save + " ✓"}
                         </button>
                         <button
                           className="btn-cancel-sm"

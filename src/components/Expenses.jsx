@@ -1,54 +1,57 @@
 import { useState } from "react";
 import { useCollection } from "../hooks/useCollection";
+import { useCatalogue } from "../hooks/useCatalogue";
+import { useLang } from "../LangContext";
 import EntryTable from "./EntryTable";
 import { Toast, useToast } from "./Toast";
 
-const EXPENSE_CATS = ["Rent", "Utilities", "Transport", "Salaries", "Marketing", "Internet", "Office Supplies", "Repairs", "Bank Charges", "Other"];
-
 export default function Expenses() {
+  const { t } = useLang();
   const { items, loading, addItem, deleteItem, updateItem } = useCollection("expenses");
+  const catalogue = useCatalogue();
   const { toast, showToast } = useToast();
-  const emptyForm = {
-    date: new Date().toISOString().split("T")[0],
-    category: "",
-    description: "",
-    payee: "",
-    phone: "",
-    amount: "",
-    notes: "",
-  };
+
+  const CATS = t.expenseCategories;
+  const OTHER = CATS[CATS.length - 1]; // last item is always "Other"
+
+  const emptyForm = { date: new Date().toISOString().split("T")[0], category: "", customCategory: "", description: "", payee: "", phone: "", amount: "", notes: "" };
   const [form, setForm] = useState(emptyForm);
   const [status, setStatus] = useState("idle");
   const [showForm, setShowForm] = useState(false);
+
+  const isOther = form.category === OTHER;
+
+  const handleCatalogueSelect = (e) => {
+    const found = catalogue.find((c) => c.name === e.target.value);
+    setForm((f) => ({ ...f, description: found ? found.name : e.target.value, amount: found?.price != null ? String(found.price) : f.amount }));
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (status !== "idle") return;
     setStatus("saving");
+    const finalCategory = isOther && form.customCategory.trim() ? form.customCategory.trim() : form.category;
     try {
-      await addItem({ ...form, amount: parseFloat(form.amount) });
+      await addItem({ ...form, category: finalCategory, amount: parseFloat(form.amount) });
       setStatus("saved");
-      showToast("Expense saved successfully!");
+      showToast(t.saved);
       setTimeout(() => { setStatus("idle"); setForm(emptyForm); setShowForm(false); }, 1500);
-    } catch (err) {
-      console.error("Save failed:", err);
+    } catch {
       setStatus("idle");
-      showToast("Save failed. Please try again.", "error");
+      showToast(t.failedSave, "error");
     }
   };
 
   const total = items.reduce((a, b) => a + (Number(b.amount) || 0), 0);
 
   const columns = [
-    { key: "date", label: "Date", inputType: "date" },
-    { key: "category", label: "Category", type: "select", options: EXPENSE_CATS },
-    { key: "description", label: "Description" },
-    { key: "payee", label: "Paid To" },
-    { key: "phone", label: "Phone", inputType: "tel", format: v => v ? (
-      <a href={`tel:${v}`} style={{ color: "var(--accent)", textDecoration: "none" }}>{v}</a>
-    ) : "-" },
-    { key: "amount", label: "Amount (KES)", inputType: "number", format: v => `KES ${Number(v).toLocaleString()}` },
-    { key: "notes", label: "Notes" },
+    { key: "date",        label: t.date,        inputType: "date" },
+    { key: "category",    label: t.expCategory, type: "select", options: CATS },
+    { key: "description", label: t.description },
+    { key: "payee",       label: t.paidTo },
+    { key: "phone",       label: t.phone,        inputType: "tel", format: v => v ? <a href={`tel:${v}`} style={{ color: "var(--accent)", textDecoration: "none" }}>{v}</a> : "-" },
+    { key: "amount",      label: t.amount,       inputType: "number", format: v => `KES ${Number(v).toLocaleString()}` },
+    { key: "notes",       label: t.notes },
   ];
 
   return (
@@ -56,57 +59,76 @@ export default function Expenses() {
       <Toast toast={toast} />
       <div className="module-header">
         <div className="module-stat">
-          <span className="stat-label">Total Expenses</span>
+          <span className="stat-label">{t.totalExpenses}</span>
           <span className="stat-value purple">KES {total.toLocaleString()}</span>
         </div>
         <button className="btn-primary" onClick={() => { setShowForm(!showForm); setStatus("idle"); }}>
-          {showForm ? "✕ Cancel" : "+ New Expense"}
+          {showForm ? `✕ ${t.cancel}` : `+ ${t.newExpense}`}
         </button>
       </div>
 
       {showForm && (
         <form className="entry-form" onSubmit={handleSubmit}>
-          <h3>Record an Expense</h3>
+          <h3>💸 {t.recordExpense}</h3>
           <div className="form-grid">
             <div className="field-group">
-              <label>Date *</label>
+              <label>{t.date} *</label>
               <input type="date" value={form.date} onChange={e => setForm({ ...form, date: e.target.value })} required />
             </div>
             <div className="field-group">
-              <label>Category *</label>
+              <label>{t.expCategory} *</label>
               <select value={form.category} onChange={e => setForm({ ...form, category: e.target.value })} required>
-                <option value="">Select category</option>
-                {EXPENSE_CATS.map(c => <option key={c}>{c}</option>)}
+                <option value="">{t.selectCategory}</option>
+                {CATS.map(c => <option key={c}>{c}</option>)}
               </select>
             </div>
+            {isOther && (
+              <div className="field-group">
+                <label>{t.specifyCategory} *</label>
+                <input placeholder={t.specifyCatPh} value={form.customCategory} onChange={e => setForm({ ...form, customCategory: e.target.value })} required />
+              </div>
+            )}
+            {catalogue.length > 0 && (
+              <div className="field-group">
+                <label>{t.pickCatalogue}</label>
+                <select onChange={handleCatalogueSelect} value={form.description}>
+                  <option value="">{t.selectItem}</option>
+                  {catalogue.map((c) => (
+                    <option key={c.id} value={c.name}>
+                      {c.name}{c.price != null ? ` — KES ${Number(c.price).toLocaleString()}${c.unit ? `/${c.unit}` : ""}` : ""}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
             <div className="field-group">
-              <label>Description</label>
-              <input placeholder="Brief description" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} />
+              <label>{t.description}</label>
+              <input placeholder={t.descriptionPh} value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} />
             </div>
             <div className="field-group">
-              <label>Paid To</label>
-              <input placeholder="Person / business paid" value={form.payee} onChange={e => setForm({ ...form, payee: e.target.value })} />
+              <label>{t.paidTo}</label>
+              <input placeholder={t.paidToPh} value={form.payee} onChange={e => setForm({ ...form, payee: e.target.value })} />
             </div>
             <div className="field-group">
-              <label>Phone Number</label>
+              <label>{t.phone}</label>
               <input type="tel" placeholder="07XX XXX XXX" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} />
             </div>
             <div className="field-group">
-              <label>Amount (KES) *</label>
+              <label>{t.amount} *</label>
               <input type="number" min="0" step="0.01" placeholder="0.00" value={form.amount} onChange={e => setForm({ ...form, amount: e.target.value })} required />
             </div>
             <div className="field-group full-width">
-              <label>Notes</label>
-              <input placeholder="Optional notes" value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} />
+              <label>{t.notes}</label>
+              <input placeholder="..." value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} />
             </div>
           </div>
           <button type="submit" className={"btn-primary" + (status === "saved" ? " btn-saved" : "")} disabled={status !== "idle"}>
-            {status === "saving" ? "Saving..." : status === "saved" ? "✅ Saved!" : "Save Expense"}
+            {status === "saving" ? t.saving : status === "saved" ? t.saved : t.saveExpense}
           </button>
         </form>
       )}
 
-      <EntryTable items={items} loading={loading} columns={columns} onDelete={deleteItem} onUpdate={updateItem} showToast={showToast} emptyMessage="No expenses recorded yet. Click '+ New Expense' to add one." />
+      <EntryTable items={items} loading={loading} columns={columns} onDelete={deleteItem} onUpdate={updateItem} showToast={showToast} emptyMessage={t.noExpenses} />
     </div>
   );
 }
