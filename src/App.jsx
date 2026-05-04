@@ -817,12 +817,16 @@ export default function App() {
                   </button>
                 </div>
 
-                <div className="login-divider">New to QuickDuka?</div>
+                <div className="login-divider">
+                  New to QuickDuka? 
+                  <b> Start Free 1-Month Trial</b>
+                </div>
                 <button
                   className="btn-register"
+                  border= "var(--accent)"
                   onClick={() => setView("register")}
                 >
-                  Start Free 1-Month Trial
+                  Create a new account
                 </button>
 
                 <div className="login-divider" style={{ marginTop: 14 }}>
@@ -832,7 +836,8 @@ export default function App() {
                   className="btn-register"
                   style={{
                     background: "transparent",
-                    border: "1.5px solid var(--accent)",
+                    // border: "1.5px solid var(--accent)",
+                    border: "var(--accent)",
                     color: "var(--accent)",
                   }}
                   onClick={() => setView("referrer")}
