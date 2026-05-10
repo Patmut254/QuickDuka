@@ -239,9 +239,7 @@ function AppShell({ user, profile, theme, toggleTheme }) {
   const infoTabs = tabs.filter((t) =>
     ["contact", "faq", "privacy"].includes(t.id),
   );
-  const mobileTabs = tabs.filter(
-    (t) => !["contact", "faq", "privacy"].includes(t.id),
-  );
+  const mobileTabs = tabs;
   const currentTab = tabs.find((t) => t.id === activeTab);
 
   const expiryDate = profile?.subscriptionExpiry?.toDate?.();
@@ -389,8 +387,13 @@ function AppShell({ user, profile, theme, toggleTheme }) {
                 onClick={() => setActiveTab("profile")}
                 title={t.profile}
               >
-                <FontAwesomeIcon icon={faCircleUser} className="user-badge-icon-mobile" />
-                <span className="user-badge-name">{profile?.ownerName || profile?.businessName || user.email}</span>
+                <FontAwesomeIcon
+                  icon={faCircleUser}
+                  className="user-badge-icon-mobile"
+                />
+                <span className="user-badge-name">
+                  {profile?.ownerName || profile?.businessName || user.email}
+                </span>
               </button>
               <button className="logout-inline" onClick={() => signOut(auth)}>
                 {t.signOut}
@@ -818,12 +821,12 @@ export default function App() {
                 </div>
 
                 <div className="login-divider">
-                  New to QuickDuka? 
+                  New to QuickDuka?
                   <b> Start Free 1-Month Trial</b>
                 </div>
                 <button
                   className="btn-register"
-                  border= "var(--accent)"
+                  border="var(--accent)"
                   onClick={() => setView("register")}
                 >
                   Create a new account

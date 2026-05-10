@@ -147,20 +147,16 @@ body {
     7px 7px;
 
   /* Gradient mask: fully visible on the RIGHT, transparent on the LEFT */
-  -webkit-mask-image: linear-gradient(
-    to left,
-    rgba(0, 0, 0, 1) 0%,
-    rgba(0, 0, 0, 0.7) 30%,
-    rgba(0, 0, 0, 0.25) 60%,
-    rgba(0, 0, 0, 0) 85%
-  );
-  mask-image: linear-gradient(
-    to left,
-    rgba(0, 0, 0, 1) 0%,
-    rgba(0, 0, 0, 0.7) 30%,
-    rgba(0, 0, 0, 0.25) 60%,
-    rgba(0, 0, 0, 0) 85%
-  );
+  -webkit-mask-image: linear-gradient(to left,
+      rgba(0, 0, 0, 1) 0%,
+      rgba(0, 0, 0, 0.7) 30%,
+      rgba(0, 0, 0, 0.25) 60%,
+      rgba(0, 0, 0, 0) 85%);
+  mask-image: linear-gradient(to left,
+      rgba(0, 0, 0, 1) 0%,
+      rgba(0, 0, 0, 0.7) 30%,
+      rgba(0, 0, 0, 0.25) 60%,
+      rgba(0, 0, 0, 0) 85%);
 
   animation: dotsPulse 8s ease-in-out infinite alternate;
 }
@@ -172,28 +168,22 @@ body {
   width: 100vw;
   height: 100vh;
 
-  background: radial-gradient(
-    circle,
-    rgba(46, 204, 113, 0.15) 1px,
-    transparent 1px
-  );
+  background: radial-gradient(circle,
+      rgba(46, 204, 113, 0.15) 1px,
+      transparent 1px);
   background-size: 48px 48px;
   background-position: 16px 16px;
 
-  -webkit-mask-image: linear-gradient(
-    135deg,
-    rgba(0, 0, 0, 0) 0%,
-    rgba(0, 0, 0, 0.4) 40%,
-    rgba(0, 0, 0, 0.9) 70%,
-    rgba(0, 0, 0, 1) 100%
-  );
-  mask-image: linear-gradient(
-    135deg,
-    rgba(0, 0, 0, 0) 0%,
-    rgba(0, 0, 0, 0.4) 40%,
-    rgba(0, 0, 0, 0.9) 70%,
-    rgba(0, 0, 0, 1) 100%
-  );
+  -webkit-mask-image: linear-gradient(135deg,
+      rgba(0, 0, 0, 0) 0%,
+      rgba(0, 0, 0, 0.4) 40%,
+      rgba(0, 0, 0, 0.9) 70%,
+      rgba(0, 0, 0, 1) 100%);
+  mask-image: linear-gradient(135deg,
+      rgba(0, 0, 0, 0) 0%,
+      rgba(0, 0, 0, 0.4) 40%,
+      rgba(0, 0, 0, 0.9) 70%,
+      rgba(0, 0, 0, 1) 100%);
 
   animation: dotsPulse 12s ease-in-out infinite alternate-reverse;
 }
@@ -230,11 +220,9 @@ body {
 
   .login-dots-br {
     background:
-      radial-gradient(
-        circle,
+      radial-gradient(circle,
         rgba(46, 204, 113, 0.18) 1.5px,
-        transparent 1.5px
-      ),
+        transparent 1.5px),
       radial-gradient(circle, rgba(26, 122, 60, 0.08) 2.5px, transparent 2.5px);
     background-size:
       48px 48px,
@@ -258,11 +246,9 @@ body {
 }
 
 [data-theme="dark"] .login-dots-br {
-  background: radial-gradient(
-    circle,
-    rgba(46, 204, 113, 0.12) 1px,
-    transparent 1px
-  );
+  background: radial-gradient(circle,
+      rgba(46, 204, 113, 0.12) 1px,
+      transparent 1px);
   background-size: 48px 48px;
   background-position: 16px 16px;
 }
@@ -276,11 +262,9 @@ body {
   left: -80px;
   width: 520px;
   height: 520px;
-  background: radial-gradient(
-    circle at 35% 40%,
-    rgba(26, 122, 60, 0.1) 0%,
-    transparent 65%
-  );
+  background: radial-gradient(circle at 35% 40%,
+      rgba(26, 122, 60, 0.1) 0%,
+      transparent 65%);
 }
 
 .login-blob::after {
@@ -290,11 +274,9 @@ body {
   right: -80px;
   width: 400px;
   height: 400px;
-  background: radial-gradient(
-    circle at 60% 60%,
-    rgba(26, 122, 60, 0.07) 0%,
-    transparent 65%
-  );
+  background: radial-gradient(circle at 60% 60%,
+      rgba(26, 122, 60, 0.07) 0%,
+      transparent 65%);
   display: block;
 }
 
@@ -567,7 +549,7 @@ body {
   gap: 5px;
 }
 
-.field-group > label {
+.field-group>label {
   font-size: 11.5px;
   font-weight: 700;
   color: var(--muted);
@@ -1735,20 +1717,16 @@ body {
   background-position:
     0 0,
     7px 7px;
-  -webkit-mask-image: linear-gradient(
-    to left,
-    rgba(0, 0, 0, 1) 0%,
-    rgba(0, 0, 0, 0.7) 30%,
-    rgba(0, 0, 0, 0.2) 65%,
-    rgba(0, 0, 0, 0) 85%
-  );
-  mask-image: linear-gradient(
-    to left,
-    rgba(0, 0, 0, 1) 0%,
-    rgba(0, 0, 0, 0.7) 30%,
-    rgba(0, 0, 0, 0.2) 65%,
-    rgba(0, 0, 0, 0) 85%
-  );
+  -webkit-mask-image: linear-gradient(to left,
+      rgba(0, 0, 0, 1) 0%,
+      rgba(0, 0, 0, 0.7) 30%,
+      rgba(0, 0, 0, 0.2) 65%,
+      rgba(0, 0, 0, 0) 85%);
+  mask-image: linear-gradient(to left,
+      rgba(0, 0, 0, 1) 0%,
+      rgba(0, 0, 0, 0.7) 30%,
+      rgba(0, 0, 0, 0.2) 65%,
+      rgba(0, 0, 0, 0) 85%);
   animation: dotsPulse 8s ease-in-out infinite alternate;
 }
 
@@ -1757,27 +1735,21 @@ body {
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: radial-gradient(
-    circle,
-    rgba(46, 204, 113, 0.15) 1px,
-    transparent 1px
-  );
+  background: radial-gradient(circle,
+      rgba(46, 204, 113, 0.15) 1px,
+      transparent 1px);
   background-size: 48px 48px;
   background-position: 16px 16px;
-  -webkit-mask-image: linear-gradient(
-    135deg,
-    rgba(0, 0, 0, 0) 0%,
-    rgba(0, 0, 0, 0.4) 40%,
-    rgba(0, 0, 0, 0.9) 70%,
-    rgba(0, 0, 0, 1) 100%
-  );
-  mask-image: linear-gradient(
-    135deg,
-    rgba(0, 0, 0, 0) 0%,
-    rgba(0, 0, 0, 0.4) 40%,
-    rgba(0, 0, 0, 0.9) 70%,
-    rgba(0, 0, 0, 1) 100%
-  );
+  -webkit-mask-image: linear-gradient(135deg,
+      rgba(0, 0, 0, 0) 0%,
+      rgba(0, 0, 0, 0.4) 40%,
+      rgba(0, 0, 0, 0.9) 70%,
+      rgba(0, 0, 0, 1) 100%);
+  mask-image: linear-gradient(135deg,
+      rgba(0, 0, 0, 0) 0%,
+      rgba(0, 0, 0, 0.4) 40%,
+      rgba(0, 0, 0, 0.9) 70%,
+      rgba(0, 0, 0, 1) 100%);
   animation: dotsPulse 12s ease-in-out infinite alternate-reverse;
 }
 
@@ -2401,9 +2373,9 @@ a[href^="tel:"]:hover {
 
   /* Login page mobile fixes */
   .login-page {
-    padding: 24px 16px 0;
-    min-height: calc(100vh - 0px);
-    justify-content: flex-start;
+    padding: 24px 16px 32px;
+    min-height: 100vh;
+    justify-content: center;
   }
 
   /* Dots use fixed positioning — on mobile constrain them */
@@ -3220,11 +3192,9 @@ a[href^="tel:"]:hover {
 }
 
 [data-theme="dark"] .login-blob {
-  background: radial-gradient(
-    circle at 30% 40%,
-    rgba(46, 204, 113, 0.07) 0%,
-    transparent 65%
-  );
+  background: radial-gradient(circle at 30% 40%,
+      rgba(46, 204, 113, 0.07) 0%,
+      transparent 65%);
 }
 
 [data-theme="dark"] .login-card {
@@ -4588,12 +4558,12 @@ a[href^="tel:"]:hover {
 }
 
 /* Global footer copyright */
-/* ═══════════════════════════════════════════════════════════
+/* 
    APP FOOTER — SINGLE AUTHORITATIVE DEFINITION
    Desktop: fixed bar offset by sidebar width inside app-shell.
    Auth pages (login/register): static text below the card.
    Mobile: always static, never floating.
-   ═══════════════════════════════════════════════════════════ */
+   */
 
 .app-footer {
   display: flex;
@@ -4622,7 +4592,7 @@ a[href^="tel:"]:hover {
 }
 
 /* Auth pages (login / register / referrer) → static below content */
-.login-page + .app-footer,
+.login-page+.app-footer,
 .app-footer:not(.app-shell .app-footer) {
   position: static;
   height: auto;
@@ -4645,9 +4615,11 @@ a[href^="tel:"]:hover {
 
 /* MOBILE OVERRIDES */
 @media (max-width: 768px) {
+
   /* On mobile, even inside app-shell, footer goes ABOVE mobile nav bar */
   .app-shell .app-footer {
-    display: none; /* hide fixed footer — mobile nav bar replaces it */
+    display: none;
+    /* hide fixed footer — mobile nav bar replaces it */
   }
 
   /* Auth pages — just sit at the very bottom, static */
@@ -4698,6 +4670,7 @@ a[href^="tel:"]:hover {
     flex-wrap: nowrap;
     overflow: hidden;
   }
+
   .logout-inline {
     white-space: nowrap;
     flex-shrink: 0;
@@ -4705,6 +4678,7 @@ a[href^="tel:"]:hover {
     font-size: 11px;
     padding: 5px 8px;
   }
+
   .user-badge,
   .user-badge-btn {
     display: flex !important;
@@ -4714,6 +4688,7 @@ a[href^="tel:"]:hover {
     font-size: 11px;
     padding: 4px 8px;
   }
+
   .user-badge-name {
     display: inline;
     overflow: hidden;
@@ -4721,15 +4696,18 @@ a[href^="tel:"]:hover {
     white-space: nowrap;
     max-width: 70px;
   }
+
   .lang-toggle-btn {
     flex-shrink: 0;
     font-size: 10px;
     padding: 4px 7px;
   }
+
   .theme-toggle {
     flex-shrink: 0;
     padding: 5px 8px;
   }
+
   .expiry-warning-badge {
     display: none;
   }
@@ -4739,6 +4717,7 @@ a[href^="tel:"]:hover {
   .user-badge-name {
     display: none !important;
   }
+
   .user-badge,
   .user-badge-btn {
     display: flex !important;
@@ -4746,6 +4725,7 @@ a[href^="tel:"]:hover {
     min-width: 32px;
     justify-content: center;
   }
+
   .user-badge-icon-mobile {
     font-size: 16px;
   }
@@ -4792,6 +4772,7 @@ a[href^="tel:"]:hover {
     flex-direction: column;
     align-items: stretch;
   }
+
   .toolbar-right {
     display: flex;
     justify-content: space-between;
@@ -4930,9 +4911,11 @@ a[href^="tel:"]:hover {
   .history-card {
     flex-direction: column;
   }
+
   .history-left {
     width: 100%;
   }
+
   .history-right {
     width: 100%;
     justify-content: flex-end;
@@ -4945,7 +4928,7 @@ a[href^="tel:"]:hover {
 }
 
 /* FIXES: INFO PAGE TABS */
-.info-page > div > button {
+.info-page>div>button {
   border-radius: 0;
 }
 
@@ -4955,6 +4938,7 @@ a[href^="tel:"]:hover {
     font-size: 13px;
     gap: 8px;
   }
+
   .page-title-icon {
     width: 26px;
     height: 26px;
@@ -4978,17 +4962,21 @@ a[href^="tel:"]:hover {
   .admin-stats-row {
     grid-template-columns: repeat(2, 1fr);
   }
+
   .admin-stats-grid {
     grid-template-columns: repeat(2, 1fr);
   }
+
   .admin-nav-tab {
     padding: 8px 10px;
     font-size: 11px;
     gap: 4px;
   }
+
   .admin-controls {
     flex-direction: column;
   }
+
   .admin-user-summary {
     flex-wrap: wrap;
   }
@@ -5008,6 +4996,7 @@ a[href^="tel:"]:hover {
     text-align: center;
     gap: 10px;
   }
+
   .form-row-2 {
     grid-template-columns: 1fr;
   }
@@ -5018,9 +5007,11 @@ a[href^="tel:"]:hover {
   .credits-summary {
     grid-template-columns: 1fr;
   }
+
   .credit-card-header {
     flex-direction: column;
   }
+
   .credit-actions {
     flex-wrap: wrap;
     gap: 8px;
@@ -5227,10 +5218,12 @@ a[href^="tel:"]:hover {
   .stock-grid {
     grid-template-columns: 1fr;
   }
+
   .stock-card-top {
     flex-direction: column;
     gap: 6px;
   }
+
   .stock-item-price {
     text-align: left;
   }
@@ -5315,9 +5308,9 @@ a[href^="tel:"]:hover {
   margin-bottom: 14px;
 }
 
-/* ═══════════════════════════════════════════════════════════
+/* 
    REFERRER REGISTER PAGE
-   ═══════════════════════════════════════════════════════════ */
+   */
 
 .ref-reg-page {
   padding-bottom: 0;
@@ -5634,18 +5627,20 @@ a[href^="tel:"]:hover {
   .ref-earn-strip-val {
     font-size: 14px;
   }
+
   .ref-earn-strip-lbl {
     font-size: 10px;
   }
+
   .ref-radio-row {
     flex-direction: column;
     gap: 8px;
   }
 }
 
-/* ═══════════════════════════════════════════════════════════
+/* 
    ADMIN — REFERRERS TAB
-   ═══════════════════════════════════════════════════════════ */
+   */
 
 .reftab-body {
   min-height: 200px;
@@ -5891,6 +5886,7 @@ a[href^="tel:"]:hover {
   .reftab-item {
     flex-wrap: wrap;
   }
+
   .reftab-item-actions {
     flex-direction: row;
     width: 100%;
@@ -6009,9 +6005,9 @@ a[href^="tel:"]:hover {
   }
 }
 
-/* ═══════════════════════════════════════════════════════════
+/* 
    ADMIN — CUSTOMER TRACKER TAB
-   ═══════════════════════════════════════════════════════════ */
+   */
 
 .ctab-body {
   min-height: 200px;
@@ -6287,17 +6283,21 @@ a[href^="tel:"]:hover {
   .ctab-group-header {
     flex-wrap: wrap;
   }
+
   .ctab-customer-row {
     flex-wrap: wrap;
   }
+
   .ctab-customer-right {
     flex-direction: row;
     align-items: center;
     gap: 10px;
   }
+
   .ctab-group-earnings {
     text-align: left;
   }
+
   .ctab-month-dot {
     width: 24px;
     height: 24px;
@@ -6305,9 +6305,9 @@ a[href^="tel:"]:hover {
   }
 }
 
-/* ═══════════════════════════════════════════════════════════
+/* 
    ADMIN NAV TABS — MOBILE SCROLL
-   ═══════════════════════════════════════════════════════════ */
+   */
 
 .admin-nav-tabs {
   overflow-x: auto;
@@ -6324,9 +6324,9 @@ a[href^="tel:"]:hover {
   flex-shrink: 0;
 }
 
-/* ═══════════════════════════════════════════════════════════
+/* 
    CREDITS — STATS ROW (collected / written off / total)
-   ═══════════════════════════════════════════════════════════ */
+   */
 
 .credits-stats-row {
   display: grid;
@@ -6369,9 +6369,11 @@ a[href^="tel:"]:hover {
 .credits-stat-green .credits-stat-icon {
   color: var(--green);
 }
+
 .credits-stat-red .credits-stat-icon {
   color: var(--red);
 }
+
 .credits-stat-neutral .credits-stat-icon {
   color: var(--muted);
 }
@@ -6395,6 +6397,7 @@ a[href^="tel:"]:hover {
 .credits-stat-green .credits-stat-val {
   color: var(--green);
 }
+
 .credits-stat-red .credits-stat-val {
   color: var(--red);
 }
@@ -6405,9 +6408,9 @@ a[href^="tel:"]:hover {
   }
 }
 
-/* ═══════════════════════════════════════════════════════════
+/* 
    CREDITS — AMOUNT CHIPS ON CARD
-   ═══════════════════════════════════════════════════════════ */
+   */
 
 .credit-amounts-col {
   text-align: right;
@@ -6439,9 +6442,9 @@ a[href^="tel:"]:hover {
   border: 1px solid #f5a5a5;
 }
 
-/* ═══════════════════════════════════════════════════════════
+/* 
    CREDITS — CLOSED NOTE (bad debt multi-line)
-   ═══════════════════════════════════════════════════════════ */
+   */
 
 .credit-closed-note-wrap {
   display: flex;
@@ -6458,9 +6461,9 @@ a[href^="tel:"]:hover {
   align-items: center;
 }
 
-/* ═══════════════════════════════════════════════════════════
+/* 
    CREDITS — PAYMENT MODAL META TABLE
-   ═══════════════════════════════════════════════════════════ */
+   */
 
 .credit-modal-meta {
   background: var(--bg3);
@@ -6499,13 +6502,14 @@ a[href^="tel:"]:hover {
 .text-green {
   color: var(--green) !important;
 }
+
 .text-red {
   color: var(--red) !important;
 }
 
-/* ═══════════════════════════════════════════════════════════
+/* 
    CREDITS — PAYMENT PREVIEW PILL
-   ═══════════════════════════════════════════════════════════ */
+   */
 
 .credit-pay-preview {
   margin-top: 12px;

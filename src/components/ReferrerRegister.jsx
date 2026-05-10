@@ -3,16 +3,31 @@ import { db } from "../firebase";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  faUser, faPhone, faEnvelope, faHandshake, faCheckCircle,
-  faChevronLeft, faFileArrowUp, faCircleInfo,
-  faLocationDot, faIdCard, faPiggyBank,
+  faUser,
+  faPhone,
+  faEnvelope,
+  faHandshake,
+  faCheckCircle,
+  faChevronLeft,
+  faFileArrowUp,
+  faCircleInfo,
+  faLocationDot,
+  faIdCard,
+  faPiggyBank,
 } from "@fortawesome/free-solid-svg-icons";
 
 export default function ReferrerRegister({ onBack }) {
   const [form, setForm] = useState({
-    fullName: "", phone: "", email: "", idNumber: "",
-    mpesaName: "", mpesaPhone: "", county: "",
-    experience: "", willingToEarn: "", cvFileName: "",
+    fullName: "",
+    phone: "",
+    email: "",
+    idNumber: "",
+    mpesaName: "",
+    mpesaPhone: "",
+    county: "",
+    experience: "",
+    willingToEarn: "",
+    cvFileName: "",
   });
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
@@ -30,20 +45,30 @@ export default function ReferrerRegister({ onBack }) {
     setError("");
     if (!form.fullName.trim()) return setError("Full name is required.");
     if (!form.phone.trim()) return setError("Phone number is required.");
-    if (!form.email.trim() || !form.email.includes("@")) return setError("Valid email is required.");
-    if (!form.mpesaPhone.trim()) return setError("M-Pesa phone number is required.");
-    if (!form.willingToEarn) return setError("Please confirm if you're willing to participate.");
+    if (!form.email.trim() || !form.email.includes("@"))
+      return setError("Valid email is required.");
+    if (!form.mpesaPhone.trim())
+      return setError("M-Pesa phone number is required.");
+    if (!form.mpesaName.trim())
+      return setError("M-Pesa registered name is required.");
+    if (!form.willingToEarn)
+      return setError("Please confirm if you're willing to participate.");
 
     setSaving(true);
     try {
       await addDoc(collection(db, "referrerApplications"), {
-        fullName: form.fullName.trim(), phone: form.phone.trim(),
-        email: form.email.trim(), idNumber: form.idNumber.trim() || null,
-        mpesaName: form.mpesaName.trim() || null, mpesaPhone: form.mpesaPhone.trim(),
-        county: form.county.trim() || null, experience: form.experience.trim() || null,
+        fullName: form.fullName.trim(),
+        phone: form.phone.trim(),
+        email: form.email.trim(),
+        idNumber: form.idNumber.trim() || null,
+        mpesaName: form.mpesaName.trim(),
+        mpesaPhone: form.mpesaPhone.trim(),
+        county: form.county.trim() || null,
+        experience: form.experience.trim() || null,
         willingToEarn: form.willingToEarn === "yes",
         cvFileName: form.cvFileName || null,
-        status: "pending", createdAt: serverTimestamp(),
+        status: "pending",
+        createdAt: serverTimestamp(),
       });
       setDone(true);
     } catch {
@@ -58,32 +83,46 @@ export default function ReferrerRegister({ onBack }) {
         <div className="login-dots login-dots-tl" />
         <div className="login-card" style={{ maxWidth: 460 }}>
           <div className="ref-success-wrap">
-            <div className="ref-success-icon"><FontAwesomeIcon icon={faCheckCircle} /></div>
+            <div className="ref-success-icon">
+              <FontAwesomeIcon icon={faCheckCircle} />
+            </div>
             <h2 className="ref-success-title">Application Submitted!</h2>
             <p className="ref-success-sub">
-              Thank you, <strong>{form.fullName}</strong>. We'll review your application
-              and reach out within 1–7 business days.
+              Thank you, <strong>{form.fullName}</strong>. We'll review your
+              application and reach out within 1–7 business days.
             </p>
             <div className="ref-earnings-summary">
               <div className="ref-earnings-row">
-                <span className="ref-earn-label">First payment per customer - Month 2</span>
+                <span className="ref-earn-label">
+                  First payment per customer - Month 2
+                </span>
                 <span className="ref-earn-val">KES 50</span>
               </div>
               <div className="ref-earnings-row">
                 <span className="ref-earn-label">Months 3–7 per customer</span>
-                <span className="ref-earn-val">KES 20<span className="ref-earn-sub">/mo</span></span>
+                <span className="ref-earn-val">
+                  KES 20<span className="ref-earn-sub">/mo</span>
+                </span>
               </div>
               <div className="ref-earnings-row ref-earnings-total">
-                <span className="ref-earn-label">Maximum per customer (6 months)</span>
+                <span className="ref-earn-label">
+                  Maximum per customer (6 months)
+                </span>
                 <span className="ref-earn-val">KES 150</span>
               </div>
             </div>
-            <button className="btn-login" onClick={onBack} style={{ marginTop: 8 }}>
+            <button
+              className="btn-login"
+              onClick={onBack}
+              style={{ marginTop: 8 }}
+            >
               Back to Sign In
             </button>
           </div>
         </div>
-        <div className="ref-page-footer">© 2026 QuickDuka. All rights reserved.</div>
+        <div className="ref-page-footer">
+          © 2026 QuickDuka. All rights reserved.
+        </div>
       </div>
     );
   }
@@ -226,7 +265,7 @@ export default function ReferrerRegister({ onBack }) {
           <div className="form-row-2">
             <div className="field-group">
               <label>
-                M-Pesa Name <span className="ref-optional">(optional)</span>
+                M-Pesa Name <span className="ref-required">*</span>
               </label>
               <div className="input-icon-wrap">
                 <div className="input-icon-box">

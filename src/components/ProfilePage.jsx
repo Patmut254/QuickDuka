@@ -11,57 +11,69 @@ import {
   faCheckCircle,
   faCircleUser,
 } from "@fortawesome/free-solid-svg-icons";
-import { db } from "../firebase";
-import { doc, updateDoc } from "firebase/firestore";
+import { getFirestore, doc, updateDoc } from "firebase/firestore";
 import { kenyaCounties } from "../data/kenyaLocations";
 import { useLang } from "../LangContext";
+
+const db = getFirestore();
 
 export default function ProfilePage({ user, profile }) {
   const { t } = useLang();
   const [form, setForm] = useState({
-    businessName:  profile?.businessName  || "",
-    ownerName:     profile?.ownerName     || "",
-    phone:         profile?.phone         || "",
-    shopNumber:    profile?.shopNumber    || "",
-    buildingName:  profile?.buildingName  || "",
-    county:        profile?.county        || "",
-    subcounty:     profile?.subcounty     || "",
-    town:          profile?.town          || "",
-    notes:         profile?.notes         || "",
+    businessName: profile?.businessName || "",
+    ownerName: profile?.ownerName || "",
+    phone: profile?.phone || "",
+    shopNumber: profile?.shopNumber || "",
+    buildingName: profile?.buildingName || "",
+    county: profile?.county || "",
+    subcounty: profile?.subcounty || "",
+    town: profile?.town || "",
+    notes: profile?.notes || "",
   });
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
 
-  const selectedCounty = kenyaCounties.find(c => c.county === form.county);
+  const selectedCounty = kenyaCounties.find((c) => c.county === form.county);
   const subcounties = selectedCounty?.subcounties || [];
 
   const handleChange = (e) =>
-    setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
+    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
 
   const handleSave = async (e) => {
     e.preventDefault();
     if (saving) return;
+    if (!user?.uid) {
+      setError("Session error — please sign out and sign back in.");
+      return;
+    }
     setSaving(true);
     setError("");
     setSaved(false);
     try {
-      await updateDoc(doc(db, "users", user.uid), {
+      const updates = {
         businessName: form.businessName.trim(),
-        ownerName:    form.ownerName.trim(),
-        phone:        form.phone.trim(),
-        shopNumber:   form.shopNumber.trim(),
+        ownerName: form.ownerName.trim(),
+        phone: form.phone.trim(),
+        shopNumber: form.shopNumber.trim(),
         buildingName: form.buildingName.trim(),
-        county:       form.county,
-        subcounty:    form.subcounty,
-        town:         form.town.trim(),
-        notes:        form.notes.trim(),
-      });
+        county: form.county,
+        subcounty: form.subcounty,
+        town: form.town.trim(),
+        notes: form.notes.trim(),
+      };
+      await updateDoc(doc(db, "users", user.uid), updates);
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
     } catch (err) {
-      setError(t.failedSaveProfile);
-      console.error(err);
+      console.error("Profile save error:", err);
+      if (err.code === "permission-denied") {
+        setError("Permission denied. Please sign out and sign back in.");
+      } else if (err.code === "not-found") {
+        setError("Profile document not found. Please contact support.");
+      } else {
+        setError(t.failedSaveProfile || "Failed to save. Please try again.");
+      }
     }
     setSaving(false);
   };
@@ -74,8 +86,12 @@ export default function ProfilePage({ user, profile }) {
           <FontAwesomeIcon icon={faCircleUser} />
         </div>
         <div>
-          <div className="profile-name">{profile?.businessName || t.businessName}</div>
-          <div className="profile-role">{profile?.ownerName || user?.email}</div>
+          <div className="profile-name">
+            {profile?.businessName || t.businessName}
+          </div>
+          <div className="profile-role">
+            {profile?.ownerName || user?.email}
+          </div>
         </div>
       </div>
 
@@ -83,22 +99,41 @@ export default function ProfilePage({ user, profile }) {
         {/* Business info */}
         <div className="info-card" style={{ marginBottom: 14 }}>
           <h2>
-            <span className="fa-icon"><FontAwesomeIcon icon={faStore} /></span> {t.businessDetails}
+            <span className="fa-icon">
+              <FontAwesomeIcon icon={faStore} />
+            </span>{" "}
+            {t.businessDetails}
           </h2>
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             <div className="form-row-2">
               <div className="field-group">
                 <label>{t.businessName}</label>
                 <div className="input-icon-wrap">
-                  <div className="input-icon-box"><FontAwesomeIcon icon={faStore} /></div>
-                  <input type="text" name="businessName" placeholder={t.businessNamePh} value={form.businessName} onChange={handleChange} />
+                  <div className="input-icon-box">
+                    <FontAwesomeIcon icon={faStore} />
+                  </div>
+                  <input
+                    type="text"
+                    name="businessName"
+                    placeholder={t.businessNamePh}
+                    value={form.businessName}
+                    onChange={handleChange}
+                  />
                 </div>
               </div>
               <div className="field-group">
                 <label>{t.ownerName}</label>
                 <div className="input-icon-wrap">
-                  <div className="input-icon-box"><FontAwesomeIcon icon={faUser} /></div>
-                  <input type="text" name="ownerName" placeholder={t.ownerNamePh} value={form.ownerName} onChange={handleChange} />
+                  <div className="input-icon-box">
+                    <FontAwesomeIcon icon={faUser} />
+                  </div>
+                  <input
+                    type="text"
+                    name="ownerName"
+                    placeholder={t.ownerNamePh}
+                    value={form.ownerName}
+                    onChange={handleChange}
+                  />
                 </div>
               </div>
             </div>
@@ -106,15 +141,30 @@ export default function ProfilePage({ user, profile }) {
               <div className="field-group">
                 <label>{t.phone}</label>
                 <div className="input-icon-wrap">
-                  <div className="input-icon-box"><FontAwesomeIcon icon={faPhone} /></div>
-                  <input type="tel" name="phone" placeholder={t.phonePh} value={form.phone} onChange={handleChange} />
+                  <div className="input-icon-box">
+                    <FontAwesomeIcon icon={faPhone} />
+                  </div>
+                  <input
+                    type="tel"
+                    name="phone"
+                    placeholder={t.phonePh}
+                    value={form.phone}
+                    onChange={handleChange}
+                  />
                 </div>
               </div>
               <div className="field-group">
                 <label>{t.emailLogin}</label>
                 <div className="input-icon-wrap">
-                  <div className="input-icon-box"><FontAwesomeIcon icon={faEnvelope} /></div>
-                  <input type="email" value={profile?.realEmail || user?.email || ""} disabled style={{ opacity: .65, cursor: "not-allowed" }} />
+                  <div className="input-icon-box">
+                    <FontAwesomeIcon icon={faEnvelope} />
+                  </div>
+                  <input
+                    type="email"
+                    value={profile?.realEmail || user?.email || ""}
+                    disabled
+                    style={{ opacity: 0.65, cursor: "not-allowed" }}
+                  />
                 </div>
               </div>
             </div>
@@ -124,39 +174,77 @@ export default function ProfilePage({ user, profile }) {
         {/* Shop location */}
         <div className="info-card" style={{ marginBottom: 14 }}>
           <h2>
-            <span className="fa-icon"><FontAwesomeIcon icon={faMapMarkerAlt} /></span> {t.shopLocation}
+            <span className="fa-icon">
+              <FontAwesomeIcon icon={faMapMarkerAlt} />
+            </span>{" "}
+            {t.shopLocation}
           </h2>
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             <div className="form-row-2">
               <div className="field-group">
                 <label>{t.shopNumber}</label>
                 <div className="input-icon-wrap">
-                  <div className="input-icon-box"><FontAwesomeIcon icon={faHashtag} /></div>
-                  <input type="text" name="shopNumber" placeholder={t.shopNumberPh} value={form.shopNumber} onChange={handleChange} />
+                  <div className="input-icon-box">
+                    <FontAwesomeIcon icon={faHashtag} />
+                  </div>
+                  <input
+                    type="text"
+                    name="shopNumber"
+                    placeholder={t.shopNumberPh}
+                    value={form.shopNumber}
+                    onChange={handleChange}
+                  />
                 </div>
               </div>
               <div className="field-group">
                 <label>{t.buildingName}</label>
                 <div className="input-icon-wrap">
-                  <div className="input-icon-box"><FontAwesomeIcon icon={faStore} /></div>
-                  <input type="text" name="buildingName" placeholder={t.buildingNamePh} value={form.buildingName} onChange={handleChange} />
+                  <div className="input-icon-box">
+                    <FontAwesomeIcon icon={faStore} />
+                  </div>
+                  <input
+                    type="text"
+                    name="buildingName"
+                    placeholder={t.buildingNamePh}
+                    value={form.buildingName}
+                    onChange={handleChange}
+                  />
                 </div>
               </div>
             </div>
             <div className="form-row-2">
               <div className="field-group">
                 <label>{t.county}</label>
-                <select name="county" value={form.county} onChange={e => { handleChange(e); setForm(p => ({ ...p, subcounty: "" })); }}>
+                <select
+                  name="county"
+                  value={form.county}
+                  onChange={(e) => {
+                    handleChange(e);
+                    setForm((p) => ({ ...p, subcounty: "" }));
+                  }}
+                >
                   <option value="">{t.selectCounty}</option>
-                  {kenyaCounties.map(c => <option key={c.county} value={c.county}>{c.county}</option>)}
+                  {kenyaCounties.map((c) => (
+                    <option key={c.county} value={c.county}>
+                      {c.county}
+                    </option>
+                  ))}
                 </select>
               </div>
               {subcounties.length > 0 && (
                 <div className="field-group">
                   <label>{t.subcounty}</label>
-                  <select name="subcounty" value={form.subcounty} onChange={handleChange}>
+                  <select
+                    name="subcounty"
+                    value={form.subcounty}
+                    onChange={handleChange}
+                  >
                     <option value="">{t.selectSubcounty}</option>
-                    {subcounties.map(s => <option key={s} value={s}>{s}</option>)}
+                    {subcounties.map((s) => (
+                      <option key={s} value={s}>
+                        {s}
+                      </option>
+                    ))}
                   </select>
                 </div>
               )}
@@ -164,18 +252,36 @@ export default function ProfilePage({ user, profile }) {
             <div className="field-group">
               <label>{t.town}</label>
               <div className="input-icon-wrap">
-                <div className="input-icon-box"><FontAwesomeIcon icon={faMapMarkerAlt} /></div>
-                <input type="text" name="town" placeholder={t.townPh} value={form.town} onChange={handleChange} />
+                <div className="input-icon-box">
+                  <FontAwesomeIcon icon={faMapMarkerAlt} />
+                </div>
+                <input
+                  type="text"
+                  name="town"
+                  placeholder={t.townPh}
+                  value={form.town}
+                  onChange={handleChange}
+                />
               </div>
             </div>
             <div className="field-group">
               <label>{t.additionalNotes}</label>
-              <textarea name="notes" placeholder={t.additionalNotesPh} value={form.notes} onChange={handleChange} rows={2} />
+              <textarea
+                name="notes"
+                placeholder={t.additionalNotesPh}
+                value={form.notes}
+                onChange={handleChange}
+                rows={2}
+              />
             </div>
           </div>
         </div>
 
-        {error && <div className="login-error" style={{ marginBottom: 12 }}>{error}</div>}
+        {error && (
+          <div className="login-error" style={{ marginBottom: 12 }}>
+            {error}
+          </div>
+        )}
 
         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
           <button type="submit" className="profile-save-btn" disabled={saving}>
