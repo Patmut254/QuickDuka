@@ -23,16 +23,18 @@ import {
   isWithinInterval,
 } from "date-fns";
 
-export default function Dashboard({ setActiveTab }) {
+import FeatureGate from "./FeatureGate";
+
+export default function Dashboard({ setActiveTab, sub }) {
   const { t } = useLang();
-  const { items: sales }     = useCollection("sales");
+  const { items: sales } = useCollection("sales");
   const { items: purchases } = useCollection("purchases");
-  const { items: expenses }  = useCollection("expenses");
-  const { items: losses }    = useCollection("losses");
+  const { items: expenses } = useCollection("expenses");
+  const { items: losses } = useCollection("losses");
 
   const now = new Date();
   const monthStart = startOfMonth(now);
-  const monthEnd   = endOfMonth(now);
+  const monthEnd = endOfMonth(now);
 
   const inMonth = (item) => {
     try {
@@ -41,10 +43,10 @@ export default function Dashboard({ setActiveTab }) {
     } catch { return false; }
   };
 
-  const totalSales     = sales.filter(inMonth).reduce((a, b) => a + (Number(b.amount) || 0), 0);
+  const totalSales = sales.filter(inMonth).reduce((a, b) => a + (Number(b.amount) || 0), 0);
   const totalPurchases = purchases.filter(inMonth).reduce((a, b) => a + (Number(b.amount) || 0), 0);
-  const totalExpenses  = expenses.filter(inMonth).reduce((a, b) => a + (Number(b.amount) || 0), 0);
-  const totalLosses    = losses.filter(inMonth).reduce((a, b) => a + (Number(b.amount) || 0), 0);
+  const totalExpenses = expenses.filter(inMonth).reduce((a, b) => a + (Number(b.amount) || 0), 0);
+  const totalLosses = losses.filter(inMonth).reduce((a, b) => a + (Number(b.amount) || 0), 0);
   const profit = totalSales - totalPurchases - totalExpenses - totalLosses;
 
   const chartData = useMemo(() => {
@@ -53,7 +55,7 @@ export default function Dashboard({ setActiveTab }) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
       const label = format(d, "MMM yyyy");
       const start = startOfMonth(d);
-      const end   = endOfMonth(d);
+      const end = endOfMonth(d);
       const inRange = (item) => {
         try {
           const dt = item.date ? parseISO(item.date) : item.createdAt?.toDate();
@@ -70,11 +72,11 @@ export default function Dashboard({ setActiveTab }) {
   }, [now, sales, purchases, expenses, losses]);
 
   const cards = [
-    { label: t.salesThisMonth,     value: totalSales,     color: "#22c55e", icon: faMoneyBillTrendUp },
+    { label: t.salesThisMonth, value: totalSales, color: "#22c55e", icon: faMoneyBillTrendUp },
     { label: t.purchasesThisMonth, value: totalPurchases, color: "#f97316", icon: faCartPlus },
-    { label: t.expensesThisMonth,  value: totalExpenses,  color: "#a855f7", icon: faReceipt },
-    { label: t.lossesThisMonth,    value: totalLosses,    color: "#ef4444", icon: faTriangleExclamation },
-    { label: t.netProfitLabel,           value: profit,         color: profit >= 0 ? "#22c55e" : "#ef4444", icon: profit >= 0 ? faArrowTrendUp : faArrowTrendDown },
+    { label: t.expensesThisMonth, value: totalExpenses, color: "#a855f7", icon: faReceipt },
+    { label: t.lossesThisMonth, value: totalLosses, color: "#ef4444", icon: faTriangleExclamation },
+    { label: t.netProfitLabel, value: profit, color: profit >= 0 ? "#22c55e" : "#ef4444", icon: profit >= 0 ? faArrowTrendUp : faArrowTrendDown },
   ];
 
   const recent = [
@@ -159,10 +161,10 @@ export default function Dashboard({ setActiveTab }) {
                 formatter={(v) => `KES ${v.toLocaleString()}`}
               />
               <Legend wrapperStyle={{ color: "var(--muted)", fontSize: 12 }} />
-              <Area type="monotone" dataKey="Sales"     stroke="#22c55e" fill="url(#gSales)"  strokeWidth={2} />
-              <Area type="monotone" dataKey="Expenses"  stroke="#a855f7" fill="url(#gExp)"    strokeWidth={2} />
-              <Area type="monotone" dataKey="Losses"    stroke="#ef4444" fill="url(#gLoss)"   strokeWidth={2} />
-              <Area type="monotone" dataKey="Profit"    stroke="#3b82f6" fill="url(#gProfit)" strokeWidth={2} />
+              <Area type="monotone" dataKey="Sales" stroke="#22c55e" fill="url(#gSales)" strokeWidth={2} />
+              <Area type="monotone" dataKey="Expenses" stroke="#a855f7" fill="url(#gExp)" strokeWidth={2} />
+              <Area type="monotone" dataKey="Losses" stroke="#ef4444" fill="url(#gLoss)" strokeWidth={2} />
+              <Area type="monotone" dataKey="Profit" stroke="#3b82f6" fill="url(#gProfit)" strokeWidth={2} />
             </AreaChart>
           </ResponsiveContainer>
         </div>
@@ -210,7 +212,21 @@ export default function Dashboard({ setActiveTab }) {
             ))}
           </div>
         )}
-      </div>
+
+      </div>{/* end recent-section */}
+
+      {/* ── Plan-gated sections ── */}
+      {sub && (
+        <div style={{ marginTop: 24, display: "flex", flexDirection: "column", gap: 12 }}>
+          <FeatureGate feature="combinedReporting" sub={sub} lockedLabel="Combined Branch Reports">
+            {/* Placeholder: real combined report component goes here */}
+            <div style={{ padding: 16, borderRadius: 10, background: "var(--bg2)", border: "1px solid var(--border)", fontSize: 13, color: "var(--muted)" }}>
+              Combined reporting across branches is enabled on your Business plan.
+            </div>
+          </FeatureGate>
+        </div>
+      )}
+
     </div>
-  );
+  )
 }

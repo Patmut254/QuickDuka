@@ -30,18 +30,17 @@ import {
   faShieldHalved,
   faGift,
 } from "@fortawesome/free-solid-svg-icons";
-
-function AppFooter() {
-  return (
-    <div className="app-footer">© 2026 QuickDuka. All rights reserved.</div>
-  );
-}
+import { PLANS as PLAN_MAP, PLAN_ORDER } from "../subscription";
 
 const db = getFirestore();
 
-const STEPS = ["Account", "Business", "Done"];
+// Plans come from the central subscription config so pricing stays in sync
+const PLANS = PLAN_ORDER.map((id) => PLAN_MAP[id]);
 
-function TrialBadge() {
+const STEPS = ["Plan", "Account", "Business", "Done"];
+
+function TrialBadge({ plan }) {
+  const p = PLANS.find((x) => x.id === plan);
   return (
     <div className="trial-badge-popup">
       <div className="trial-badge-icon">
@@ -50,7 +49,7 @@ function TrialBadge() {
       <div>
         <div className="trial-badge-title">1 Month Free Trial</div>
         <div className="trial-badge-sub">
-          Then KES 100/month — cancel anytime
+          Then KES {p ? p.price : 100}/month — cancel anytime
         </div>
       </div>
     </div>
@@ -129,7 +128,10 @@ function DoneStep({ onBack }) {
 export default function Register({ onBack }) {
   const [step, setStep] = useState(0);
 
-  // Step 0 — credentials
+  // Step 0 — plan selection
+  const [selectedPlan, setSelectedPlan] = useState("starter");
+
+  // Step 1 — credentials
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
@@ -180,7 +182,7 @@ export default function Register({ onBack }) {
   const hasEmail = email.trim().length > 0;
   const hasPhone = /^\+254\d{9}$/.test(normPhone);
 
-  // Step 0 submit
+  // Step 1 submit
   const handleCredNext = async (e) => {
     e.preventDefault();
     setCredError("");
@@ -205,8 +207,7 @@ export default function Register({ onBack }) {
       return setCredError("Passwords do not match.");
     }
 
-    // Best-effort duplicate check (Firestore security rules may block this
-    // for unauthenticated users — that's fine, Firebase Auth will catch it)
+    // Best-effort duplicate check
     try {
       const eq = query(
         collection(db, "users"),
@@ -231,10 +232,10 @@ export default function Register({ onBack }) {
       // Duplicate check is best-effort — continue regardless
     }
 
-    setStep(1);
+    setStep(2);
   };
 
-  // Step 1 submit
+  // Step 2 submit
   const handleBizNext = async (e) => {
     e.preventDefault();
     setBizError("");
@@ -257,14 +258,14 @@ export default function Register({ onBack }) {
         password,
       );
 
-      // 2. Send verification email (non-blocking — don't fail registration if this fails)
+      // 2. Send verification email (non-blocking)
       try {
         await sendEmailVerification(cred.user);
       } catch (verifyErr) {
         console.warn("Email verification send failed:", verifyErr.message);
       }
 
-      // 3. Write Firestore profile with trial subscription
+      // 3. Write Firestore profile with trial subscription + chosen plan
       await createUserProfile(cred.user.uid, {
         businessName: businessName.trim(),
         ownerName: ownerName.trim(),
@@ -274,9 +275,10 @@ export default function Register({ onBack }) {
         county,
         subcounty,
         referrer: finalReferrer || null,
+        subscriptionPlan: selectedPlan,
       });
 
-      setStep(2);
+      setStep(3);
     } catch (err) {
       console.error("Registration failed:", err);
       setSaving(false);
@@ -313,10 +315,9 @@ export default function Register({ onBack }) {
     <div className="login-page">
       <div className="login-dots login-dots-tl" />
       <div className="login-dots login-dots-br" />
-      <AppFooter />
-      <TrialBadge />
+      <TrialBadge plan={selectedPlan} />
 
-      <div className="login-card" style={{ maxWidth: 480, paddingTop: 32 }}>
+      <div className="login-card" style={{ maxWidth: 440 }}>
         <div className="login-header">
           <img
             src="/logo.png"
@@ -324,13 +325,160 @@ export default function Register({ onBack }) {
             className="login-logo-img"
             style={{ height: 58 }}
           />
-          <p>Create your free account — 1 month free, then KES 100/month.</p>
+          <p>Create your free account — 1 month free, then pay monthly.</p>
         </div>
 
         {stepBar}
 
-        {/* STEP 0: Credentials */}
+        {/* STEP 0: Plan Selection */}
         {step === 0 && (
+          <div className="login-form">
+            <div className="form-section-label">Choose Your Plan</div>
+            <p
+              style={{
+                fontSize: 12,
+                color: "var(--muted)",
+                marginBottom: 12,
+                marginTop: -6,
+              }}
+            >
+              All plans include a free 1-month trial.
+            </p>
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: 8,
+                marginBottom: 18,
+              }}
+            >
+              {PLANS.map((plan) => (
+                <button
+                  key={plan.id}
+                  type="button"
+                  onClick={() => setSelectedPlan(plan.id)}
+                  style={{
+                    border: `2px solid ${selectedPlan === plan.id ? plan.color : "var(--border)"}`,
+                    borderRadius: 10,
+                    padding: "10px 14px",
+                    background:
+                      selectedPlan === plan.id
+                        ? `${plan.color}0d`
+                        : "var(--bg2)",
+                    cursor: "pointer",
+                    textAlign: "left",
+                    transition: "all 0.15s",
+                    fontFamily: "inherit",
+                  }}
+                >
+                  <div
+                    style={{ display: "flex", alignItems: "center", gap: 9 }}
+                  >
+                    <div
+                      style={{
+                        width: 16,
+                        height: 16,
+                        borderRadius: "50%",
+                        border: `2px solid ${plan.color}`,
+                        background:
+                          selectedPlan === plan.id ? plan.color : "transparent",
+                        flexShrink: 0,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      {selectedPlan === plan.id && (
+                        <div
+                          style={{
+                            width: 5,
+                            height: 5,
+                            borderRadius: "50%",
+                            background: "#fff",
+                          }}
+                        />
+                      )}
+                    </div>
+                    <span
+                      style={{
+                        fontWeight: 700,
+                        fontSize: 13,
+                        color: plan.color,
+                      }}
+                    >
+                      {plan.name}
+                    </span>
+                    {plan.badge && (
+                      <span
+                        style={{
+                          fontSize: 9,
+                          fontWeight: 700,
+                          padding: "2px 7px",
+                          borderRadius: 20,
+                          letterSpacing: 0.5,
+                          background: plan.color,
+                          color: "#fff",
+                        }}
+                      >
+                        {plan.badge}
+                      </span>
+                    )}
+                    <span
+                      style={{
+                        marginLeft: "auto",
+                        fontWeight: 700,
+                        fontSize: 13,
+                        color: "var(--text)",
+                      }}
+                    >
+                      KES {plan.price.toLocaleString()}
+                      <span
+                        style={{
+                          fontSize: 11,
+                          fontWeight: 400,
+                          color: "var(--muted)",
+                        }}
+                      >
+                        /mo
+                      </span>
+                    </span>
+                  </div>
+                  <ul
+                    style={{
+                      margin: "5px 0 0 25px",
+                      padding: 0,
+                      listStyle: "disc",
+                    }}
+                  >
+                    {plan.features.map((f) => (
+                      <li
+                        key={f}
+                        style={{
+                          fontSize: 11,
+                          color: "var(--muted)",
+                          lineHeight: 1.6,
+                        }}
+                      >
+                        {f}
+                      </li>
+                    ))}
+                  </ul>
+                </button>
+              ))}
+            </div>
+            <button
+              type="button"
+              className="btn-login"
+              onClick={() => setStep(1)}
+            >
+              Continue with {PLANS.find((p) => p.id === selectedPlan)?.name}{" "}
+              <FontAwesomeIcon icon={faChevronRight} />
+            </button>
+          </div>
+        )}
+
+        {/* STEP 1: Credentials */}
+        {step === 1 && (
           <form onSubmit={handleCredNext} className="login-form" noValidate>
             <div className="form-section-label">Your Login Details</div>
 
@@ -418,11 +566,20 @@ export default function Register({ onBack }) {
             <button type="submit" className="btn-login">
               Endelea / Continue <FontAwesomeIcon icon={faChevronRight} />
             </button>
+            <div className="forgot-pw-wrap">
+              <button
+                type="button"
+                className="forgot-pw-btn"
+                onClick={() => setStep(0)}
+              >
+                <FontAwesomeIcon icon={faChevronLeft} /> Back to Plan
+              </button>
+            </div>
           </form>
         )}
 
-        {/* STEP 1: Business Details */}
-        {step === 1 && (
+        {/* STEP 2: Business Details */}
+        {step === 2 && (
           <form onSubmit={handleBizNext} className="login-form" noValidate>
             <div className="form-section-label">Business Details</div>
 
@@ -543,7 +700,7 @@ export default function Register({ onBack }) {
               <button
                 type="button"
                 className="forgot-pw-btn"
-                onClick={() => setStep(0)}
+                onClick={() => setStep(1)}
               >
                 <FontAwesomeIcon icon={faChevronLeft} /> Back
               </button>
@@ -551,10 +708,10 @@ export default function Register({ onBack }) {
           </form>
         )}
 
-        {/* STEP 2: Done */}
-        {step === 2 && <DoneStep onBack={onBack} />}
+        {/* STEP 3: Done */}
+        {step === 3 && <DoneStep onBack={onBack} />}
 
-        {step < 2 && (
+        {step < 3 && (
           <div className="forgot-pw-wrap" style={{ marginTop: 14 }}>
             <button className="forgot-pw-btn" onClick={onBack}>
               Already have an account? Sign in

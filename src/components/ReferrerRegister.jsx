@@ -121,7 +121,7 @@ export default function ReferrerRegister({ onBack }) {
           </div>
         </div>
         <div className="ref-page-footer">
-          © 2026 QuickDuka. All rights reserved.
+          {/* © 2026 QuickDuka. All rights reserved. */}
         </div>
       </div>
     );

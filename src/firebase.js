@@ -27,3 +27,14 @@ export const db = initializeFirestore(app, {
 });
 
 export const auth = getAuth(app);
+
+// Secondary app — used ONLY when creating staff accounts so the owner's
+// auth session is never interrupted (createUserWithEmailAndPassword would
+// otherwise switch the current user to the newly created one).
+let _secondaryApp = null;
+export function getSecondaryApp() {
+  if (!_secondaryApp) {
+    _secondaryApp = initializeApp(firebaseConfig, "secondary");
+  }
+  return _secondaryApp;
+}

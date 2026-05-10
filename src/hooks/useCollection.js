@@ -39,7 +39,7 @@ async function logAction(
   }
 }
 
-export function useCollection(collectionName) {
+export function useCollection(collectionName, { ownerUid: overrideOwnerUid } = {}) {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [uid, setUid] = useState(null);
@@ -60,9 +60,12 @@ export function useCollection(collectionName) {
 
     setLoading(true);
 
-    // No orderBy here — sorting client-side avoids needing a composite
-    // Firestore index for every collection (userId + createdAt).
-    const q = query(collection(db, collectionName), where("userId", "==", uid));
+    // ownerUid mode: owner queries all records tagged with their uid as ownerUid
+    // (captures their own entries + all staff entries for their business)
+    // Normal mode: query by userId (staff querying their own entries)
+    const queryUid = overrideOwnerUid || uid;
+    const queryField = overrideOwnerUid ? "ownerUid" : "userId";
+    const q = query(collection(db, collectionName), where(queryField, "==", queryUid));
 
     // Real-time listener — updates immediately without any reload
     const unsub = onSnapshot(
@@ -88,10 +91,18 @@ export function useCollection(collectionName) {
   }, [collectionName, uid]);
 
   // addItem
-  const addItem = async (data) => {
+  // ownerUid is stamped on every record so the business owner can query
+  // all entries across their account + all their staff accounts.
+  // For owner accounts: ownerUid === userId.
+  // For staff accounts: ownerUid = the owner they belong to, userId = their own uid.
+  const addItem = async (data, extraMeta = {}) => {
     const ref = await addDoc(collection(db, collectionName), {
       ...data,
       userId: uid,
+      ownerUid: extraMeta.ownerUid || uid,
+      staffName: extraMeta.staffName || null,
+      branchId: extraMeta.branchId || null,
+      branchName: extraMeta.branchName || null,
       createdAt: serverTimestamp(),
     });
 

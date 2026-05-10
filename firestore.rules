@@ -2,29 +2,45 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Admin gets full access 
+    // Admin gets full access
     function isAdmin() {
       return request.auth != null &&
              request.auth.token.email == "anitapatrick025@gmail.com";
     }
 
-    // users collection 
-    // Admin can read ALL user documents (needed for admin panel)
-    // Each user can only read/write their own document
-    match /users/{userId} {
-      allow read, write: if isAdmin();
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+    // Fields that only admin can write — users cannot promote their own plan
+    function touchesSubscriptionFields() {
+      return request.resource.data.diff(resource.data).affectedKeys()
+               .hasAny(['subscriptionPlan', 'subscriptionStatus', 'subscriptionExpiry',
+                        'trialStartedAt', 'createdByAdmin']);
+    }
 
-      // Sub-collections (paymentHistory, etc.)
+    // users collection
+    match /users/{userId} {
+      // Admin: full access
+      allow read, write: if isAdmin();
+
+      // User: read own doc always
+      allow read: if request.auth != null && request.auth.uid == userId;
+
+      // User: write own doc BUT not subscription/plan fields
+      allow write: if request.auth != null
+                   && request.auth.uid == userId
+                   && !touchesSubscriptionFields();
+
+      // Allow initial profile creation (no existing doc yet)
+      allow create: if request.auth != null
+                    && request.auth.uid == userId;
+
+      // Sub-collections (paymentHistory, etc.) — read-only for users
       match /{subcollection}/{docId} {
         allow read, write: if isAdmin();
-        allow read, write: if request.auth != null && request.auth.uid == userId;
+        allow read: if request.auth != null && request.auth.uid == userId;
       }
     }
 
-    // Business data collections (sales, purchases, etc.) 
+    // Business data collections (sales, purchases, expenses, etc.)
     // Users can only access their own data
-    // Admin can read everything
     match /{collection}/{docId} {
       allow read, write: if isAdmin();
       allow read, write: if request.auth != null &&

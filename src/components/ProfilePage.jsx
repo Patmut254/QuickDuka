@@ -10,10 +10,14 @@ import {
   faFloppyDisk,
   faCheckCircle,
   faCircleUser,
+  faCalendarDays,
+  faCrown,
 } from "@fortawesome/free-solid-svg-icons";
 import { getFirestore, doc, updateDoc } from "firebase/firestore";
 import { kenyaCounties } from "../data/kenyaLocations";
 import { useLang } from "../LangContext";
+import { getPlan } from "../subscription";
+import { PlanBadge } from "./FeatureGate";
 
 const db = getFirestore();
 
@@ -295,6 +299,121 @@ export default function ProfilePage({ user, profile }) {
           )}
         </div>
       </form>
+
+      {/* ── Subscription Info Card ─────────────────────────────────────────── */}
+      <SubscriptionInfoCard profile={profile} />
+    </div>
+  );
+}
+
+// ── Subscription info shown on Profile page ──────────────────────────────────
+function SubscriptionInfoCard({ profile }) {
+  const planId     = profile?.subscriptionPlan || "starter";
+  const planDef    = getPlan(planId);
+  const status     = profile?.subscriptionStatus || "trial";
+  const expiry     = profile?.subscriptionExpiry?.toDate?.()
+                     ?? (profile?.subscriptionExpiry instanceof Date ? profile.subscriptionExpiry : null);
+  const startDate  = profile?.subscriptionStartDate?.toDate?.() ?? null;
+
+  const daysLeft = expiry
+    ? Math.ceil((expiry - new Date()) / (1000 * 60 * 60 * 24))
+    : null;
+
+  const statusColor = {
+    active:  "#22c55e",
+    trial:   "#f59e0b",
+    expired: "#ef4444",
+    pending: "#6b7280",
+  }[status] || "#6b7280";
+
+  const statusLabel = {
+    active:  "Active",
+    trial:   "Free Trial",
+    expired: "Expired",
+    pending: "Pending Payment",
+  }[status] || status;
+
+  const fmt = (d) => d
+    ? d.toLocaleDateString("en-KE", { day: "numeric", month: "short", year: "numeric" })
+    : "—";
+
+  return (
+    <div
+      className="info-card"
+      style={{ marginTop: 14, borderLeft: `4px solid ${planDef.color}` }}
+    >
+      <h2>
+        <span className="fa-icon">
+          <FontAwesomeIcon icon={faCrown} style={{ color: planDef.color }} />
+        </span>{" "}
+        Subscription
+      </h2>
+
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 16, alignItems: "flex-start" }}>
+        {/* Plan */}
+        <div style={{ flex: "1 1 160px" }}>
+          <div style={{ fontSize: 11, color: "var(--muted)", marginBottom: 4, textTransform: "uppercase", letterSpacing: 0.5 }}>
+            Current Plan
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <PlanBadge plan={planId} />
+            <span style={{ fontSize: 13, color: "var(--muted)" }}>
+              KES {planDef.price.toLocaleString()}/mo
+            </span>
+          </div>
+          <ul style={{ margin: "8px 0 0", padding: 0, listStyle: "none" }}>
+            {planDef.features.map((f) => (
+              <li key={f} style={{ fontSize: 11, color: "var(--muted)", display: "flex", alignItems: "center", gap: 5, marginBottom: 3 }}>
+                <FontAwesomeIcon icon={faCheckCircle} style={{ color: planDef.color, fontSize: 9 }} />
+                {f}
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* Status & dates */}
+        <div style={{ flex: "1 1 160px" }}>
+          <div style={{ fontSize: 11, color: "var(--muted)", marginBottom: 4, textTransform: "uppercase", letterSpacing: 0.5 }}>
+            Status
+          </div>
+          <span style={{
+            display: "inline-block",
+            padding: "2px 10px",
+            borderRadius: 20,
+            background: statusColor + "18",
+            border: `1.5px solid ${statusColor}40`,
+            color: statusColor,
+            fontSize: 12,
+            fontWeight: 700,
+          }}>
+            {statusLabel}
+          </span>
+
+          <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 5 }}>
+            {startDate && (
+              <div style={{ fontSize: 12, color: "var(--muted)", display: "flex", alignItems: "center", gap: 6 }}>
+                <FontAwesomeIcon icon={faCalendarDays} style={{ fontSize: 10, color: "var(--muted)" }} />
+                Started: <strong style={{ color: "var(--text)" }}>{fmt(startDate)}</strong>
+              </div>
+            )}
+            {expiry && (
+              <div style={{ fontSize: 12, color: "var(--muted)", display: "flex", alignItems: "center", gap: 6 }}>
+                <FontAwesomeIcon icon={faCalendarDays} style={{ fontSize: 10, color: "var(--muted)" }} />
+                {daysLeft > 0
+                  ? <>Expires in <strong style={{ color: daysLeft <= 5 ? "#ef4444" : "var(--text)" }}>{daysLeft} day{daysLeft !== 1 ? "s" : ""}</strong> ({fmt(expiry)})</>
+                  : daysLeft === 0
+                  ? <strong style={{ color: "#ef4444" }}>Expires today</strong>
+                  : <strong style={{ color: "#ef4444" }}>Expired on {fmt(expiry)}</strong>
+                }
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div style={{ marginTop: 12, padding: "8px 12px", borderRadius: 8, background: "var(--bg)", border: "1px solid var(--border)", fontSize: 11, color: "var(--muted)" }}>
+        📅 Subscriptions renew monthly. To upgrade your plan, contact support or pay via M-Pesa on next renewal.
+      </div>
     </div>
   );
 }

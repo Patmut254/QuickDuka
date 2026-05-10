@@ -4,8 +4,9 @@ import { useCollection } from "../hooks/useCollection";
 import { useLang } from "../LangContext";
 import { Toast, useToast } from "./Toast";
 import AlertDialog from "./AlertDialog";
+import FeatureGate from "./FeatureGate";
 
-export default function Stock() {
+export default function Stock({ sub }) {
   const { t } = useLang();
   const { items, loading, addItem, deleteItem, updateItem } =
     useCollection("stock");
@@ -75,6 +76,22 @@ export default function Stock() {
   return (
     <div className="module-page">
       <Toast toast={toast} />
+
+      {/* Branch stock gate — only visible on Starter/Growth plans */}
+      {sub && !sub.can("multipleBranches") && (
+        <div style={{ marginBottom: 16 }}>
+          <FeatureGate
+            feature="multipleBranches"
+            sub={sub}
+            lockedLabel="Multi-Branch Stock Management"
+          >
+            {/* Children shown when Business plan is active */}
+            <div style={{ padding: "10px 14px", borderRadius: 8, background: "var(--bg2)", border: "1px solid var(--border)", fontSize: 13, color: "var(--muted)" }}>
+              Multi-branch stock view is enabled on your Business plan.
+            </div>
+          </FeatureGate>
+        </div>
+      )}
 
       <div className="module-header">
         <div className="module-stat">

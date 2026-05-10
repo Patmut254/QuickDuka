@@ -5,10 +5,12 @@ import { useLang } from "../LangContext";
 import EntryTable from "./EntryTable";
 import { Toast, useToast } from "./Toast";
 
-export default function Sales() {
+export default function Sales({ ownerUid }) {
   const { t } = useLang();
+  // If ownerUid is passed, query by ownerUid to get all sales including staff.
+  // Otherwise fall back to normal userId query (staff's own view).
   const { items, loading, addItem, deleteItem, updateItem } =
-    useCollection("sales");
+    useCollection("sales", ownerUid ? { ownerUid } : undefined);
   const stock = useStock();
   const { toast, showToast } = useToast();
 
@@ -81,6 +83,15 @@ export default function Sales() {
       format: (v) => `KES ${Number(v).toLocaleString()}`,
     },
     { key: "notes", label: t.notes },
+    ...(ownerUid
+      ? [{
+          key: "staffName",
+          label: "By",
+          format: (v) => v
+            ? <span style={{ fontSize: 11, fontWeight: 600, padding: "2px 7px", borderRadius: 20, background: "var(--accent)15", color: "var(--accent)" }}>{v}</span>
+            : <span style={{ fontSize: 11, color: "var(--muted)" }}>Owner</span>,
+        }]
+      : []),
   ];
 
   return (

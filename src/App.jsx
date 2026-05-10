@@ -10,9 +10,11 @@ import {
 import {
   getFirestore,
   collection,
+  addDoc,
   query,
   where,
   getDocs,
+  serverTimestamp as serverTimestamp_visit,
 } from "firebase/firestore";
 import { useUserProfile } from "./hooks/useUserProfile";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -40,6 +42,8 @@ import {
   faChevronLeft,
   faCircleUser,
   faTriangleExclamation,
+  faUsers,
+  faCodeBranch,
 } from "@fortawesome/free-solid-svg-icons";
 import { faSquareCheck } from "@fortawesome/free-regular-svg-icons";
 import Dashboard from "./components/Dashboard";
@@ -54,11 +58,16 @@ import Register from "./components/Register";
 import ReferrerRegister from "./components/ReferrerRegister";
 import SubscriptionWall from "./components/SubscriptionWall";
 import AdminPanel, { isAdmin } from "./components/AdminPanel";
+import { useSubscription } from "./hooks/useSubscription";
+import { PlanBadge } from "./components/FeatureGate";
 import ContactPage from "./components/ContactPage";
 import FAQPage from "./components/FAQPage";
 import PrivacyPage from "./components/PrivacyPage";
 import ProfilePage from "./components/ProfilePage";
 import Losses from "./components/Losses";
+import StaffPage from "./components/StaffPage";
+import StaffShell from "./components/StaffShell";
+import BranchesPage from "./components/BranchesPage";
 import ReferrerDashboard from "./components/ReferrerDashboard";
 import { LangContext, T } from "./LangContext";
 import "./App.css";
@@ -174,6 +183,19 @@ function AppFooter({ offset }) {
 // App Shell
 function AppShell({ user, profile, theme, toggleTheme }) {
   const [activeTab, setActiveTab] = useState("dashboard");
+
+  // Track page visits to Firestore so admin analytics can show popular pages
+  useEffect(() => {
+    if (!user?.uid || !activeTab) return;
+    const db_visit = getFirestore();
+    addDoc(collection(db_visit, "pageVisits"), {
+      uid: user.uid,
+      page: activeTab,
+      plan: profile?.subscriptionPlan || "starter",
+      ts: serverTimestamp_visit(),
+    }).catch(() => {}); // never block UI on analytics failure
+  }, [activeTab, user?.uid]);
+
   const [lang, setLang] = useState(
     () => localStorage.getItem("qd-lang") || "en",
   );
@@ -182,6 +204,9 @@ function AppShell({ user, profile, theme, toggleTheme }) {
   const admin = isAdmin(user);
   const isReferrer = profile?.role === "referrer";
   const t = T[lang];
+
+  // Subscription feature gate hook — passed to child components that need plan checks
+  const sub = useSubscription(profile, admin);
 
   const toggleLang = () => {
     const next = lang === "en" ? "sw" : "en";
@@ -212,6 +237,14 @@ function AppShell({ user, profile, theme, toggleTheme }) {
             badgeStyle: { background: "#22c55e", color: "#fff" },
           },
         ]
+      : []),
+    // Team tab: Growth and Business plans only
+    ...(["growth", "business"].includes(sub.plan)
+      ? [{ id: "team", label: t.team || "Team", icon: faUsers }]
+      : []),
+    // Branches tab: Business only
+    ...(sub.plan === "business"
+      ? [{ id: "branches", label: t.branches || "Branches", icon: faCodeBranch }]
       : []),
     { id: "profile", label: t.profile, icon: faCircleUser },
     { id: "sales", label: t.sales, icon: faMoneyBillTrendUp },
@@ -265,6 +298,18 @@ function AppShell({ user, profile, theme, toggleTheme }) {
           {/* Business name */}
           {profile?.businessName && (
             <div className="sidebar-biz-name">{profile.businessName}</div>
+          )}
+
+          {/* Plan badge — visible at a glance */}
+          {!admin && (
+            <div style={{ padding: "0 16px 10px", display: "flex", alignItems: "center", gap: 6 }}>
+              <PlanBadge plan={sub.plan} />
+              {sub.status === "trial" && (
+                <span style={{ fontSize: 10, color: "var(--muted)", fontStyle: "italic" }}>
+                  Trial
+                </span>
+              )}
+            </div>
           )}
 
           {/* Nav — scrollable, fills available space */}
@@ -403,14 +448,16 @@ function AppShell({ user, profile, theme, toggleTheme }) {
 
           <div className="page-body">
             {activeTab === "dashboard" && (
-              <Dashboard setActiveTab={setActiveTab} />
+              <Dashboard setActiveTab={setActiveTab} sub={sub} />
             )}
-            {activeTab === "sales" && <Sales />}
+            {activeTab === "sales" && <Sales ownerUid={user.uid} />}
             {activeTab === "credits" && <Credits />}
             {activeTab === "purchases" && <Purchases />}
             {activeTab === "expenses" && <Expenses />}
             {activeTab === "losses" && <Losses />}
-            {activeTab === "stock" && <Stock />}
+            {activeTab === "team" && <StaffPage sub={sub} profile={profile} />}
+            {activeTab === "branches" && <BranchesPage sub={sub} />}
+            {activeTab === "stock" && <Stock sub={sub} />}
             {activeTab === "reports" && <Reports />}
             {activeTab === "history" && <History />}
             {activeTab === "profile" && (
@@ -1026,6 +1073,12 @@ export default function App() {
         </button>
       </div>
     );
+  }
+
+  // Staff accounts: show stripped-down sales-only UI
+  if (profile?.role === "staff") {
+    // If owner has deactivated them, StaffShell shows the deactivated screen
+    return <StaffShell user={user} profile={profile} />;
   }
 
   // Subscription gate — no bypass for regular users

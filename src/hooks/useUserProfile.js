@@ -58,6 +58,7 @@ export function useUserProfile() {
             email: user.email || null,
             role: "user",
             subscriptionStatus: "trial",
+            subscriptionPlan: "starter",   // default plan; admin changes this
             subscriptionExpiry: trialExpiry,
             trialStartedAt: serverTimestamp(),
             createdAt: serverTimestamp(),
@@ -115,6 +116,7 @@ export async function createUserProfile(uid, data) {
       ...data,
       role: "user",
       subscriptionStatus: "trial",
+      subscriptionPlan: data.subscriptionPlan || "starter",
       subscriptionExpiry: trialExpiry,
       trialStartedAt: now,
       createdAt: now,
