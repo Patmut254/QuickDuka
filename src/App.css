@@ -6531,3 +6531,10 @@ a[href^="tel:"]:hover {
   border: 1px solid #f5c898;
   color: var(--orange);
 }
+/* ── Prevent iOS/Android zoom on input focus ───────────────────────────── */
+/* iOS zooms when input font-size < 16px. This overrides all inputs globally */
+input,
+select,
+textarea {
+  font-size: 16px !important;
+}

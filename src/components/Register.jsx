@@ -167,20 +167,43 @@ export default function Register({ onBack }) {
   const selectedCounty = kenyaCounties.find((c) => c.county === county);
   const subcounties = selectedCounty?.subcounties || [];
 
+  /**
+   * Normalize a Kenyan phone number to +254XXXXXXXXX format.
+   * Accepts: 07XXXXXXXX (10 digits) or +254XXXXXXXXX (12 chars / 12 digits)
+   * Returns normalized string, or original if unrecognized.
+   */
   const normalizePhone = (p) => {
-    const d = p.replace(/\D/g, "");
-    if (d.startsWith("07") && d.length === 10) return "+254" + d.slice(1);
-    if (d.startsWith("011") && d.length === 10) return "+254" + d.slice(1);
-    if (d.startsWith("01") && d.length === 10) return "+254" + d.slice(1);
-    if (d.startsWith("254") && d.length === 12) return "+" + d;
+    const d = p.replace(/\D/g, ""); // strip everything except digits
+    if (d.startsWith("07") && d.length === 10) return "+254" + d.slice(1);   // 07XX → +2547XX
+    if (d.startsWith("011") && d.length === 10) return "+254" + d.slice(1);  // 011X → +25411X
+    if (d.startsWith("01") && d.length === 10) return "+254" + d.slice(1);   // 01XX → +25401X
+    if (d.startsWith("254") && d.length === 12) return "+" + d;              // 2547XX → +2547XX
     if ((d.startsWith("7") || d.startsWith("1")) && d.length === 9)
-      return "+254" + d;
+      return "+254" + d;                                                       // 7XX → +2547XX
     return p;
+  };
+
+  /**
+   * Validate phone: returns an error string or empty string if valid.
+   * Empty phone = optional, so empty is also valid.
+   */
+  const validatePhone = (p) => {
+    if (!p.trim()) return ""; // optional field
+    const digits = p.replace(/\D/g, "");
+    const norm = normalizePhone(p);
+    const isValid = /^\+254\d{9}$/.test(norm);
+    if (isValid) return "";
+    if (digits.length < 10)
+      return "Phone number is too short. Use format: 0712345678 or +254712345678";
+    if (digits.length > 12)
+      return "Phone number is too long. Use format: 0712345678 or +254712345678";
+    return "Invalid phone number. Use 0700000000 (10 digits) or +254700000000 (12 digits)";
   };
 
   const normPhone = normalizePhone(phone);
   const hasEmail = email.trim().length > 0;
   const hasPhone = /^\+254\d{9}$/.test(normPhone);
+  const phoneError = validatePhone(phone);
 
   // Step 1 submit
   const handleCredNext = async (e) => {
@@ -195,10 +218,8 @@ export default function Register({ onBack }) {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
       return setCredError("Enter a valid email address.");
     }
-    if (phone.trim() && !hasPhone) {
-      return setCredError(
-        "Enter a valid Kenyan phone number e.g. 0712 345 678.",
-      );
+    if (phone.trim() && phoneError) {
+      return setCredError(phoneError);
     }
     if (password.length < 6) {
       return setCredError("Password must be at least 6 characters.");
@@ -215,7 +236,7 @@ export default function Register({ onBack }) {
       );
       const es = await getDocs(eq);
       if (!es.empty)
-        return setCredError("This email is already registered. Please log in.");
+        return setCredError("This email address is already linked to an account. Please sign in instead.");
 
       if (hasPhone) {
         const pq = query(
@@ -225,7 +246,7 @@ export default function Register({ onBack }) {
         const ps = await getDocs(pq);
         if (!ps.empty)
           return setCredError(
-            "This phone is already registered. Please log in.",
+            "This phone number is already linked to an account. Each phone can only be used once.",
           );
       }
     } catch {
@@ -509,15 +530,26 @@ export default function Register({ onBack }) {
                 </div>
                 <input
                   type="tel"
-                  placeholder="07xxxxxxxx"
+                  placeholder="07xxxxxxxx or +254700000000"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   autoComplete="tel"
+                  inputMode="tel"
                 />
               </div>
-              <span className="field-hint">
-                Useful later for M-Pesa and support.
-              </span>
+              {phone.trim() && phoneError ? (
+                <span className="field-hint" style={{ color: "var(--red, #ef4444)" }}>
+                  {phoneError}
+                </span>
+              ) : phone.trim() && hasPhone ? (
+                <span className="field-hint" style={{ color: "#16a34a" }}>
+                  ✓ {normPhone}
+                </span>
+              ) : (
+                <span className="field-hint">
+                  Format: 0712345678 (10 digits) or +254712345678 (12 digits)
+                </span>
+              )}
             </div>
 
             <div className="form-section-label">Set Password</div>

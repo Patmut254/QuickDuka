@@ -44,6 +44,16 @@ export default function ProfilePage({ user, profile }) {
   const handleChange = (e) =>
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
 
+  const normalizePhone = (p) => {
+    const d = p.replace(/\D/g, "");
+    if (d.startsWith("07") && d.length === 10) return "+254" + d.slice(1);
+    if (d.startsWith("011") && d.length === 10) return "+254" + d.slice(1);
+    if (d.startsWith("01") && d.length === 10) return "+254" + d.slice(1);
+    if (d.startsWith("254") && d.length === 12) return "+" + d;
+    if ((d.startsWith("7") || d.startsWith("1")) && d.length === 9) return "+254" + d;
+    return p;
+  };
+
   const handleSave = async (e) => {
     e.preventDefault();
     if (saving) return;
@@ -51,14 +61,26 @@ export default function ProfilePage({ user, profile }) {
       setError("Session error — please sign out and sign back in.");
       return;
     }
+    // Validate phone if provided
+    if (form.phone.trim()) {
+      const norm = normalizePhone(form.phone);
+      const digits = form.phone.replace(/\D/g, "");
+      if (!/^\+254\d{9}$/.test(norm)) {
+        if (digits.length < 10) setError("Phone number is too short. Use 0712345678 (10 digits) or +254712345678.");
+        else if (digits.length > 12) setError("Phone number is too long. Use 0712345678 (10 digits) or +254712345678.");
+        else setError("Invalid phone number. Use format: 0712345678 or +254712345678.");
+        return;
+      }
+    }
     setSaving(true);
     setError("");
     setSaved(false);
     try {
+      const normPhone = form.phone.trim() ? normalizePhone(form.phone) : "";
       const updates = {
         businessName: form.businessName.trim(),
         ownerName: form.ownerName.trim(),
-        phone: form.phone.trim(),
+        phone: normPhone || form.phone.trim(),
         shopNumber: form.shopNumber.trim(),
         buildingName: form.buildingName.trim(),
         county: form.county,
