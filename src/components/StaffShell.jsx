@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 /**
  * StaffShell — UI for staff accounts when they log in.
  *
