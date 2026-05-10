@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 /* eslint-disable no-unused-vars */
 /* eslint-disable react-refresh/only-export-components */
 import { useState, useEffect } from "react";
@@ -145,8 +146,15 @@ function ChangePlanControl({ u, onChanged }) {
     return (
       <button
         className="adm-act-btn"
-        style={{ background: "var(--bg2)", color: "var(--text)", border: "1px solid var(--border2)" }}
-        onClick={() => { setSelected(current); setChanging(true); }}
+        style={{
+          background: "var(--bg2)",
+          color: "var(--text)",
+          border: "1px solid var(--border2)",
+        }}
+        onClick={() => {
+          setSelected(current);
+          setChanging(true);
+        }}
       >
         <FontAwesomeIcon icon={faEdit} /> Change Plan
       </button>
@@ -154,7 +162,10 @@ function ChangePlanControl({ u, onChanged }) {
   }
 
   const handleSave = async () => {
-    if (selected === current) { setChanging(false); return; }
+    if (selected === current) {
+      setChanging(false);
+      return;
+    }
     setSaving(true);
     try {
       await changePlanAdmin(u, selected);
@@ -167,7 +178,14 @@ function ChangePlanControl({ u, onChanged }) {
   };
 
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 6,
+        flexWrap: "wrap",
+      }}
+    >
       <select
         value={selected}
         onChange={(e) => setSelected(e.target.value)}
@@ -221,7 +239,11 @@ function ActivateTrialControl({ u, onActivated }) {
     return (
       <button
         className="adm-act-btn"
-        style={{ background: "#f0fdf4", color: "#166534", border: "1px solid #bbf7d0" }}
+        style={{
+          background: "#f0fdf4",
+          color: "#166534",
+          border: "1px solid #bbf7d0",
+        }}
         onClick={() => setOpen(true)}
       >
         <FontAwesomeIcon icon={faCirclePlus} /> Activate Trial
@@ -242,29 +264,69 @@ function ActivateTrialControl({ u, onActivated }) {
   };
 
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap", padding: "6px 10px", borderRadius: 8, background: "#f0fdf4", border: "1px solid #bbf7d0" }}>
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 6,
+        flexWrap: "wrap",
+        padding: "6px 10px",
+        borderRadius: 8,
+        background: "#f0fdf4",
+        border: "1px solid #bbf7d0",
+      }}
+    >
       <select
         value={plan}
         onChange={(e) => setPlan(e.target.value)}
-        style={{ padding: "4px 8px", borderRadius: 6, border: "1px solid var(--border2)", background: "var(--bg)", color: "var(--text)", fontSize: 12, fontFamily: "inherit" }}
+        style={{
+          padding: "4px 8px",
+          borderRadius: 6,
+          border: "1px solid var(--border2)",
+          background: "var(--bg)",
+          color: "var(--text)",
+          fontSize: 12,
+          fontFamily: "inherit",
+        }}
       >
         {PLAN_ORDER.map((id) => (
-          <option key={id} value={id}>{PLANS[id].name}</option>
+          <option key={id} value={id}>
+            {PLANS[id].name}
+          </option>
         ))}
       </select>
       <select
         value={months}
         onChange={(e) => setMonths(e.target.value)}
-        style={{ padding: "4px 8px", borderRadius: 6, border: "1px solid var(--border2)", background: "var(--bg)", color: "var(--text)", fontSize: 12, fontFamily: "inherit" }}
+        style={{
+          padding: "4px 8px",
+          borderRadius: 6,
+          border: "1px solid var(--border2)",
+          background: "var(--bg)",
+          color: "var(--text)",
+          fontSize: 12,
+          fontFamily: "inherit",
+        }}
       >
         {[1, 2, 3, 6, 12].map((m) => (
-          <option key={m} value={m}>{m} mo</option>
+          <option key={m} value={m}>
+            {m} mo
+          </option>
         ))}
       </select>
-      <button className="adm-act-btn adm-green" onClick={handleActivate} disabled={saving} style={{ minWidth: 70 }}>
+      <button
+        className="adm-act-btn adm-green"
+        onClick={handleActivate}
+        disabled={saving}
+        style={{ minWidth: 70 }}
+      >
         {saving ? "Saving…" : "Activate"}
       </button>
-      <button className="adm-act-btn adm-ghost" onClick={() => setOpen(false)} style={{ minWidth: 52 }}>
+      <button
+        className="adm-act-btn adm-ghost"
+        onClick={() => setOpen(false)}
+        style={{ minWidth: 52 }}
+      >
         Cancel
       </button>
     </div>
@@ -559,7 +621,8 @@ function AddUserModal({ onClose, onSuccess }) {
                 >
                   {PLAN_ORDER.map((id) => (
                     <option key={id} value={id}>
-                      {PLANS[id].name} — KES {PLANS[id].price.toLocaleString()}/mo
+                      {PLANS[id].name} — KES {PLANS[id].price.toLocaleString()}
+                      /mo
                     </option>
                   ))}
                 </select>
@@ -817,13 +880,17 @@ export default function AdminPanel() {
 
   // Owner accounts only — staff accounts (role:"staff") are shown
   // inside their owner's expanded card, not in the main list
-  const ownerUsers = users.filter(u => u.role !== "staff" && u.role !== "referrer" || !u.role);
+  const ownerUsers = users.filter(
+    (u) => (u.role !== "staff" && u.role !== "referrer") || !u.role,
+  );
   const staffByOwner = {};
-  users.filter(u => u.role === "staff").forEach(s => {
-    const key = s.ownerUid || "unlinked";
-    if (!staffByOwner[key]) staffByOwner[key] = [];
-    staffByOwner[key].push(s);
-  });
+  users
+    .filter((u) => u.role === "staff")
+    .forEach((s) => {
+      const key = s.ownerUid || "unlinked";
+      if (!staffByOwner[key]) staffByOwner[key] = [];
+      staffByOwner[key].push(s);
+    });
 
   const filtered = ownerUsers.filter((u) => {
     const st = getStatus(u);
@@ -1292,38 +1359,106 @@ export default function AdminPanel() {
 
                         {/* Staff accounts under this owner */}
                         {staffByOwner[u.id]?.length > 0 && (
-                          <div style={{ marginTop: 16, paddingTop: 14, borderTop: "1px solid var(--border)" }}>
-                            <div style={{ fontWeight: 700, fontSize: 12, color: "var(--muted)", marginBottom: 10, textTransform: "uppercase", letterSpacing: ".05em" }}>
-                              <FontAwesomeIcon icon={faUsers} style={{ marginRight: 6 }} />
+                          <div
+                            style={{
+                              marginTop: 16,
+                              paddingTop: 14,
+                              borderTop: "1px solid var(--border)",
+                            }}
+                          >
+                            <div
+                              style={{
+                                fontWeight: 700,
+                                fontSize: 12,
+                                color: "var(--muted)",
+                                marginBottom: 10,
+                                textTransform: "uppercase",
+                                letterSpacing: ".05em",
+                              }}
+                            >
+                              <FontAwesomeIcon
+                                icon={faUsers}
+                                style={{ marginRight: 6 }}
+                              />
                               Staff Accounts ({staffByOwner[u.id].length})
                             </div>
-                            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                              {staffByOwner[u.id].map(s => (
-                                <div key={s.id} style={{
-                                  display: "flex", alignItems: "center", gap: 10,
-                                  background: "var(--bg)", borderRadius: 8,
-                                  padding: "8px 12px", fontSize: 12,
-                                  opacity: s.active !== false ? 1 : 0.55,
-                                }}>
-                                  <div style={{
-                                    width: 28, height: 28, borderRadius: "50%", flexShrink: 0,
-                                    background: "var(--accent)18", display: "flex",
-                                    alignItems: "center", justifyContent: "center",
-                                    fontWeight: 800, fontSize: 11, color: "var(--accent)",
-                                  }}>
-                                    {(s.ownerName || s.email || "?")[0].toUpperCase()}
+                            <div
+                              style={{
+                                display: "flex",
+                                flexDirection: "column",
+                                gap: 6,
+                              }}
+                            >
+                              {staffByOwner[u.id].map((s) => (
+                                <div
+                                  key={s.id}
+                                  style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 10,
+                                    background: "var(--bg)",
+                                    borderRadius: 8,
+                                    padding: "8px 12px",
+                                    fontSize: 12,
+                                    opacity: s.active !== false ? 1 : 0.55,
+                                  }}
+                                >
+                                  <div
+                                    style={{
+                                      width: 28,
+                                      height: 28,
+                                      borderRadius: "50%",
+                                      flexShrink: 0,
+                                      background: "var(--accent)18",
+                                      display: "flex",
+                                      alignItems: "center",
+                                      justifyContent: "center",
+                                      fontWeight: 800,
+                                      fontSize: 11,
+                                      color: "var(--accent)",
+                                    }}
+                                  >
+                                    {(s.ownerName ||
+                                      s.email ||
+                                      "?")[0].toUpperCase()}
                                   </div>
                                   <div style={{ flex: 1, minWidth: 0 }}>
-                                    <div style={{ fontWeight: 700, color: "var(--text)" }}>{s.ownerName || "—"}</div>
-                                    <div style={{ color: "var(--muted)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                                      {s.staffRole || s.role} {s.branchName ? `· ${s.branchName}` : ""}
+                                    <div
+                                      style={{
+                                        fontWeight: 700,
+                                        color: "var(--text)",
+                                      }}
+                                    >
+                                      {s.ownerName || "—"}
+                                    </div>
+                                    <div
+                                      style={{
+                                        color: "var(--muted)",
+                                        overflow: "hidden",
+                                        textOverflow: "ellipsis",
+                                        whiteSpace: "nowrap",
+                                      }}
+                                    >
+                                      {s.staffRole || s.role}{" "}
+                                      {s.branchName ? `· ${s.branchName}` : ""}
                                     </div>
                                   </div>
-                                  <span style={{
-                                    fontSize: 10, padding: "2px 6px", borderRadius: 20, fontWeight: 700,
-                                    background: s.active !== false ? "#16a34a18" : "var(--border)",
-                                    color: s.active !== false ? "#16a34a" : "var(--muted)",
-                                  }}>
+                                  <span
+                                    style={{
+                                      fontSize: 10,
+                                      padding: "2px 6px",
+                                      borderRadius: 20,
+                                      fontWeight: 700,
+                                      background:
+                                        s.active !== false
+                                          ? "#16a34a18"
+                                          : "var(--border)",
+                                      color:
+                                        s.active !== false
+                                          ? "#16a34a"
+                                          : "var(--muted)",
+                                    }}
+                                  >
                                     {s.active !== false ? "Active" : "Inactive"}
                                   </span>
                                 </div>
@@ -1342,7 +1477,9 @@ export default function AdminPanel() {
       )}
 
       {activeTab === "payments" && <AllPaymentsHistory users={users} />}
-      {activeTab === "plans" && <PlansEditor users={ownerUsers} showToast={showToast} />}
+      {activeTab === "plans" && (
+        <PlansEditor users={ownerUsers} showToast={showToast} />
+      )}
       {activeTab === "analytics" && <AnalyticsTab users={ownerUsers} />}
       {activeTab === "referrers" && (
         <ReferrersTab users={users} showToast={showToast} />
@@ -1536,42 +1673,51 @@ function HistoryModal({ user, onClose }) {
 
 /* ─── Plans Editor ──────────────────────────────────────────────────────── */
 function PlansEditor({ users, showToast }) {
-  const db2 = getFirestore();
+  // uses the top-level db import — getFirestore() is not imported here
   const [plans, setPlans] = useState(() =>
-    JSON.parse(JSON.stringify(
-      Object.entries(PLANS).map(([id, p]) => ({ id, ...p }))
-    ))
+    JSON.parse(
+      JSON.stringify(Object.entries(PLANS).map(([id, p]) => ({ id, ...p }))),
+    ),
   );
   const [saving, setSaving] = useState(null);
   const [localEdits, setLocalEdits] = useState({});
 
   // Count users per plan
   const planCounts = {};
-  users.forEach(u => {
+  users.forEach((u) => {
     const p = u.subscriptionPlan || "starter";
     planCounts[p] = (planCounts[p] || 0) + 1;
   });
 
   const handleEdit = (planId, field, value) => {
-    setLocalEdits(prev => ({
+    setLocalEdits((prev) => ({
       ...prev,
       [planId]: { ...prev[planId], [field]: value },
     }));
   };
 
-  const hasEdits = (planId) => !!localEdits[planId] && Object.keys(localEdits[planId]).length > 0;
+  const hasEdits = (planId) =>
+    !!localEdits[planId] && Object.keys(localEdits[planId]).length > 0;
 
   const saveNote = async (planId) => {
     // Note: plan prices/features live in subscription.js (code).
     // This saves admin notes/overrides to Firestore for reference.
     setSaving(planId);
     try {
-      await setDoc(doc(db2, "adminConfig", "plans"), {
-        [planId]: localEdits[planId] || {},
-        updatedAt: serverTimestamp(),
-      }, { merge: true });
+      await setDoc(
+        doc(db, "adminConfig", "plans"),
+        {
+          [planId]: localEdits[planId] || {},
+          updatedAt: serverTimestamp(),
+        },
+        { merge: true },
+      );
       showToast(`✅ Notes saved for ${planId}`);
-      setLocalEdits(prev => { const n = { ...prev }; delete n[planId]; return n; });
+      setLocalEdits((prev) => {
+        const n = { ...prev };
+        delete n[planId];
+        return n;
+      });
     } catch (e) {
       showToast("Failed: " + e.message, "error");
     } finally {
@@ -1579,78 +1725,208 @@ function PlansEditor({ users, showToast }) {
     }
   };
 
-  const PLAN_COLORS = { starter: "#1a7a3c", growth: "#0369a1", business: "#7c3aed" };
+  const PLAN_COLORS = {
+    starter: "#1a7a3c",
+    growth: "#0369a1",
+    business: "#7c3aed",
+  };
 
   return (
     <div style={{ maxWidth: 820 }}>
       <div style={{ marginBottom: 20 }}>
-        <div style={{ fontWeight: 800, fontSize: 18, color: "var(--text)", marginBottom: 4 }}>
-          <FontAwesomeIcon icon={faPiggyBank} style={{ marginRight: 8, color: "var(--accent)" }} />
+        <div
+          style={{
+            fontWeight: 800,
+            fontSize: 18,
+            color: "var(--text)",
+            marginBottom: 4,
+          }}
+        >
+          <FontAwesomeIcon
+            icon={faPiggyBank}
+            style={{ marginRight: 8, color: "var(--accent)" }}
+          />
           Subscription Plans
         </div>
         <div style={{ fontSize: 12, color: "var(--muted)", lineHeight: 1.6 }}>
-          Prices and features are defined in <code>subscription.js</code>. Use the notes field to log any changes or customisations for reference. To permanently change a plan's price or features, edit <code>subscription.js</code>.
+          Prices and features are defined in <code>subscription.js</code>. Use
+          the notes field to log any changes or customisations for reference. To
+          permanently change a plan's price or features, edit{" "}
+          <code>subscription.js</code>.
         </div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 16 }}>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+          gap: 16,
+        }}
+      >
         {Object.entries(PLANS).map(([planId, plan]) => {
           const userCount = planCounts[planId] || 0;
           const color = PLAN_COLORS[planId] || "var(--accent)";
           const edit = localEdits[planId] || {};
 
           return (
-            <div key={planId} style={{
-              background: "var(--bg2)", border: `2px solid ${color}30`,
-              borderRadius: 14, overflow: "hidden",
-            }}>
+            <div
+              key={planId}
+              style={{
+                background: "var(--bg2)",
+                border: `2px solid ${color}30`,
+                borderRadius: 14,
+                overflow: "hidden",
+              }}
+            >
               {/* Header */}
-              <div style={{ background: `${color}18`, padding: "14px 16px", borderBottom: `1px solid ${color}20` }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+              <div
+                style={{
+                  background: `${color}18`,
+                  padding: "14px 16px",
+                  borderBottom: `1px solid ${color}20`,
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "flex-start",
+                  }}
+                >
                   <div>
                     <div style={{ fontWeight: 800, fontSize: 16, color }}>
                       {plan.name}
                       {plan.badge && (
-                        <span style={{ marginLeft: 8, fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 20, background: color, color: "#fff" }}>
+                        <span
+                          style={{
+                            marginLeft: 8,
+                            fontSize: 10,
+                            fontWeight: 700,
+                            padding: "2px 6px",
+                            borderRadius: 20,
+                            background: color,
+                            color: "#fff",
+                          }}
+                        >
                           {plan.badge}
                         </span>
                       )}
                     </div>
-                    <div style={{ fontSize: 22, fontWeight: 900, color: "var(--text)", marginTop: 4 }}>
+                    <div
+                      style={{
+                        fontSize: 22,
+                        fontWeight: 900,
+                        color: "var(--text)",
+                        marginTop: 4,
+                      }}
+                    >
                       KES {plan.price.toLocaleString()}
-                      <span style={{ fontSize: 11, fontWeight: 400, color: "var(--muted)" }}>/mo</span>
+                      <span
+                        style={{
+                          fontSize: 11,
+                          fontWeight: 400,
+                          color: "var(--muted)",
+                        }}
+                      >
+                        /mo
+                      </span>
                     </div>
                   </div>
-                  <div style={{
-                    background: color, color: "#fff", borderRadius: 10,
-                    padding: "6px 10px", textAlign: "center", minWidth: 50,
-                  }}>
-                    <div style={{ fontSize: 18, fontWeight: 900 }}>{userCount}</div>
+                  <div
+                    style={{
+                      background: color,
+                      color: "#fff",
+                      borderRadius: 10,
+                      padding: "6px 10px",
+                      textAlign: "center",
+                      minWidth: 50,
+                    }}
+                  >
+                    <div style={{ fontSize: 18, fontWeight: 900 }}>
+                      {userCount}
+                    </div>
                     <div style={{ fontSize: 9, opacity: 0.85 }}>users</div>
                   </div>
                 </div>
-                <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 6 }}>{plan.description}</div>
+                <div
+                  style={{ fontSize: 11, color: "var(--muted)", marginTop: 6 }}
+                >
+                  {plan.description}
+                </div>
               </div>
 
               {/* Features */}
               <div style={{ padding: "12px 16px" }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: "var(--muted)", marginBottom: 8, textTransform: "uppercase", letterSpacing: ".05em" }}>
+                <div
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 700,
+                    color: "var(--muted)",
+                    marginBottom: 8,
+                    textTransform: "uppercase",
+                    letterSpacing: ".05em",
+                  }}
+                >
                   Features
                 </div>
-                {plan.features.map(f => (
-                  <div key={f} style={{ fontSize: 12, color: "var(--text)", marginBottom: 4, display: "flex", alignItems: "center", gap: 6 }}>
-                    <FontAwesomeIcon icon={faCircleCheck} style={{ color: "#16a34a", fontSize: 10, flexShrink: 0 }} />
+                {plan.features.map((f) => (
+                  <div
+                    key={f}
+                    style={{
+                      fontSize: 12,
+                      color: "var(--text)",
+                      marginBottom: 4,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 6,
+                    }}
+                  >
+                    <FontAwesomeIcon
+                      icon={faCircleCheck}
+                      style={{ color: "#16a34a", fontSize: 10, flexShrink: 0 }}
+                    />
                     {f}
                   </div>
                 ))}
 
                 {/* Limits summary */}
-                <div style={{ marginTop: 10, paddingTop: 10, borderTop: "1px solid var(--border)", fontSize: 11, color: "var(--muted)" }}>
+                <div
+                  style={{
+                    marginTop: 10,
+                    paddingTop: 10,
+                    borderTop: "1px solid var(--border)",
+                    fontSize: 11,
+                    color: "var(--muted)",
+                  }}
+                >
                   {Object.entries(plan.limits).map(([k, v]) => (
-                    <div key={k} style={{ display: "flex", justifyContent: "space-between", marginBottom: 2 }}>
+                    <div
+                      key={k}
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        marginBottom: 2,
+                      }}
+                    >
                       <span>{k}</span>
-                      <span style={{ fontWeight: 700, color: v === true ? "#16a34a" : v === false ? "var(--red)" : "var(--text)" }}>
-                        {v === true ? "✓" : v === false ? "✗" : v === null ? "∞" : v}
+                      <span
+                        style={{
+                          fontWeight: 700,
+                          color:
+                            v === true
+                              ? "#16a34a"
+                              : v === false
+                                ? "var(--red)"
+                                : "var(--text)",
+                        }}
+                      >
+                        {v === true
+                          ? "✓"
+                          : v === false
+                            ? "✗"
+                            : v === null
+                              ? "∞"
+                              : v}
                       </span>
                     </div>
                   ))}
@@ -1658,27 +1934,53 @@ function PlansEditor({ users, showToast }) {
 
                 {/* Admin notes */}
                 <div style={{ marginTop: 12 }}>
-                  <label style={{ fontSize: 11, fontWeight: 700, color: "var(--muted)", display: "block", marginBottom: 4 }}>Admin Notes</label>
+                  <label
+                    style={{
+                      fontSize: 11,
+                      fontWeight: 700,
+                      color: "var(--muted)",
+                      display: "block",
+                      marginBottom: 4,
+                    }}
+                  >
+                    Admin Notes
+                  </label>
                   <textarea
                     style={{
-                      width: "100%", minHeight: 60, fontSize: 12,
-                      background: "var(--bg)", border: "1px solid var(--border)",
-                      borderRadius: 8, padding: "6px 8px", color: "var(--text)",
-                      fontFamily: "inherit", resize: "vertical", boxSizing: "border-box",
+                      width: "100%",
+                      minHeight: 60,
+                      fontSize: 12,
+                      background: "var(--bg)",
+                      border: "1px solid var(--border)",
+                      borderRadius: 8,
+                      padding: "6px 8px",
+                      color: "var(--text)",
+                      fontFamily: "inherit",
+                      resize: "vertical",
+                      boxSizing: "border-box",
                     }}
                     placeholder="e.g. Consider raising price to KES 300..."
                     value={edit.notes || ""}
-                    onChange={e => handleEdit(planId, "notes", e.target.value)}
+                    onChange={(e) =>
+                      handleEdit(planId, "notes", e.target.value)
+                    }
                   />
                   {hasEdits(planId) && (
                     <button
                       onClick={() => saveNote(planId)}
                       disabled={saving === planId}
                       style={{
-                        marginTop: 6, width: "100%", padding: "7px",
-                        background: color, color: "#fff", border: "none",
-                        borderRadius: 8, cursor: "pointer", fontFamily: "inherit",
-                        fontWeight: 700, fontSize: 12,
+                        marginTop: 6,
+                        width: "100%",
+                        padding: "7px",
+                        background: color,
+                        color: "#fff",
+                        border: "none",
+                        borderRadius: 8,
+                        cursor: "pointer",
+                        fontFamily: "inherit",
+                        fontWeight: 700,
+                        fontSize: 12,
                       }}
                     >
                       {saving === planId ? "Saving..." : "Save Notes"}
@@ -1692,24 +1994,59 @@ function PlansEditor({ users, showToast }) {
       </div>
 
       {/* Summary stats */}
-      <div style={{ marginTop: 20, padding: "14px 18px", background: "var(--bg2)", border: "1px solid var(--border)", borderRadius: 12, fontSize: 13 }}>
-        <div style={{ fontWeight: 700, color: "var(--text)", marginBottom: 10 }}>Revenue Snapshot</div>
+      <div
+        style={{
+          marginTop: 20,
+          padding: "14px 18px",
+          background: "var(--bg2)",
+          border: "1px solid var(--border)",
+          borderRadius: 12,
+          fontSize: 13,
+        }}
+      >
+        <div
+          style={{ fontWeight: 700, color: "var(--text)", marginBottom: 10 }}
+        >
+          Revenue Snapshot
+        </div>
         <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
           {Object.entries(PLANS).map(([planId, plan]) => {
             const count = planCounts[planId] || 0;
             const mrr = count * plan.price;
             return (
               <div key={planId}>
-                <div style={{ fontSize: 11, color: "var(--muted)" }}>{plan.name} MRR</div>
-                <div style={{ fontWeight: 800, fontSize: 18, color: "var(--text)" }}>KES {mrr.toLocaleString()}</div>
-                <div style={{ fontSize: 10, color: "var(--muted)" }}>{count} × {plan.price}</div>
+                <div style={{ fontSize: 11, color: "var(--muted)" }}>
+                  {plan.name} MRR
+                </div>
+                <div
+                  style={{
+                    fontWeight: 800,
+                    fontSize: 18,
+                    color: "var(--text)",
+                  }}
+                >
+                  KES {mrr.toLocaleString()}
+                </div>
+                <div style={{ fontSize: 10, color: "var(--muted)" }}>
+                  {count} × {plan.price}
+                </div>
               </div>
             );
           })}
           <div style={{ marginLeft: "auto" }}>
-            <div style={{ fontSize: 11, color: "var(--muted)" }}>Total Estimated MRR</div>
-            <div style={{ fontWeight: 900, fontSize: 22, color: "var(--accent)" }}>
-              KES {Object.entries(PLANS).reduce((sum, [id, p]) => sum + (planCounts[id] || 0) * p.price, 0).toLocaleString()}
+            <div style={{ fontSize: 11, color: "var(--muted)" }}>
+              Total Estimated MRR
+            </div>
+            <div
+              style={{ fontWeight: 900, fontSize: 22, color: "var(--accent)" }}
+            >
+              KES{" "}
+              {Object.entries(PLANS)
+                .reduce(
+                  (sum, [id, p]) => sum + (planCounts[id] || 0) * p.price,
+                  0,
+                )
+                .toLocaleString()}
             </div>
           </div>
         </div>
@@ -1720,7 +2057,7 @@ function PlansEditor({ users, showToast }) {
 
 /* ─── Analytics Tab ─────────────────────────────────────────────────────── */
 function AnalyticsTab({ users }) {
-  const db2 = getFirestore();
+  // uses the top-level db import
   const [visits, setVisits] = useState([]);
   const [loading, setLoading] = useState(true);
   const [range, setRange] = useState("7");
@@ -1731,27 +2068,28 @@ function AnalyticsTab({ users }) {
     const cutoff = new Date();
     cutoff.setDate(cutoff.getDate() - days);
 
-    // Stream last N days of page visits
-    const q = query(
-      collection(db2, "pageVisits"),
-      orderBy("ts", "desc"),
+    // Stream page visits — no orderBy to avoid needing a Firestore index
+    const q = query(collection(db, "pageVisits"));
+    const unsub = onSnapshot(
+      q,
+      (snap) => {
+        const all = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+        const filtered = all.filter((v) => {
+          const t = v.ts?.toDate?.();
+          return t && t >= cutoff;
+        });
+        setVisits(filtered);
+        setLoading(false);
+      },
+      () => setLoading(false),
     );
-    const unsub = onSnapshot(q, (snap) => {
-      const all = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-      const filtered = all.filter(v => {
-        const t = v.ts?.toDate?.();
-        return t && t >= cutoff;
-      });
-      setVisits(filtered);
-      setLoading(false);
-    }, () => setLoading(false));
     return unsub;
   }, [range]);
 
   // Page visit counts
   const pageCounts = {};
   const userPageCounts = {};
-  visits.forEach(v => {
+  visits.forEach((v) => {
     pageCounts[v.page] = (pageCounts[v.page] || 0) + 1;
     if (v.uid) {
       if (!userPageCounts[v.uid]) userPageCounts[v.uid] = {};
@@ -1762,35 +2100,71 @@ function AnalyticsTab({ users }) {
   const sortedPages = Object.entries(pageCounts).sort((a, b) => b[1] - a[1]);
   const maxVisits = sortedPages[0]?.[1] || 1;
   const totalVisits = visits.length;
-  const uniqueUsers = new Set(visits.map(v => v.uid).filter(Boolean)).size;
+  const uniqueUsers = new Set(visits.map((v) => v.uid).filter(Boolean)).size;
 
   const PAGE_LABELS = {
-    dashboard: "Dashboard", sales: "Sales", purchases: "Purchases",
-    expenses: "Expenses", losses: "Losses", stock: "Stock",
-    credits: "Credits", reports: "Reports", history: "History",
-    profile: "Profile", team: "Team", branches: "Branches",
-    admin: "Admin", contact: "Contact", faq: "FAQ",
+    dashboard: "Dashboard",
+    sales: "Sales",
+    purchases: "Purchases",
+    expenses: "Expenses",
+    losses: "Losses",
+    stock: "Stock",
+    credits: "Credits",
+    reports: "Reports",
+    history: "History",
+    profile: "Profile",
+    team: "Team",
+    branches: "Branches",
+    admin: "Admin",
+    contact: "Contact",
+    faq: "FAQ",
   };
 
   return (
     <div style={{ maxWidth: 760 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20, flexWrap: "wrap", gap: 10 }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: 20,
+          flexWrap: "wrap",
+          gap: 10,
+        }}
+      >
         <div>
-          <div style={{ fontWeight: 800, fontSize: 18, color: "var(--text)", marginBottom: 3 }}>
-            <FontAwesomeIcon icon={faChartBar} style={{ marginRight: 8, color: "var(--accent)" }} />
+          <div
+            style={{
+              fontWeight: 800,
+              fontSize: 18,
+              color: "var(--text)",
+              marginBottom: 3,
+            }}
+          >
+            <FontAwesomeIcon
+              icon={faChartBar}
+              style={{ marginRight: 8, color: "var(--accent)" }}
+            />
             Page Analytics
           </div>
           <div style={{ fontSize: 12, color: "var(--muted)" }}>
-            {loading ? "Loading..." : `${totalVisits.toLocaleString()} visits · ${uniqueUsers} unique users`}
+            {loading
+              ? "Loading..."
+              : `${totalVisits.toLocaleString()} visits · ${uniqueUsers} unique users`}
           </div>
         </div>
         <select
           value={range}
-          onChange={e => setRange(e.target.value)}
+          onChange={(e) => setRange(e.target.value)}
           style={{
-            background: "var(--bg2)", border: "1px solid var(--border)",
-            borderRadius: 8, padding: "7px 12px", color: "var(--text)",
-            fontFamily: "inherit", fontSize: 13, cursor: "pointer",
+            background: "var(--bg2)",
+            border: "1px solid var(--border)",
+            borderRadius: 8,
+            padding: "7px 12px",
+            color: "var(--text)",
+            fontFamily: "inherit",
+            fontSize: 13,
+            cursor: "pointer",
           }}
         >
           <option value="1">Last 24 hours</option>
@@ -1801,39 +2175,113 @@ function AnalyticsTab({ users }) {
       </div>
 
       {loading ? (
-        <div style={{ textAlign: "center", padding: 40, color: "var(--muted)" }}>
-          <FontAwesomeIcon icon={faSpinner} spin style={{ marginRight: 8 }} /> Loading...
+        <div
+          style={{ textAlign: "center", padding: 40, color: "var(--muted)" }}
+        >
+          <FontAwesomeIcon icon={faSpinner} spin style={{ marginRight: 8 }} />{" "}
+          Loading...
         </div>
       ) : sortedPages.length === 0 ? (
-        <div style={{ textAlign: "center", padding: "40px", border: "1.5px dashed var(--border)", borderRadius: 14, color: "var(--muted)", fontSize: 13 }}>
+        <div
+          style={{
+            textAlign: "center",
+            padding: "40px",
+            border: "1.5px dashed var(--border)",
+            borderRadius: 14,
+            color: "var(--muted)",
+            fontSize: 13,
+          }}
+        >
           No page visit data yet. Visits are recorded as users navigate the app.
         </div>
       ) : (
         <>
           {/* Bar chart */}
-          <div style={{ background: "var(--bg2)", border: "1px solid var(--border)", borderRadius: 14, padding: "20px", marginBottom: 16 }}>
-            <div style={{ fontWeight: 700, fontSize: 13, color: "var(--text)", marginBottom: 16 }}>Most Visited Pages</div>
+          <div
+            style={{
+              background: "var(--bg2)",
+              border: "1px solid var(--border)",
+              borderRadius: 14,
+              padding: "20px",
+              marginBottom: 16,
+            }}
+          >
+            <div
+              style={{
+                fontWeight: 700,
+                fontSize: 13,
+                color: "var(--text)",
+                marginBottom: 16,
+              }}
+            >
+              Most Visited Pages
+            </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               {sortedPages.map(([page, count]) => {
                 const pct = Math.round((count / maxVisits) * 100);
                 const isTop = page === sortedPages[0][0];
                 return (
-                  <div key={page} style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <div style={{ width: 100, fontSize: 12, color: isTop ? "var(--accent)" : "var(--text)", fontWeight: isTop ? 700 : 400, flexShrink: 0, textAlign: "right" }}>
+                  <div
+                    key={page}
+                    style={{ display: "flex", alignItems: "center", gap: 10 }}
+                  >
+                    <div
+                      style={{
+                        width: 100,
+                        fontSize: 12,
+                        color: isTop ? "var(--accent)" : "var(--text)",
+                        fontWeight: isTop ? 700 : 400,
+                        flexShrink: 0,
+                        textAlign: "right",
+                      }}
+                    >
                       {PAGE_LABELS[page] || page}
                     </div>
-                    <div style={{ flex: 1, height: 22, background: "var(--border)", borderRadius: 4, overflow: "hidden" }}>
-                      <div style={{
-                        height: "100%", width: `${pct}%`,
-                        background: isTop ? "var(--accent)" : "var(--accent)60",
-                        borderRadius: 4, transition: "width .4s ease",
-                        display: "flex", alignItems: "center", paddingLeft: 6,
-                        minWidth: 30,
-                      }}>
-                        <span style={{ fontSize: 10, fontWeight: 700, color: "#fff", whiteSpace: "nowrap" }}>{count}</span>
+                    <div
+                      style={{
+                        flex: 1,
+                        height: 22,
+                        background: "var(--border)",
+                        borderRadius: 4,
+                        overflow: "hidden",
+                      }}
+                    >
+                      <div
+                        style={{
+                          height: "100%",
+                          width: `${pct}%`,
+                          background: isTop
+                            ? "var(--accent)"
+                            : "var(--accent)60",
+                          borderRadius: 4,
+                          transition: "width .4s ease",
+                          display: "flex",
+                          alignItems: "center",
+                          paddingLeft: 6,
+                          minWidth: 30,
+                        }}
+                      >
+                        <span
+                          style={{
+                            fontSize: 10,
+                            fontWeight: 700,
+                            color: "#fff",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          {count}
+                        </span>
                       </div>
                     </div>
-                    <div style={{ fontSize: 11, color: "var(--muted)", width: 35, textAlign: "right", flexShrink: 0 }}>
+                    <div
+                      style={{
+                        fontSize: 11,
+                        color: "var(--muted)",
+                        width: 35,
+                        textAlign: "right",
+                        flexShrink: 0,
+                      }}
+                    >
                       {Math.round((count / totalVisits) * 100)}%
                     </div>
                   </div>
@@ -1844,33 +2292,77 @@ function AnalyticsTab({ users }) {
 
           {/* Least visited callout */}
           {sortedPages.length > 3 && (
-            <div style={{
-              background: "var(--bg2)", border: "1px solid var(--border)",
-              borderRadius: 12, padding: "14px 16px", fontSize: 12, color: "var(--muted)", lineHeight: 1.6,
-            }}>
-              <strong style={{ color: "var(--text)" }}>Least used pages:</strong>{" "}
-              {sortedPages.slice(-3).reverse().map(([p]) => PAGE_LABELS[p] || p).join(", ")} — consider improving discoverability or removing if unused.
+            <div
+              style={{
+                background: "var(--bg2)",
+                border: "1px solid var(--border)",
+                borderRadius: 12,
+                padding: "14px 16px",
+                fontSize: 12,
+                color: "var(--muted)",
+                lineHeight: 1.6,
+              }}
+            >
+              <strong style={{ color: "var(--text)" }}>
+                Least used pages:
+              </strong>{" "}
+              {sortedPages
+                .slice(-3)
+                .reverse()
+                .map(([p]) => PAGE_LABELS[p] || p)
+                .join(", ")}{" "}
+              — consider improving discoverability or removing if unused.
             </div>
           )}
 
           {/* Plan breakdown */}
           {(() => {
             const planVisits = {};
-            visits.forEach(v => {
+            visits.forEach((v) => {
               const p = v.plan || "starter";
               planVisits[p] = (planVisits[p] || 0) + 1;
             });
             return (
-              <div style={{ marginTop: 16, background: "var(--bg2)", border: "1px solid var(--border)", borderRadius: 12, padding: "14px 16px" }}>
-                <div style={{ fontWeight: 700, fontSize: 13, color: "var(--text)", marginBottom: 10 }}>Visits by Plan</div>
+              <div
+                style={{
+                  marginTop: 16,
+                  background: "var(--bg2)",
+                  border: "1px solid var(--border)",
+                  borderRadius: 12,
+                  padding: "14px 16px",
+                }}
+              >
+                <div
+                  style={{
+                    fontWeight: 700,
+                    fontSize: 13,
+                    color: "var(--text)",
+                    marginBottom: 10,
+                  }}
+                >
+                  Visits by Plan
+                </div>
                 <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
-                  {Object.entries(planVisits).sort((a, b) => b[1] - a[1]).map(([plan, count]) => (
-                    <div key={plan} style={{ textAlign: "center" }}>
-                      <PlanBadge plan={plan} />
-                      <div style={{ fontWeight: 800, fontSize: 18, color: "var(--text)", marginTop: 4 }}>{count}</div>
-                      <div style={{ fontSize: 10, color: "var(--muted)" }}>{Math.round(count / totalVisits * 100)}%</div>
-                    </div>
-                  ))}
+                  {Object.entries(planVisits)
+                    .sort((a, b) => b[1] - a[1])
+                    .map(([plan, count]) => (
+                      <div key={plan} style={{ textAlign: "center" }}>
+                        <PlanBadge plan={plan} />
+                        <div
+                          style={{
+                            fontWeight: 800,
+                            fontSize: 18,
+                            color: "var(--text)",
+                            marginTop: 4,
+                          }}
+                        >
+                          {count}
+                        </div>
+                        <div style={{ fontSize: 10, color: "var(--muted)" }}>
+                          {Math.round((count / totalVisits) * 100)}%
+                        </div>
+                      </div>
+                    ))}
                 </div>
               </div>
             );
@@ -1880,7 +2372,6 @@ function AnalyticsTab({ users }) {
     </div>
   );
 }
-
 
 /* All Payments History */
 function AllPaymentsHistory({ users }) {
