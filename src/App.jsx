@@ -238,12 +238,12 @@ function AppShell({ user, profile, theme, toggleTheme }) {
           },
         ]
       : []),
-    // Team tab: Growth and Business plans only
-    ...(["growth", "business"].includes(sub.plan)
+    // Team tab: Growth/Business plans, or admin (overseer access)
+    ...(admin || ["growth", "business"].includes(sub.plan)
       ? [{ id: "team", label: t.team || "Team", icon: faUsers }]
       : []),
-    // Branches tab: Business only
-    ...(sub.plan === "business"
+    // Branches tab: Business plan, or admin
+    ...(admin || sub.plan === "business"
       ? [{ id: "branches", label: t.branches || "Branches", icon: faCodeBranch }]
       : []),
     { id: "profile", label: t.profile, icon: faCircleUser },
@@ -455,7 +455,7 @@ function AppShell({ user, profile, theme, toggleTheme }) {
             {activeTab === "purchases" && <Purchases />}
             {activeTab === "expenses" && <Expenses />}
             {activeTab === "losses" && <Losses />}
-            {activeTab === "team" && <StaffPage sub={sub} profile={profile} />}
+            {activeTab === "team" && <StaffPage sub={sub} profile={profile} isAdmin={admin} />}
             {activeTab === "branches" && <BranchesPage sub={sub} />}
             {activeTab === "stock" && <Stock sub={sub} />}
             {activeTab === "reports" && <Reports />}

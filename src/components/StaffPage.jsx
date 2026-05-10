@@ -359,7 +359,7 @@ function StaffCard({ member, onToggle, onDelete }) {
 }
 
 // ── Main Page ───────────────────────────────────────────────────────────────
-export default function StaffPage({ sub, profile }) {
+export default function StaffPage({ sub, profile, isAdmin = false }) {
   const [staff, setStaff] = useState([]);
   const [branches, setBranches] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -414,7 +414,7 @@ export default function StaffPage({ sub, profile }) {
   const activeCount = staff.filter(m => m.active).length;
 
   return (
-    <FeatureGate feature="multipleUsers" sub={sub} lockedLabel="Team / Staff">
+    <FeatureGate feature="multipleUsers" sub={sub} lockedLabel="Team / Staff" forceAllow={isAdmin}>
       <div style={{ maxWidth: 700 }}>
         <div style={{
           display: "flex", justifyContent: "space-between", alignItems: "center",

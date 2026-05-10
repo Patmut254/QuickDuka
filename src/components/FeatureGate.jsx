@@ -28,10 +28,11 @@ export default function FeatureGate({
   children,
   lockedLabel,
   inline = false,
+  forceAllow = false,
 }) {
   const [showTip, setShowTip] = useState(false);
 
-  if (sub.can(feature)) {
+  if (forceAllow || sub.can(feature)) {
     return children;
   }
 
