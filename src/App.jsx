@@ -194,7 +194,7 @@ function AppShell({ user, profile, theme, toggleTheme }) {
       plan: profile?.subscriptionPlan || "starter",
       ts: serverTimestamp_visit(),
     }).catch(() => {}); // never block UI on analytics failure
-  }, [activeTab, user?.uid]);
+  }, [activeTab, profile?.subscriptionPlan, user.uid]);
 
   const [lang, setLang] = useState(
     () => localStorage.getItem("qd-lang") || "en",
