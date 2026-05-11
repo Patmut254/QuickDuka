@@ -182,19 +182,26 @@ function AppFooter({ offset }) {
 // Translations
 // App Shell
 function AppShell({ user, profile, theme, toggleTheme }) {
-  const [activeTab, setActiveTab] = useState("dashboard");
+  const [activeTab, setActiveTab] = useState(
+    () => sessionStorage.getItem("qd-active-tab") || "dashboard"
+  );
 
-  // Track page visits to Firestore so admin analytics can show popular pages
+  // Persist tab so PWA install prompt / page refresh returns to the same page
+  const handleTabChange = (tab) => {
+    sessionStorage.setItem("qd-active-tab", tab);
+    setActiveTab(tab);
+  };
+
+  // Track page visits for admin analytics — fires on tab change, never blocks UI
   useEffect(() => {
     if (!user?.uid || !activeTab) return;
-    const db_visit = getFirestore();
-    addDoc(collection(db_visit, "pageVisits"), {
+    addDoc(collection(db, "pageVisits"), {
       uid: user.uid,
       page: activeTab,
       plan: profile?.subscriptionPlan || "starter",
       ts: serverTimestamp_visit(),
-    }).catch(() => {}); // never block UI on analytics failure
-  }, [activeTab, user?.uid]);
+    }).catch(() => {});
+  }, [activeTab, user?.uid, profile?.subscriptionPlan]);
 
   const [lang, setLang] = useState(
     () => localStorage.getItem("qd-lang") || "en",
@@ -238,12 +245,12 @@ function AppShell({ user, profile, theme, toggleTheme }) {
           },
         ]
       : []),
-    // Team tab: Growth/Business plans, or admin (overseer access)
-    ...(admin || ["growth", "business"].includes(sub.plan)
+    // Team tab: Growth and Business plans only
+    ...(["growth", "business"].includes(sub.plan)
       ? [{ id: "team", label: t.team || "Team", icon: faUsers }]
       : []),
-    // Branches tab: Business plan, or admin
-    ...(admin || sub.plan === "business"
+    // Branches tab: Business only
+    ...(sub.plan === "business"
       ? [{ id: "branches", label: t.branches || "Branches", icon: faCodeBranch }]
       : []),
     { id: "profile", label: t.profile, icon: faCircleUser },
@@ -318,7 +325,7 @@ function AppShell({ user, profile, theme, toggleTheme }) {
               <button
                 key={tab.id}
                 className={"nav-item" + (activeTab === tab.id ? " active" : "")}
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() => handleTabChange(tab.id)}
               >
                 <span className="nav-icon">
                   <FontAwesomeIcon icon={tab.icon} />
@@ -342,7 +349,7 @@ function AppShell({ user, profile, theme, toggleTheme }) {
               <button
                 key={tab.id}
                 className={"nav-item" + (activeTab === tab.id ? " active" : "")}
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() => handleTabChange(tab.id)}
               >
                 <span className="nav-icon">
                   <FontAwesomeIcon icon={tab.icon} />
@@ -388,7 +395,7 @@ function AppShell({ user, profile, theme, toggleTheme }) {
             <button
               key={tab.id}
               className={"mobile-tab" + (activeTab === tab.id ? " active" : "")}
-              onClick={() => setActiveTab(tab.id)}
+              onClick={() => handleTabChange(tab.id)}
             >
               <span className="mobile-tab-icon">
                 <FontAwesomeIcon icon={tab.icon} />
@@ -429,7 +436,7 @@ function AppShell({ user, profile, theme, toggleTheme }) {
               </button>
               <button
                 className="user-badge user-badge-btn"
-                onClick={() => setActiveTab("profile")}
+                onClick={() => handleTabChange("profile")}
                 title={t.profile}
               >
                 <FontAwesomeIcon
@@ -448,14 +455,14 @@ function AppShell({ user, profile, theme, toggleTheme }) {
 
           <div className="page-body">
             {activeTab === "dashboard" && (
-              <Dashboard setActiveTab={setActiveTab} sub={sub} />
+              <Dashboard setActiveTab={handleTabChange} sub={sub} />
             )}
             {activeTab === "sales" && <Sales ownerUid={user.uid} />}
             {activeTab === "credits" && <Credits />}
             {activeTab === "purchases" && <Purchases />}
             {activeTab === "expenses" && <Expenses />}
             {activeTab === "losses" && <Losses />}
-            {activeTab === "team" && <StaffPage sub={sub} profile={profile} isAdmin={admin} />}
+            {activeTab === "team" && <StaffPage sub={sub} profile={profile} />}
             {activeTab === "branches" && <BranchesPage sub={sub} />}
             {activeTab === "stock" && <Stock sub={sub} />}
             {activeTab === "reports" && <Reports />}
