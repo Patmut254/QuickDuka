@@ -314,6 +314,7 @@ export const T = {
       "QuickDuka is a simple business management app built for small business owners in Kenya. Use it to record your daily sales, track expenses, manage customer debts, and see your profit every month. Everything is saved securely online so you can access it from any device.",
     welcomeTip:
       "Record every sale and expense daily for accurate reports at the end of the month.",
+    tipLabel: "Tip",
     yourDataPrivate: "Your Data is Private",
     yourDataDesc:
       "All your business records are stored securely in your personal account. No one else can see your data. QuickDuka does not share your information with anyone.",
@@ -357,15 +358,90 @@ export const T = {
         title: "History",
         desc: "History keeps a record of every change made in the app. Every time you add, edit or delete a record, it is logged here. If you accidentally delete something, you can restore it from History. You can also filter by Added, Edited, Deleted or Restored.",
       },
+      {
+        title: "Subscription Plans",
+        desc: "QuickDuka has three plans. Starter (KES 100/mo) is for a single owner running one shop with no extra staff. Growth (KES 250/mo) adds multiple staff accounts so your team can each log in with their own credentials while you manage everything as the owner. Business (KES 700/mo) unlocks multiple branches, a central admin dashboard, and combined reporting across all your shops. You start with a free 1-month trial and can upgrade at any time from your profile.",
+      },
     ],
     faqList: [
       {
+        q: "What plans does QuickDuka offer?",
+        a: `QuickDuka has three plans:
+
+🟢 Starter — KES 100/mo
+One shop, owner only. Perfect for a solo trader who wants to track sales, expenses and profit.
+
+🔵 Growth — KES 250/mo
+One shop with unlimited staff accounts. Your team each get their own login while you manage everything as the owner.
+
+🟣 Business — KES 700/mo
+Multiple branches, a central admin dashboard, and combined reports across all your shops.
+
+All plans include a free 1-month trial. No card needed — pay via M-Pesa.`,
+      },
+      {
         q: "How much does QuickDuka cost?",
-        a: "QuickDuka costs KES 100 per month. You pay via M-Pesa STK push and you will receive a prompt on your phone to enter your PIN. No card is required.",
+        a: `There are three pricing tiers:
+
+🟢 Starter — KES 100/mo: One shop, owner only.
+🔵 Growth — KES 250/mo: One shop + unlimited staff accounts.
+🟣 Business — KES 700/mo: Multiple branches + central admin + combined reports.
+
+All plans start with a free 1-month trial. You pay via M-Pesa STK push — no card required.`,
       },
       {
         q: "How do I pay for my subscription?",
-        a: "On the payment screen, enter your M-Pesa number and tap Pay Now. You will get a pop-up on your phone. Enter your M-Pesa PIN then tap Verify Payment. If you have trouble, use the manual option and WhatsApp us your M-Pesa confirmation SMS.",
+        a: `On the payment screen, select your plan, enter your M-Pesa number and tap Pay Now. You will get a pop-up on your phone to enter your M-Pesa PIN, then tap Verify Payment.
+
+🟢 Starter: KES 100/mo
+🔵 Growth: KES 250/mo
+🟣 Business: KES 700/mo
+
+If you have trouble, use the manual option and WhatsApp us your M-Pesa confirmation SMS.`,
+      },
+      {
+        q: "Can I add staff to my account?",
+        a: `It depends on your plan:
+
+🟢 Starter (KES 100/mo): Owner account only — no extra staff logins.
+🔵 Growth (KES 250/mo): Unlimited staff accounts. Each team member gets their own login linked to your account.
+🟣 Business (KES 700/mo): Unlimited staff across multiple branches.
+
+Upgrade anytime from your profile.`,
+      },
+      {
+        q: "Can I manage multiple shops or branches?",
+        a: `Multiple branches are available on the Business plan only:
+
+🟢 Starter (KES 100/mo): One shop, one owner.
+🔵 Growth (KES 250/mo): One shop with a team.
+🟣 Business (KES 700/mo): Unlimited branches, central admin dashboard, and combined reporting across all shops.
+
+Upgrade to Business from your profile to unlock multi-branch management.`,
+      },
+      {
+        q: "Is there a free trial?",
+        a: `Yes — every new account gets a free 1-month trial with full access to all features.
+
+After the trial, choose the plan that fits your business:
+
+🟢 Starter — KES 100/mo: Solo owner, one shop.
+🔵 Growth — KES 250/mo: One shop + staff accounts.
+🟣 Business — KES 700/mo: Multiple branches + admin tools.
+
+No card needed. Pay via M-Pesa when your trial ends.`,
+      },
+      {
+        q: "What happens when my subscription expires?",
+        a: `Your account is locked until you renew — but your data is never deleted. You get a 2-day grace period after expiry.
+
+Renew by paying for your plan via M-Pesa:
+
+🟢 Starter — KES 100/mo
+🔵 Growth — KES 250/mo
+🟣 Business — KES 700/mo
+
+You can also upgrade to a higher plan at renewal.`,
       },
       {
         q: "Can I log in with my phone number?",
@@ -376,10 +452,6 @@ export const T = {
         a: "Your data is stored securely in Google Firebase which is the same infrastructure used by millions of apps worldwide. Each user's data is separate and only accessible by you.",
       },
       {
-        q: "Can multiple people use the same account?",
-        a: "QuickDuka is a single-user account. Each business owner gets their own login. If you need team access, contact us and we will advise you.",
-      },
-      {
         q: "How do I track who owes me money?",
         a: "Use the Credits section. Record the customer's name, phone, item and amount. You can record partial payments and the app tracks outstanding balances automatically.",
       },
@@ -388,20 +460,12 @@ export const T = {
         a: "Yes. Phone numbers saved in Sales, Purchases, Expenses and Credits appear as clickable links. Tap to call directly from the app.",
       },
       {
-        q: "What happens when my subscription expires?",
-        a: "Your account is locked until you renew. Your data is not deleted. Pay KES 100 to resume access. You get a 2-day grace period after expiry.",
-      },
-      {
         q: "How do I reset my password?",
         a: "On the login screen, tap Forgot password and enter your email or phone number. We will email a reset link to your registered email address.",
       },
       {
         q: "Can I use QuickDuka offline?",
         a: "QuickDuka requires an internet connection to save and sync data. We recommend using it with mobile data or WiFi.",
-      },
-      {
-        q: "Is there a free trial?",
-        a: "There is a free 1-month trial when you first register. After that, you pay KES 100 per month to continue.",
       },
       {
         q: "What is the Credits section for?",
@@ -826,6 +890,7 @@ export const T = {
       "QuickDuka ni programu rahisi ya usimamizi wa biashara iliyoundwa kwa wamiliki wa biashara ndogo ndogo Kenya. Itumie kurekodi mauzo yako ya kila siku, kufuatilia gharama, kusimamia madeni ya wateja, na kuona faida yako kila mwezi. Kila kitu kimehifadhiwa salama mtandaoni ili uweze kuifikia kutoka kwa kifaa chochote.",
     welcomeTip:
       "Rekodi kila mauzo na gharama kila siku ili upate ripoti sahihi mwishoni mwa mwezi.",
+    tipLabel: "Kidokezo",
     yourDataPrivate: "Data Yako ni ya Siri",
     yourDataDesc:
       "Rekodi zote za biashara yako zimehifadhiwa salama katika akaunti yako ya kibinafsi. Hakuna mtu mwingine anayeweza kuona data yako. QuickDuka haishiriki taarifa zako na mtu yeyote.",
@@ -869,15 +934,90 @@ export const T = {
         title: "Historia",
         desc: "Historia inaweka rekodi ya kila mabadiliko yaliyofanywa kwenye programu. Kila wakati unapoongeza, kuhariri au kufuta rekodi, inarekodiwa hapa. Ukifuta kitu kwa bahati mbaya, unaweza kuirejesha kutoka Historia. Unaweza pia kuchagua kwa Imeongezwa, Imebadilishwa, Imefutwa au Imerudishwa.",
       },
+      {
+        title: "Mipango ya Usajili",
+        desc: "QuickDuka ina mipango mitatu. Starter (KES 100/mwezi) ni kwa mmiliki mmoja wa duka moja bila wafanyakazi wengine. Growth (KES 250/mwezi) inaongeza akaunti nyingi za wafanyakazi ili timu yako kila mmoja aweze kuingia kwa nambari yake huku ukiendelea kusimamia kila kitu kama mmiliki. Business (KES 700/mwezi) inafungua matawi mengi, dashibodi ya msimamizi mkuu, na ripoti za pamoja za matawi yote. Unaanza na jaribio la bure la mwezi 1 na unaweza kuboresha mpango wako wakati wowote kutoka kwenye wasifu wako.",
+      },
     ],
     faqList: [
       {
+        q: "QuickDuka ina mipango gani?",
+        a: `QuickDuka ina mipango mitatu:
+
+🟢 Starter — KES 100/mwezi
+Duka moja, mmiliki peke yake. Inafaa kwa mfanyabiashara wa peke yake anayetaka kufuatilia mauzo, gharama na faida.
+
+🔵 Growth — KES 250/mwezi
+Duka moja na akaunti nyingi za wafanyakazi. Timu yako kila mmoja anaingia kwa nambari yake huku ukisimamia kila kitu kama mmiliki.
+
+🟣 Business — KES 700/mwezi
+Matawi mengi, dashibodi ya msimamizi mkuu, na ripoti za pamoja za maduka yako yote.
+
+Mipango yote inaanza na jaribio la bure la mwezi 1. Hakuna kadi — lipa kupitia M-Pesa.`,
+      },
+      {
         q: "QuickDuka inagharimu kiasi gani?",
-        a: "QuickDuka inagharimu KES 100 kwa mwezi. Unalipa kupitia M-Pesa STK push na utapata ombi kwenye simu yako kuingiza PIN yako. Hakuna kadi inayohitajika.",
+        a: `Kuna viwango vitatu vya bei:
+
+🟢 Starter — KES 100/mwezi: Duka moja, mmiliki peke yake.
+🔵 Growth — KES 250/mwezi: Duka moja + akaunti nyingi za wafanyakazi.
+🟣 Business — KES 700/mwezi: Matawi mengi + msimamizi mkuu + ripoti za pamoja.
+
+Mipango yote inaanza na jaribio la bure la mwezi 1. Unalipa kupitia M-Pesa STK push — hakuna kadi inayohitajika.`,
       },
       {
         q: "Ninawezaje kulipa usajili wangu?",
-        a: "Kwenye skrini ya malipo, weka nambari yako ya M-Pesa na gonga Lipa Sasa. Utapata pop-up kwenye simu yako. Weka PIN yako ya M-Pesa kisha gonga Thibitisha Malipo. Ukipata shida, tumia chaguo la mkono na tutumie SMS yako ya uthibitisho wa M-Pesa kwenye WhatsApp.",
+        a: `Kwenye skrini ya malipo, chagua mpango wako, weka nambari yako ya M-Pesa na gonga Lipa Sasa. Utapata pop-up kwenye simu yako kuingiza PIN yako ya M-Pesa, kisha gonga Thibitisha Malipo.
+
+🟢 Starter: KES 100/mwezi
+🔵 Growth: KES 250/mwezi
+🟣 Business: KES 700/mwezi
+
+Ukipata shida, tumia chaguo la mkono na tutumie SMS yako ya uthibitisho wa M-Pesa kwenye WhatsApp.`,
+      },
+      {
+        q: "Ninaweza kuongeza wafanyakazi kwenye akaunti yangu?",
+        a: `Inategemea mpango wako:
+
+🟢 Starter (KES 100/mwezi): Akaunti ya mmiliki peke yake — hakuna kuingia kwa wafanyakazi wengine.
+🔵 Growth (KES 250/mwezi): Akaunti nyingi za wafanyakazi. Kila mwanachama wa timu anapata kuingia kwake mwenyewe.
+🟣 Business (KES 700/mwezi): Wafanyakazi wasio na kikomo katika matawi mengi.
+
+Boresha mpango wako wakati wowote kutoka kwenye wasifu wako.`,
+      },
+      {
+        q: "Ninaweza kusimamia matawi mengi?",
+        a: `Matawi mengi yanapatikana kwenye mpango wa Business peke yake:
+
+🟢 Starter (KES 100/mwezi): Duka moja, mmiliki mmoja.
+🔵 Growth (KES 250/mwezi): Duka moja na timu.
+🟣 Business (KES 700/mwezi): Matawi yasiyo na kikomo, dashibodi ya msimamizi mkuu, na ripoti za pamoja za maduka yote.
+
+Boresha hadi Business kutoka kwenye wasifu wako kufungua usimamizi wa matawi mengi.`,
+      },
+      {
+        q: "Je, kuna jaribio la bure?",
+        a: `Ndiyo — kila akaunti mpya inapata jaribio la bure la mwezi 1 na ufikiaji kamili wa vipengele vyote.
+
+Baada ya jaribio, chagua mpango unaofaa biashara yako:
+
+🟢 Starter — KES 100/mwezi: Mmiliki mmoja, duka moja.
+🔵 Growth — KES 250/mwezi: Duka moja + akaunti za wafanyakazi.
+🟣 Business — KES 700/mwezi: Matawi mengi + zana za msimamizi.
+
+Hakuna kadi. Lipa kupitia M-Pesa jaribio lako linapoisha.`,
+      },
+      {
+        q: "Nini kinatokea usajili wangu ukiisha?",
+        a: `Akaunti yako inafungwa hadi urenew — lakini data yako haifutwi kamwe. Unapata kipindi cha neema cha siku 2 baada ya kuisha.
+
+Renew kwa kulipa kwa mpango wako kupitia M-Pesa:
+
+🟢 Starter — KES 100/mwezi
+🔵 Growth — KES 250/mwezi
+🟣 Business — KES 700/mwezi
+
+Unaweza pia kuboresha hadi mpango wa juu wakati wa kurenew.`,
       },
       {
         q: "Ninaweza kuingia kwa nambari yangu ya simu?",
@@ -888,10 +1028,6 @@ export const T = {
         a: "Data yako imehifadhiwa salama katika Google Firebase ambayo ni miundombinu ile ile inayotumiwa na programu milioni duniani. Data ya kila mtumiaji iko tofauti na inaweza kufikika na wewe peke yako.",
       },
       {
-        q: "Je, watu wengi wanaweza kutumia akaunti moja?",
-        a: "QuickDuka ni akaunti ya mtumiaji mmoja. Kila mmiliki wa biashara anapata kuingia kwake mwenyewe. Ukihitaji ufikiaji wa timu, wasiliana nasi nasi tukushauri.",
-      },
-      {
         q: "Ninawezaje kufuatilia wanaonidaiwa pesa?",
         a: "Tumia sehemu ya Mikopo. Rekodi jina la mteja, simu, bidhaa na kiasi. Unaweza kurekodi malipo ya sehemu na programu inafuatilia salio zilizobaki moja kwa moja.",
       },
@@ -900,20 +1036,12 @@ export const T = {
         a: "Ndiyo. Nambari za simu zilizohifadhiwa katika Mauzo, Manunuzi, Gharama na Mikopo zinaonekana kama viungo vinavyoweza kubonyezwa. Gonga kupiga simu moja kwa moja kutoka kwenye programu.",
       },
       {
-        q: "Nini kinatokea usajili wangu ukiisha?",
-        a: "Akaunti yako inafungwa hadi urenew. Data yako haifutwa. Lipa KES 100 kuendelea kupata ufikiaji. Unapata kipindi cha neema cha siku 2 baada ya kuisha.",
-      },
-      {
         q: "Ninawezaje kuweka upya nenosiri langu?",
         a: "Kwenye skrini ya kuingia, gonga Umesahau nenosiri na weka barua pepe yako au nambari ya simu. Tutatuma kiungo cha kuweka upya kwa anwani yako ya barua pepe iliyosajiliwa.",
       },
       {
         q: "Ninaweza kutumia QuickDuka bila mtandao?",
         a: "QuickDuka inahitaji muunganisho wa intaneti kuhifadhi na kusynchronize data. Tunapendekeza kuitumia na data ya simu au WiFi.",
-      },
-      {
-        q: "Je, kuna jaribio la bure?",
-        a: "Kuna jaribio la bure la mwezi 1 unaposajili kwa mara ya kwanza. Baada ya hapo, unalipa KES 100 kwa mwezi kuendelea.",
       },
       {
         q: "Sehemu ya Mikopo ni kwa nini?",

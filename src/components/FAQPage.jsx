@@ -1,20 +1,48 @@
 import { useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  faQuestionCircle, faChevronDown, faChevronUp, faChartLine,
-  faCartPlus, faReceipt, faTriangleExclamation, faBox,
-  faClockRotateLeft, faMobileScreen, faLock, faMoneyBill, faInfoCircle,
+  faQuestionCircle,
+  faChevronDown,
+  faChevronUp,
+  faChartLine,
+  faCartPlus,
+  faReceipt,
+  faTriangleExclamation,
+  faBox,
+  faClockRotateLeft,
+  faMobileScreen,
+  faLock,
+  faMoneyBill,
+  faInfoCircle,
+  faLayerGroup,
 } from "@fortawesome/free-solid-svg-icons";
 import { faSquareCheck as faSquareCheckR } from "@fortawesome/free-regular-svg-icons";
 import { useLang } from "../LangContext";
 
+// One entry per howToSteps item (10 total)
 const STEP_ICONS = [
-  faChartLine, faMoneyBill, faSquareCheckR, faCartPlus, faReceipt,
-  faTriangleExclamation, faBox, faChartLine, faClockRotateLeft,
+  faChartLine, // 1. Dashboard
+  faMoneyBill, // 2. Recording Sales
+  faSquareCheckR, // 3. Tracking Debts / Credits
+  faCartPlus, // 4. Recording Purchases
+  faReceipt, // 5. Logging Expenses
+  faTriangleExclamation, // 6. Recording Losses
+  faBox, // 7. Stock Catalogue
+  faChartLine, // 8. Reports
+  faClockRotateLeft, // 9. History
+  faLayerGroup, // 10. Subscription Plans
 ];
 const STEP_COLORS = [
-  "var(--green)", "#22c55e", "var(--orange)", "#3b82f6",
-  "#a855f7", "var(--red)", "#14b8a6", "var(--green)", "#6366f1",
+  "var(--green)", // Dashboard
+  "#22c55e", // Sales
+  "var(--orange)", // Credits
+  "#3b82f6", // Purchases
+  "#a855f7", // Expenses
+  "var(--red)", // Losses
+  "#14b8a6", // Stock
+  "var(--green)", // Reports
+  "#6366f1", // History
+  "#f59e0b", // Subscription Plans (amber/gold)
 ];
 
 function FaqItem({ f, i, open, setOpen }) {
@@ -22,9 +50,24 @@ function FaqItem({ f, i, open, setOpen }) {
     <div className="faq-item">
       <div className="faq-q" onClick={() => setOpen(open === i ? null : i)}>
         {f.q}
-        <FontAwesomeIcon icon={open === i ? faChevronUp : faChevronDown} style={{ fontSize: 12, color: "var(--muted)", flexShrink: 0 }} />
+        <FontAwesomeIcon
+          icon={open === i ? faChevronUp : faChevronDown}
+          style={{ fontSize: 12, color: "var(--muted)", flexShrink: 0 }}
+        />
       </div>
-      {open === i && <div className="faq-a">{f.a}</div>}
+      {open === i && (
+        <div className="faq-a">
+          {f.a.split("\n").map((line, idx) =>
+            line === "" ? (
+              <div key={idx} style={{ height: 6 }} />
+            ) : (
+              <p key={idx} style={{ margin: "2px 0" }}>
+                {line}
+              </p>
+            ),
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -102,7 +145,7 @@ export default function FAQPage() {
                 border: "1px solid var(--green-lt)",
               }}
             >
-              <strong style={{ color: "var(--green)" }}>Tip:</strong>{" "}
+              <strong style={{ color: "var(--green)" }}>{t.tipLabel}:</strong>{" "}
               {t.welcomeTip}
             </p>
           </div>
