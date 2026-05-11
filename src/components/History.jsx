@@ -1,6 +1,13 @@
 import { useState, useEffect } from "react";
-import { db } from "../firebase";
-import { collection, query, orderBy, limit, getDocs, onSnapshot } from "firebase/firestore";
+import { db, auth } from "../firebase";
+import {
+  collection,
+  query,
+  orderBy,
+  limit,
+  where,
+  onSnapshot,
+} from "firebase/firestore";
 import { useCollection } from "../hooks/useCollection";
 import { Toast, useToast } from "./Toast";
 import AlertDialog from "./AlertDialog";
@@ -34,12 +41,12 @@ const ACTION_COLORS = {
 };
 
 const COL_LABELS = {
-  sales:     "sales",
+  sales: "sales",
   purchases: "purchases",
-  expenses:  "expenses",
-  credits:   "credits",
-  losses:    "losses",
-  stock:     "stock",
+  expenses: "expenses",
+  credits: "credits",
+  losses: "losses",
+  stock: "stock",
 };
 
 function formatVal(obj) {
@@ -95,18 +102,25 @@ export default function History() {
   // Real-time audit log listener
   useEffect(() => {
     if (!db) return;
+    const uid = auth.currentUser?.uid;
+    if (!uid) return;
     const q = query(
       collection(db, "auditLog"),
+      where("userId", "==", uid),
       orderBy("timestamp", "desc"),
       limit(200),
     );
-    const unsub = onSnapshot(q, (snap) => {
-      setLogs(snap.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
-      setHistoryLoading(false);
-    }, (err) => {
-      console.error("History fetch error:", err.message);
-      setHistoryLoading(false);
-    });
+    const unsub = onSnapshot(
+      q,
+      (snap) => {
+        setLogs(snap.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
+        setHistoryLoading(false);
+      },
+      (err) => {
+        console.error("History fetch error:", err.message);
+        setHistoryLoading(false);
+      },
+    );
     return unsub;
   }, []);
 
@@ -127,9 +141,7 @@ export default function History() {
   };
 
   const handleClearHistory = async () => {
-    const confirmed = window.confirm(
-      t.deleteHistory,
-    );
+    const confirmed = window.confirm(t.deleteHistory);
 
     if (!confirmed) return;
 
@@ -156,9 +168,15 @@ export default function History() {
         message={
           restoreTarget
             ? `Hii itarudisha "${restoreTarget.description || ""}" kwenye ${
-                t[COL_LABELS[restoreTarget.collectionName]] || restoreTarget.collectionName|t[COL_LABELS[restoreTarget.collectionName]] || restoreTarget.collectionName
+                t[COL_LABELS[restoreTarget.collectionName]] ||
+                restoreTarget.collectionName |
+                  t[COL_LABELS[restoreTarget.collectionName]] ||
+                restoreTarget.collectionName
               }. / This will re-add "${restoreTarget.description || ""}" back to ${
-                t[COL_LABELS[restoreTarget.collectionName]] || restoreTarget.collectionName|t[COL_LABELS[restoreTarget.collectionName]] || restoreTarget.collectionName
+                t[COL_LABELS[restoreTarget.collectionName]] ||
+                restoreTarget.collectionName |
+                  t[COL_LABELS[restoreTarget.collectionName]] ||
+                restoreTarget.collectionName
               }.`
             : ""
         }
@@ -176,14 +194,15 @@ export default function History() {
               className={`filter-pill${filter === f ? " active" : ""}`}
               onClick={() => setFilter(f)}
             >
-          {f === "ALL" ? t.allActivity : t[ACTION_COLORS[f]?.label] || f}
+              {f === "ALL" ? t.allActivity : t[ACTION_COLORS[f]?.label] || f}
             </button>
           ))}
         </div>
 
         <div className="toolbar-right">
           <span className="table-count">
-            {filtered.length}{filtered.length !== 1 ? "" : ""}
+            {filtered.length}
+            {filtered.length !== 1 ? "" : ""}
           </span>
 
           <button
@@ -199,9 +218,7 @@ export default function History() {
       {historyLoading ? (
         <div className="table-loading">{t.historyLoading}</div>
       ) : filtered.length === 0 ? (
-        <div className="empty-state">
-          {t.noHistory}
-        </div>
+        <div className="empty-state">{t.noHistory}</div>
       ) : (
         <div className="history-list">
           {filtered.map((log) => {
@@ -227,7 +244,8 @@ export default function History() {
 
                     <div className="history-meta">
                       <span className="history-col">
-                        {t[COL_LABELS[log.collectionName]] || log.collectionName}
+                        {t[COL_LABELS[log.collectionName]] ||
+                          log.collectionName}
                       </span>
 
                       {log.before && (
