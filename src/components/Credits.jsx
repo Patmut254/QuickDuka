@@ -123,7 +123,12 @@ export default function Credits() {
       if (isFullyPaid) {
         showToast(t.paidSales);
       } else {
-        showToast(t.partialPay(actualAmount.toLocaleString(), (payingCredit.totalAmount - newPaid).toLocaleString()));
+        showToast(
+          t.partialPay(
+            actualAmount.toLocaleString(),
+            (payingCredit.totalAmount - newPaid).toLocaleString(),
+          ),
+        );
       }
 
       setPayingCredit(null);
@@ -867,7 +872,7 @@ export default function Credits() {
             : ""
         }
         confirmLabel={t.yesWriteOff}
-        cancelLabel="{t.cancel}"
+        cancelLabel={t.cancel}
         onCancel={() => setBadDebtTarget(null)}
         onConfirm={confirmBadDebt}
       />
@@ -882,7 +887,7 @@ export default function Credits() {
             : ""
         }
         confirmLabel="Ndio, Futa / Yes, Delete"
-        cancelLabel="{t.cancel}"
+        cancelLabel={t.cancel}
         onCancel={() => setDeleteTarget(null)}
         onConfirm={async () => {
           if (deleteTarget) {
