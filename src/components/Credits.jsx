@@ -692,9 +692,12 @@ export default function Credits() {
                           icon={faCalendar}
                           style={{ marginRight: 4, fontSize: 10 }}
                         />
-                        Tarehe: {credit.dateIssued}
+                        {t.date}: {credit.dateIssued}
                         {credit.dueDate && (
-                          <>&nbsp;·&nbsp;Mwisho: {credit.dueDate}</>
+                          <>
+                            &nbsp;·&nbsp;{t.dueDate.split(" (")[0]}:{" "}
+                            {credit.dueDate}
+                          </>
                         )}
                       </span>
                     </div>
@@ -709,7 +712,8 @@ export default function Credits() {
                     {/* Outstanding: show remaining */}
                     {isOutstanding && remaining > 0 && (
                       <div className="credit-remaining">
-                        KES {remaining.toLocaleString()} imebaki / remaining
+                        KES {remaining.toLocaleString()}{" "}
+                        {t.remaining.toLowerCase()}
                       </div>
                     )}
 
@@ -886,7 +890,7 @@ export default function Credits() {
             ? `This will permanently remove the credit for "${deleteTarget.customer}". This cannot be undone.`
             : ""
         }
-        confirmLabel="Ndio, Futa / Yes, Delete"
+        confirmLabel={t.confirmDelete}
         cancelLabel={t.cancel}
         onCancel={() => setDeleteTarget(null)}
         onConfirm={async () => {

@@ -64,8 +64,7 @@ export default function EntryTable({
     setDeleting(true);
     try {
       await onDelete(deleteTarget.id, deleteTarget.item);
-      showToast &&
-        showToast(t.deletedToast, "delete");
+      showToast && showToast(t.deletedToast, "delete");
     } catch (err) {
       console.error("Delete failed:", err);
       showToast && showToast(t.failedDelete, "error");
@@ -83,7 +82,13 @@ export default function EntryTable({
         title={t.delete}
         message={
           deleteTarget
-            ? `Unakaribia kufuta "${deleteTarget.item?.description || deleteTarget.item?.item || deleteTarget.item?.category || "this record"}" — KES ${Number(deleteTarget.item?.amount || 0).toLocaleString()}. Unaweza kuirejesha kwenye Historia. / You can restore it from the History tab.`
+            ? t.deleteMsg(
+                deleteTarget.item?.description ||
+                  deleteTarget.item?.item ||
+                  deleteTarget.item?.category ||
+                  "this record",
+                Number(deleteTarget.item?.amount || 0).toLocaleString(),
+              )
             : ""
         }
         confirmLabel={deleting ? t.deleting : t.confirmDelete}
@@ -93,7 +98,9 @@ export default function EntryTable({
       />
 
       <div className="table-toolbar">
-        <label htmlFor="table-search" className="sr-only">{t.search}</label>
+        <label htmlFor="table-search" className="sr-only">
+          {t.search}
+        </label>
         <input
           id="table-search"
           name="table-search"
@@ -111,9 +118,7 @@ export default function EntryTable({
       {loading ? (
         <div className="table-loading">{t.loading}</div>
       ) : filtered.length === 0 ? (
-        <div className="empty-state">
-          {search ? t.noResults : emptyMessage}
-        </div>
+        <div className="empty-state">{search ? t.noResults : emptyMessage}</div>
       ) : (
         <div className="table-scroll">
           <table className="data-table">

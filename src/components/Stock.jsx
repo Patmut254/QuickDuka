@@ -86,7 +86,16 @@ export default function Stock({ sub }) {
             lockedLabel="Multi-Branch Stock Management"
           >
             {/* Children shown when Business plan is active */}
-            <div style={{ padding: "10px 14px", borderRadius: 8, background: "var(--bg2)", border: "1px solid var(--border)", fontSize: 13, color: "var(--muted)" }}>
+            <div
+              style={{
+                padding: "10px 14px",
+                borderRadius: 8,
+                background: "var(--bg2)",
+                border: "1px solid var(--border)",
+                fontSize: 13,
+                color: "var(--muted)",
+              }}
+            >
               Multi-branch stock view is enabled on your Business plan.
             </div>
           </FeatureGate>
@@ -322,10 +331,10 @@ export default function Stock({ sub }) {
                   className="btn-cancel-sm"
                   onClick={() => setEditTarget(null)}
                 >
-                  Funga / Cancel
+                  {t.cancel}
                 </button>
                 <button type="submit" className="btn-primary">
-                  Hifadhi Mabadiliko / Save Changes
+                  {t.saveChanges}
                 </button>
               </div>
             </form>
@@ -336,11 +345,7 @@ export default function Stock({ sub }) {
       <AlertDialog
         open={!!deleteTarget}
         title={t.removeItem}
-        message={
-          deleteTarget
-            ? `Ondoa "${deleteTarget.name}" kutoka kwenye orodha yako? / Remove "${deleteTarget.name}" from your list?`
-            : ""
-        }
+        message={deleteTarget ? t.removeMsg(deleteTarget.name) : ""}
         onCancel={() => setDeleteTarget(null)}
         onConfirm={async () => {
           await deleteItem(deleteTarget.id, deleteTarget);
