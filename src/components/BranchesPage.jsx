@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 /**
  * BranchesPage — Branch management for Business plan owners.
  *
