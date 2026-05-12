@@ -38,3 +38,10 @@ export function getSecondaryApp() {
   }
   return _secondaryApp;
 }
+
+// Plain Firestore instance without offline persistence — used for
+// unauthenticated public writes (e.g. referrer application form).
+// persistentLocalCache can throw failed-precondition for unauthed writes
+// in some browsers, so public submissions use this clean instance instead.
+const _publicApp = initializeApp(firebaseConfig, "public");
+export const publicDb = initializeFirestore(_publicApp, {});

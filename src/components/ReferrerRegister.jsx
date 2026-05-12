@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { db } from "../firebase";
+import { publicDb } from "../firebase";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -56,7 +56,7 @@ export default function ReferrerRegister({ onBack }) {
 
     setSaving(true);
     try {
-      await addDoc(collection(db, "referrerApplications"), {
+      await addDoc(collection(publicDb, "referrerApplications"), {
         fullName: form.fullName.trim(),
         phone: form.phone.trim(),
         email: form.email.trim(),
@@ -71,8 +71,15 @@ export default function ReferrerRegister({ onBack }) {
         createdAt: serverTimestamp(),
       });
       setDone(true);
-    } catch {
-      setError("Failed to submit. Please check your connection and try again.");
+    } catch (err) {
+      console.error("ReferrerRegister submit error:", err);
+      setError(
+        err?.code === "permission-denied"
+          ? "Submission blocked by server rules. Please contact support."
+          : err?.code === "unavailable" || err?.message?.includes("offline")
+            ? "You appear to be offline. Please check your internet and try again."
+            : `Submission failed (${err?.code ?? "unknown error"}). Please try again.`,
+      );
     }
     setSaving(false);
   };
