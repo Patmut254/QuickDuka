@@ -689,10 +689,33 @@ function DeleteUserModal({ user, onClose, onDeleted }) {
   const handleDelete = async () => {
     setDeleting(true);
     try {
-      // Delete all payment history subcollection docs
-      // (Firestore doesn't auto-delete subcollections, but that's OK — orphaned docs)
-      // Delete the user's Firestore profile doc — this locks them out completely
-      await deleteDoc(doc(db, "users", user.id));
+      const userRef = doc(db, "users", user.id);
+
+      // STEP 1: Mark deleted = true first.
+      // If the user is currently logged in, useUserProfile will catch this flag
+      // on next render and sign them out immediately.
+      await updateDoc(userRef, { deleted: true });
+
+      // STEP 2: Block the email from re-registering.
+      // Register.jsx already queries this collection before creating an account.
+      if (user.email) {
+        const blockRef = doc(
+          db,
+          "blockedEmails",
+          user.email.toLowerCase().replace(/\./g, "_"),
+        );
+        await setDoc(blockRef, {
+          email: user.email,
+          reason: "Account deleted by admin",
+          deletedAt: serverTimestamp(),
+          deletedBusinessName: user.businessName || null,
+        });
+      }
+
+      // STEP 3: Delete the Firestore profile doc.
+      // This is the final lockout — no profile = no access.
+      await deleteDoc(userRef);
+
       onDeleted?.(`"${user.businessName || user.email}" has been removed.`);
       onClose();
     } catch (err) {

@@ -1,7 +1,8 @@
+/* eslint-disable no-unused-vars */
 import { useState, useEffect, useRef } from "react";
 import { db, auth } from "../firebase";
 import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
-import { onAuthStateChanged } from "firebase/auth";
+import { onAuthStateChanged, signOut } from "firebase/auth";
 
 // Keep in sync with AdminPanel.jsx
 const ADMIN_EMAIL = "anitapatrick025@gmail.com";
@@ -12,7 +13,6 @@ export function useUserProfile() {
   const [notFound, setNotFound] = useState(false);
 
   const terminatedRef = useRef(false);
-  const creatingRef = useRef(false);
 
   useEffect(() => {
     terminatedRef.current = false;
@@ -32,56 +32,53 @@ export function useUserProfile() {
         setNotFound(false);
       }
 
+      // ADMIN: bypass profile check entirely
+      if (user.email === ADMIN_EMAIL) {
+        if (!terminatedRef.current) {
+          setProfile({ id: user.uid, email: user.email, role: "admin" });
+          setLoading(false);
+        }
+        return;
+      }
+
+      // REGULAR USER: must have a Firestore profile
       const ref = doc(db, "users", user.uid);
 
       try {
-        // 🔹 STEP 1: Try to get profile
-        let snap = await getDoc(ref);
+        const snap = await getDoc(ref);
 
-        // 🔹 STEP 2: If profile exists
-        if (snap.exists()) {
+        if (!snap.exists()) {
+          // No profile = deleted or never finished registration.
+          // Sign them out immediately so they land back on the login screen.
+          await signOut(auth);
           if (!terminatedRef.current) {
-            setProfile({ id: snap.id, ...snap.data() });
+            setProfile(null);
+            setNotFound(true);
             setLoading(false);
           }
           return;
         }
 
-        // 🔹 STEP 3: Auto-create (only for non-admin)
-        if (!creatingRef.current && user.email !== ADMIN_EMAIL) {
-          creatingRef.current = true;
+        const data = snap.data();
 
-          const trialExpiry = new Date();
-          trialExpiry.setDate(trialExpiry.getDate() + 30);
-
-          await setDoc(ref, {
-            email: user.email || null,
-            role: "user",
-            subscriptionStatus: "trial",
-            subscriptionPlan: "starter",   // default plan; admin changes this
-            subscriptionExpiry: trialExpiry,
-            trialStartedAt: serverTimestamp(),
-            createdAt: serverTimestamp(),
-          });
-
-          // 🔹 Fetch again after creation
-          snap = await getDoc(ref);
-
-          if (snap.exists() && !terminatedRef.current) {
-            setProfile({ id: snap.id, ...snap.data() });
+        // DELETED flag: admin marked this account as removed 
+        if (data.deleted === true) {
+          await signOut(auth);
+          if (!terminatedRef.current) {
+            setProfile(null);
+            setNotFound(true);
             setLoading(false);
-            return;
           }
+          return;
         }
 
-        // 🔹 Still no profile
+        // All good: set the profile
         if (!terminatedRef.current) {
-          setNotFound(true);
+          setProfile({ id: snap.id, ...data });
           setLoading(false);
         }
       } catch (err) {
         console.error("Profile fetch failed:", err);
-
         if (!terminatedRef.current) {
           setNotFound(true);
           setLoading(false);
@@ -100,6 +97,7 @@ export function useUserProfile() {
 
 /**
  * Called explicitly from Register.jsx after Firebase Auth account creation.
+ * Saves ALL registration fields: businessName, ownerName, phone, county, etc.
  */
 export async function createUserProfile(uid, data) {
   const ref = doc(db, "users", uid);
@@ -113,19 +111,32 @@ export async function createUserProfile(uid, data) {
   await setDoc(
     ref,
     {
-      ...data,
+      // Registration fields — passed in from Register.jsx
+      businessName: data.businessName || null,
+      ownerName: data.ownerName || null,
+      phone: data.phone || null,
+      email: data.email || null,
+      realEmail: data.realEmail || data.email || null,
+      county: data.county || null,
+      subcounty: data.subcounty || null,
+      referrer: data.referrer || null,
+
+      // Subscription
       role: "user",
       subscriptionStatus: "trial",
       subscriptionPlan: data.subscriptionPlan || "starter",
       subscriptionExpiry: trialExpiry,
       trialStartedAt: now,
       createdAt: now,
+
+      // Safety flag — never deleted at creation
+      deleted: false,
     },
-    { merge: true },
+    { merge: false }, // full write — no partial merging on new accounts
   );
 }
 
-/** One-shot fetch */
+/** One-shot fetch — used by admin and staff checks */
 export async function getUserProfile(uid) {
   const ref = doc(db, "users", uid);
   const snap = await getDoc(ref);

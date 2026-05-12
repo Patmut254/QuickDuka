@@ -174,12 +174,12 @@ export default function Register({ onBack }) {
    */
   const normalizePhone = (p) => {
     const d = p.replace(/\D/g, ""); // strip everything except digits
-    if (d.startsWith("07") && d.length === 10) return "+254" + d.slice(1);   // 07XX → +2547XX
-    if (d.startsWith("011") && d.length === 10) return "+254" + d.slice(1);  // 011X → +25411X
-    if (d.startsWith("01") && d.length === 10) return "+254" + d.slice(1);   // 01XX → +25401X
-    if (d.startsWith("254") && d.length === 12) return "+" + d;              // 2547XX → +2547XX
+    if (d.startsWith("07") && d.length === 10) return "+254" + d.slice(1); // 07XX → +2547XX
+    if (d.startsWith("011") && d.length === 10) return "+254" + d.slice(1); // 011X → +25411X
+    if (d.startsWith("01") && d.length === 10) return "+254" + d.slice(1); // 01XX → +25401X
+    if (d.startsWith("254") && d.length === 12) return "+" + d; // 2547XX → +2547XX
     if ((d.startsWith("7") || d.startsWith("1")) && d.length === 9)
-      return "+254" + d;                                                       // 7XX → +2547XX
+      return "+254" + d; // 7XX → +2547XX
     return p;
   };
 
@@ -230,13 +230,25 @@ export default function Register({ onBack }) {
 
     // Best-effort duplicate check
     try {
+      // Check active users
       const eq = query(
         collection(db, "users"),
         where("email", "==", email.trim()),
       );
       const es = await getDocs(eq);
       if (!es.empty)
-        return setCredError("This email address is already linked to an account. Please sign in instead.");
+        return setCredError(
+          "This email address is already linked to an account. Please sign in instead.",
+        );
+
+      // Check blocked/deleted emails
+      const blockedKey = email.trim().toLowerCase().replace(/\./g, "_");
+      const blockedRef = doc(db, "blockedEmails", blockedKey);
+      const blockedSnap = await getDoc(blockedRef);
+      if (blockedSnap.exists())
+        return setCredError(
+          "This email address cannot be used to create a new account. Please contact support.",
+        );
 
       if (hasPhone) {
         const pq = query(
@@ -538,7 +550,10 @@ export default function Register({ onBack }) {
                 />
               </div>
               {phone.trim() && phoneError ? (
-                <span className="field-hint" style={{ color: "var(--red, #ef4444)" }}>
+                <span
+                  className="field-hint"
+                  style={{ color: "var(--red, #ef4444)" }}
+                >
                   {phoneError}
                 </span>
               ) : phone.trim() && hasPhone ? (
