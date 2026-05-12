@@ -1321,7 +1321,7 @@ export default function AdminPanel() {
                           >
                             <FontAwesomeIcon icon={faHistory} /> History
                           </button>
-                          {/* ── Activate Trial (manual activation without payment) ── */}
+                          {/*  Activate Trial (manual activation without payment)  */}
                           {(u.subscriptionStatus === "pending" ||
                             u.subscriptionStatus === "expired" ||
                             !u.subscriptionStatus) && (
@@ -1334,7 +1334,7 @@ export default function AdminPanel() {
                               }}
                             />
                           )}
-                          {/* ── Plan change ── */}
+                          {/*  Plan change  */}
                           <ChangePlanControl
                             u={u}
                             onChanged={(newPlan) => {
@@ -1671,7 +1671,7 @@ function HistoryModal({ user, onClose }) {
   );
 }
 
-/* ─── Plans Editor ──────────────────────────────────────────────────────── */
+/* Plans Editor*/
 function PlansEditor({ users, showToast }) {
   // uses the top-level db import — getFirestore() is not imported here
   const [plans, setPlans] = useState(() =>
@@ -2055,7 +2055,7 @@ function PlansEditor({ users, showToast }) {
   );
 }
 
-/* ─── Analytics Tab ─────────────────────────────────────────────────────── */
+/* Analytics Tab*/
 function AnalyticsTab({ users }) {
   // uses the top-level db import
   const [visits, setVisits] = useState([]);

@@ -1,7 +1,6 @@
 import { useState } from "react";
-import { auth, db } from "../firebase";
+import { auth } from "../firebase";
 import { signOut } from "firebase/auth";
-import { doc, updateDoc, addDoc, collection, Timestamp, serverTimestamp } from "firebase/firestore";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faPhone,
@@ -18,6 +17,11 @@ import { PLANS as PLAN_MAP, PLAN_ORDER } from "../subscription";
 
 // Set your deployed Django backend URL here
 const MPESA_BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "";
+
+// ── IMPORTANT: Replace with your real WhatsApp support number ────────────────
+// Format: country code + number, no + sign, no spaces. E.g. 254712345678
+const SUPPORT_WHATSAPP = "254700000000"; // ← REPLACE BEFORE LAUNCH
+// ─────────────────────────────────────────────────────────────────────────────
 
 // Convert central plan map to ordered array for rendering
 const PLANS = PLAN_ORDER.map((id) => ({
@@ -39,7 +43,8 @@ export default function SubscriptionWall({ profile }) {
 
   const selectedPlan = PLANS.find((p) => p.id === activePlan) || currentPlan;
 
-  const trialExpiry =
+  // subscriptionExpiry covers both trial and paid expiry
+  const subscriptionExpiry =
     profile?.subscriptionExpiry?.toDate?.() ??
     (profile?.subscriptionExpiry instanceof Date
       ? profile.subscriptionExpiry
@@ -47,13 +52,14 @@ export default function SubscriptionWall({ profile }) {
 
   const isTrialEnded =
     profile?.subscriptionStatus === "trial" &&
-    trialExpiry &&
-    new Date() > trialExpiry;
+    subscriptionExpiry &&
+    new Date() > subscriptionExpiry;
+
   const isExpired =
     profile?.subscriptionStatus === "expired" ||
     (profile?.subscriptionStatus === "active" &&
-      trialExpiry &&
-      new Date() > trialExpiry);
+      subscriptionExpiry &&
+      new Date() > subscriptionExpiry);
 
   const normalizePhone = (p) => {
     const digits = p.replace(/\D/g, "");
@@ -86,12 +92,9 @@ export default function SubscriptionWall({ profile }) {
           amount: selectedPlan.price,
           user_email: profile?.email,
           user_uid: profile?.id,
-          account_ref: (profile?.phone || profile?.email || "QuickDuka").slice(
-            0,
-            12,
-          ),
-          description: `QuickDuka ${selectedPlan.name} Plan`,
           plan: selectedPlan.id,
+          account_ref: (profile?.phone || profile?.email || "QuickDuka").slice(0, 12),
+          description: `QuickDuka ${selectedPlan.name} Plan`,
         }),
       });
       const data = await res.json();
@@ -100,15 +103,11 @@ export default function SubscriptionWall({ profile }) {
         setStkMsg("M-Pesa prompt sent! Check your phone and enter your PIN.");
       } else {
         setStkStatus("error");
-        setStkMsg(
-          data.error || "Failed to send M-Pesa prompt. Please try again.",
-        );
+        setStkMsg(data.error || "Failed to send M-Pesa prompt. Please try again.");
       }
     } catch {
       setStkStatus("error");
-      setStkMsg(
-        "Could not reach payment server. Check your internet and try again.",
-      );
+      setStkMsg("Could not reach payment server. Check your internet and try again.");
     }
   };
 
@@ -120,56 +119,30 @@ export default function SubscriptionWall({ profile }) {
         `${MPESA_BACKEND_URL}/api/mpesa/check-payment/?uid=${profile?.id}`,
       );
       const data = await res.json();
+
       if (res.ok && data.activated) {
-        // ── Save the confirmed plan + subscription to Firestore ──────────────
-        // This is the canonical write that activates the plan after payment.
-        // The backend confirms payment; the frontend owns the plan selection.
-        try {
-          const startDate = new Date();
-          const endDate = new Date(startDate);
-          endDate.setMonth(endDate.getMonth() + 1);
-
-          const userRef = doc(db, "users", profile.id);
-          await updateDoc(userRef, {
-            subscriptionPlan:   selectedPlan.id,
-            subscriptionStatus: "active",
-            subscriptionExpiry: Timestamp.fromDate(endDate),
-            subscriptionStartDate: Timestamp.fromDate(startDate),
-            lastPaymentAmount: selectedPlan.price,
-            lastPaymentAt: serverTimestamp(),
-            lastMpesaReceipt: data.mpesa_receipt || data.receipt || null,
-          });
-
-          // Log in paymentHistory subcollection for audit trail
-          await addDoc(collection(db, "users", profile.id, "paymentHistory"), {
-            type: "mpesa_payment",
-            plan: selectedPlan.id,
-            planName: selectedPlan.name,
-            amount: selectedPlan.price,
-            startDate: Timestamp.fromDate(startDate),
-            endDate: Timestamp.fromDate(endDate),
-            mpesaReceipt: data.mpesa_receipt || data.receipt || null,
-            activatedAt: serverTimestamp(),
-          });
-        } catch (dbErr) {
-          // DB write failed — still show success since payment went through,
-          // but log it so admin can fix manually
-          console.error("Failed to save subscription to Firestore:", dbErr);
-        }
-        // ─────────────────────────────────────────────────────────────────────
-
+        // Backend has already written subscriptionPlan, subscriptionStatus,
+        // subscriptionExpiry, and paymentHistory to Firestore via Admin SDK.
+        // Frontend just reloads — no Firestore writes needed here.
         setCheckStatus("ok");
         setCheckMsg("Payment confirmed! Opening your account...");
         setTimeout(() => window.location.reload(), 1500);
       } else {
+        // Not yet confirmed — reset so user can tap Verify again
         setCheckStatus("pending");
-        setCheckMsg(
-          "Payment not confirmed yet. Please wait a moment and try again.",
-        );
+        setCheckMsg("Payment not confirmed yet. Wait a moment, then try again.");
+        setTimeout(() => {
+          setCheckStatus("idle");
+          setCheckMsg("");
+        }, 3000);
       }
     } catch {
       setCheckStatus("error");
       setCheckMsg("Could not verify. Please try again.");
+      setTimeout(() => {
+        setCheckStatus("idle");
+        setCheckMsg("");
+      }, 3000);
     }
   };
 
@@ -219,13 +192,7 @@ export default function SubscriptionWall({ profile }) {
             }}
           >
             <div style={{ textAlign: "left" }}>
-              <div
-                style={{
-                  fontWeight: 800,
-                  fontSize: 15,
-                  color: selectedPlan.color,
-                }}
-              >
+              <div style={{ fontWeight: 800, fontSize: 15, color: selectedPlan.color }}>
                 {selectedPlan.name} Plan
               </div>
               <div style={{ fontSize: 13, color: "var(--muted)" }}>
@@ -256,6 +223,8 @@ export default function SubscriptionWall({ profile }) {
                     setShowPlans(false);
                     setStkStatus("idle");
                     setStkMsg("");
+                    setCheckStatus("idle");
+                    setCheckMsg("");
                   }}
                   style={{
                     width: "100%",
@@ -264,8 +233,7 @@ export default function SubscriptionWall({ profile }) {
                     gap: 12,
                     padding: "12px 16px",
                     textAlign: "left",
-                    background:
-                      activePlan === plan.id ? `${plan.color}0f` : "var(--bg2)",
+                    background: activePlan === plan.id ? `${plan.color}0f` : "var(--bg2)",
                     border: "none",
                     borderBottom: "1px solid var(--border)",
                     cursor: "pointer",
@@ -278,19 +246,12 @@ export default function SubscriptionWall({ profile }) {
                       height: 16,
                       borderRadius: "50%",
                       border: `2px solid ${plan.color}`,
-                      background:
-                        activePlan === plan.id ? plan.color : "transparent",
+                      background: activePlan === plan.id ? plan.color : "transparent",
                       flexShrink: 0,
                     }}
                   />
                   <div style={{ flex: 1 }}>
-                    <div
-                      style={{
-                        fontWeight: 700,
-                        fontSize: 13,
-                        color: plan.color,
-                      }}
-                    >
+                    <div style={{ fontWeight: 700, fontSize: 13, color: plan.color }}>
                       {plan.name}
                       {plan.badge && (
                         <span
@@ -372,6 +333,7 @@ export default function SubscriptionWall({ profile }) {
           </div>
         </div>
 
+        {/* M-Pesa payment box */}
         <div className="sub-stk-box">
           <div className="sub-stk-label">
             <FontAwesomeIcon icon={faPhone} /> Pay KES{" "}
@@ -418,6 +380,7 @@ export default function SubscriptionWall({ profile }) {
           )}
         </div>
 
+        {/* Verify payment section — shown after STK push is sent */}
         {stkStatus === "sent" && (
           <div style={{ marginTop: 16 }}>
             <p
@@ -433,16 +396,20 @@ export default function SubscriptionWall({ profile }) {
             <button
               className="sub-refresh-btn"
               onClick={handleCheckPayment}
-              disabled={checkStatus === "checking"}
+              disabled={checkStatus === "checking" || checkStatus === "ok"}
             >
               <FontAwesomeIcon icon={faRotate} style={{ marginRight: 7 }} />
               {checkStatus === "checking"
                 ? "Checking payment..."
-                : "I've Paid — Verify Now"}
+                : checkStatus === "ok"
+                  ? "Confirmed ✓"
+                  : "I've Paid — Verify Now"}
             </button>
             {checkMsg && (
               <div
-                className={`sub-stk-msg ${checkStatus === "ok" ? "sub-stk-success" : "sub-stk-error"}`}
+                className={`sub-stk-msg ${
+                  checkStatus === "ok" ? "sub-stk-success" : "sub-stk-error"
+                }`}
                 style={{ marginTop: 10 }}
               >
                 {checkMsg}
@@ -451,10 +418,11 @@ export default function SubscriptionWall({ profile }) {
           </div>
         )}
 
+        {/* WhatsApp support link — shown on STK push error */}
         {stkStatus === "error" && (
           <div style={{ marginTop: 12, textAlign: "center" }}>
             <a
-              href={`https://wa.me/254700000000?text=QuickDuka subscription - ${profile?.phone || profile?.email} - ${profile?.businessName || ""}`}
+              href={`https://wa.me/${SUPPORT_WHATSAPP}?text=QuickDuka subscription - ${profile?.phone || profile?.email} - ${profile?.businessName || ""}`}
               target="_blank"
               rel="noreferrer"
               className="sub-wa-btn"

@@ -39,10 +39,17 @@ export default function FeatureGate({
   const message = sub.upgradeMsg(feature);
   const upgradePlan = sub.upgradePlan;
 
-  // ── Inline locked badge (for table cells, small UI areas) ─────────────────
+  //  Inline locked badge (for table cells, small UI areas)
   if (inline) {
     return (
-      <span style={{ position: "relative", display: "inline-flex", alignItems: "center", gap: 5 }}>
+      <span
+        style={{
+          position: "relative",
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 5,
+        }}
+      >
         <span
           style={{
             display: "inline-flex",
@@ -89,7 +96,7 @@ export default function FeatureGate({
     );
   }
 
-  // ── Full locked block ──────────────────────────────────────────────────────
+  //  Full locked block
   return (
     <div
       style={{
@@ -121,10 +128,24 @@ export default function FeatureGate({
       </div>
 
       <div>
-        <div style={{ fontWeight: 700, fontSize: 14, color: "var(--text)", marginBottom: 4 }}>
+        <div
+          style={{
+            fontWeight: 700,
+            fontSize: 14,
+            color: "var(--text)",
+            marginBottom: 4,
+          }}
+        >
           {lockedLabel ? `${lockedLabel} — Upgrade Required` : "Feature Locked"}
         </div>
-        <div style={{ fontSize: 12, color: "var(--muted)", lineHeight: 1.5, maxWidth: 280 }}>
+        <div
+          style={{
+            fontSize: 12,
+            color: "var(--muted)",
+            lineHeight: 1.5,
+            maxWidth: 280,
+          }}
+        >
           {message}
         </div>
       </div>
@@ -145,7 +166,8 @@ export default function FeatureGate({
           }}
         >
           <FontAwesomeIcon icon={faArrowUp} style={{ fontSize: 10 }} />
-          Upgrade to {upgradePlan.name} — KES {upgradePlan.price.toLocaleString()}/mo
+          Upgrade to {upgradePlan.name} — KES{" "}
+          {upgradePlan.price.toLocaleString()}/mo
         </div>
       )}
     </div>

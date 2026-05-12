@@ -1,18 +1,18 @@
 /**
  * QuickDuka Subscription System
- * ─────────────────────────────
+ *
  * Single source of truth for plan definitions, limits, and feature checks.
  * Designed to be easy to extend for payment integration, free trials,
  * plan upgrades, and renewals later.
  */
 
-// ─── Plan Definitions ──────────────────────────────────────────────────────────
+// Plan Definitions
 
 export const PLANS = {
   starter: {
     id: "starter",
     name: "Starter",
-    price: 100,           // KES / month
+    price: 100, // KES / month
     color: "#1a7a3c",
     badge: "Popular",
     description: "Perfect for a single-person shop",
@@ -23,7 +23,7 @@ export const PLANS = {
     ],
     limits: {
       maxShops: 1,
-      maxStaff: 0,        // 0 = no extra staff, owner only
+      maxStaff: 0, // 0 = no extra staff, owner only
       multipleUsers: false,
       multipleBranches: false,
       centralAdmin: false,
@@ -43,7 +43,7 @@ export const PLANS = {
     ],
     limits: {
       maxShops: 1,
-      maxStaff: null,     // null = unlimited
+      maxStaff: null, // null = unlimited
       multipleUsers: true,
       multipleBranches: false,
       centralAdmin: false,
@@ -64,7 +64,7 @@ export const PLANS = {
       "Combined branch reporting",
     ],
     limits: {
-      maxShops: null,     // null = unlimited
+      maxShops: null, // null = unlimited
       maxStaff: null,
       multipleUsers: true,
       multipleBranches: true,
@@ -76,7 +76,7 @@ export const PLANS = {
 
 export const PLAN_ORDER = ["starter", "growth", "business"];
 
-// ─── Plan Helpers ──────────────────────────────────────────────────────────────
+// Plan Helpers
 
 /**
  * Get a plan definition by ID. Falls back to starter if unknown.
@@ -96,7 +96,7 @@ export function getPlanLimits(planId) {
   return getPlan(planId).limits;
 }
 
-// ─── Feature Gate ──────────────────────────────────────────────────────────────
+// Feature Gate
 
 /**
  * Check whether a profile's active plan allows a specific feature.
@@ -134,7 +134,7 @@ export function canAddShop(profile, currentShopCount = 1, isAdmin = false) {
   if (isAdmin) return true;
   if (!profile) return false;
   const limits = getPlanLimits(profile.subscriptionPlan || "starter");
-  if (limits.maxShops === null) return true;         // unlimited
+  if (limits.maxShops === null) return true; // unlimited
   return currentShopCount < limits.maxShops;
 }
 
@@ -151,7 +151,7 @@ export function canAddStaff(profile, isAdmin = false) {
   return limits.multipleUsers === true;
 }
 
-// ─── Upgrade Prompt Helper ─────────────────────────────────────────────────────
+// Upgrade Prompt Helper
 
 /**
  * Returns the next plan up from the current one, or null if already on Business.
@@ -179,10 +179,13 @@ export function getUpgradeMessage(feature, currentPlanId = "starter") {
     centralAdmin: `Central admin across branches is a Business plan feature (KES 700/mo).`,
     combinedReporting: `Combined branch reporting is a Business plan feature (KES 700/mo).`,
   };
-  return messages[feature] || `Upgrade to ${upgrade?.name || "a higher plan"} to unlock this feature.`;
+  return (
+    messages[feature] ||
+    `Upgrade to ${upgrade?.name || "a higher plan"} to unlock this feature.`
+  );
 }
 
-// ─── Default plan for new sign-ups ────────────────────────────────────────────
+// Default plan for new sign-ups
 // When a user registers, they start on trial with no committed plan.
 // Admin assigns the actual plan manually until payment is integrated.
 export const DEFAULT_PLAN = "starter";

@@ -1,7 +1,14 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable react-hooks/preserve-manual-memoization */
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faMoneyBillTrendUp, faCartPlus, faReceipt, faArrowTrendUp, faArrowTrendDown, faTriangleExclamation } from "@fortawesome/free-solid-svg-icons";
+import {
+  faMoneyBillTrendUp,
+  faCartPlus,
+  faReceipt,
+  faArrowTrendUp,
+  faArrowTrendDown,
+  faTriangleExclamation,
+} from "@fortawesome/free-solid-svg-icons";
 import { useMemo } from "react";
 import { useCollection } from "../hooks/useCollection";
 import { useLang } from "../LangContext";
@@ -40,13 +47,23 @@ export default function Dashboard({ setActiveTab, sub }) {
     try {
       const d = item.date ? parseISO(item.date) : item.createdAt?.toDate();
       return d && isWithinInterval(d, { start: monthStart, end: monthEnd });
-    } catch { return false; }
+    } catch {
+      return false;
+    }
   };
 
-  const totalSales = sales.filter(inMonth).reduce((a, b) => a + (Number(b.amount) || 0), 0);
-  const totalPurchases = purchases.filter(inMonth).reduce((a, b) => a + (Number(b.amount) || 0), 0);
-  const totalExpenses = expenses.filter(inMonth).reduce((a, b) => a + (Number(b.amount) || 0), 0);
-  const totalLosses = losses.filter(inMonth).reduce((a, b) => a + (Number(b.amount) || 0), 0);
+  const totalSales = sales
+    .filter(inMonth)
+    .reduce((a, b) => a + (Number(b.amount) || 0), 0);
+  const totalPurchases = purchases
+    .filter(inMonth)
+    .reduce((a, b) => a + (Number(b.amount) || 0), 0);
+  const totalExpenses = expenses
+    .filter(inMonth)
+    .reduce((a, b) => a + (Number(b.amount) || 0), 0);
+  const totalLosses = losses
+    .filter(inMonth)
+    .reduce((a, b) => a + (Number(b.amount) || 0), 0);
   const profit = totalSales - totalPurchases - totalExpenses - totalLosses;
 
   const chartData = useMemo(() => {
@@ -60,23 +77,65 @@ export default function Dashboard({ setActiveTab, sub }) {
         try {
           const dt = item.date ? parseISO(item.date) : item.createdAt?.toDate();
           return dt && isWithinInterval(dt, { start, end });
-        } catch { return false; }
+        } catch {
+          return false;
+        }
       };
-      const s = sales.filter(inRange).reduce((a, b) => a + (Number(b.amount) || 0), 0);
-      const p = purchases.filter(inRange).reduce((a, b) => a + (Number(b.amount) || 0), 0);
-      const e = expenses.filter(inRange).reduce((a, b) => a + (Number(b.amount) || 0), 0);
-      const l = losses.filter(inRange).reduce((a, b) => a + (Number(b.amount) || 0), 0);
-      months.push({ month: label, Sales: s, Purchases: p, Expenses: e, Losses: l, Profit: s - p - e - l });
+      const s = sales
+        .filter(inRange)
+        .reduce((a, b) => a + (Number(b.amount) || 0), 0);
+      const p = purchases
+        .filter(inRange)
+        .reduce((a, b) => a + (Number(b.amount) || 0), 0);
+      const e = expenses
+        .filter(inRange)
+        .reduce((a, b) => a + (Number(b.amount) || 0), 0);
+      const l = losses
+        .filter(inRange)
+        .reduce((a, b) => a + (Number(b.amount) || 0), 0);
+      months.push({
+        month: label,
+        Sales: s,
+        Purchases: p,
+        Expenses: e,
+        Losses: l,
+        Profit: s - p - e - l,
+      });
     }
     return months;
   }, [now, sales, purchases, expenses, losses]);
 
   const cards = [
-    { label: t.salesThisMonth, value: totalSales, color: "#22c55e", icon: faMoneyBillTrendUp },
-    { label: t.purchasesThisMonth, value: totalPurchases, color: "#f97316", icon: faCartPlus },
-    { label: t.expensesThisMonth, value: totalExpenses, color: "#a855f7", icon: faReceipt },
-    { label: t.lossesThisMonth, value: totalLosses, color: "#ef4444", icon: faTriangleExclamation },
-    { label: t.netProfitLabel, value: profit, color: profit >= 0 ? "#22c55e" : "#ef4444", icon: profit >= 0 ? faArrowTrendUp : faArrowTrendDown },
+    {
+      label: t.salesThisMonth,
+      value: totalSales,
+      color: "#22c55e",
+      icon: faMoneyBillTrendUp,
+    },
+    {
+      label: t.purchasesThisMonth,
+      value: totalPurchases,
+      color: "#f97316",
+      icon: faCartPlus,
+    },
+    {
+      label: t.expensesThisMonth,
+      value: totalExpenses,
+      color: "#a855f7",
+      icon: faReceipt,
+    },
+    {
+      label: t.lossesThisMonth,
+      value: totalLosses,
+      color: "#ef4444",
+      icon: faTriangleExclamation,
+    },
+    {
+      label: t.netProfitLabel,
+      value: profit,
+      color: profit >= 0 ? "#22c55e" : "#ef4444",
+      icon: profit >= 0 ? faArrowTrendUp : faArrowTrendDown,
+    },
   ];
 
   const recent = [
@@ -104,7 +163,9 @@ export default function Dashboard({ setActiveTab, sub }) {
             key={c.label}
             style={{ borderTop: `4px solid ${c.color}` }}
           >
-            <div className="card-icon"><FontAwesomeIcon icon={c.icon} /></div>
+            <div className="card-icon">
+              <FontAwesomeIcon icon={c.icon} />
+            </div>
             <div className="card-body">
               <div className="card-label">{c.label}</div>
               <div className="card-value" style={{ color: c.color }}>
@@ -144,7 +205,10 @@ export default function Dashboard({ setActiveTab, sub }) {
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="#2a2a3a" />
-              <XAxis dataKey="month" tick={{ fill: "var(--muted)", fontSize: 12 }} />
+              <XAxis
+                dataKey="month"
+                tick={{ fill: "var(--muted)", fontSize: 12 }}
+              />
               <YAxis
                 tick={{ fill: "var(--muted)", fontSize: 12 }}
                 tickFormatter={(v) =>
@@ -161,10 +225,34 @@ export default function Dashboard({ setActiveTab, sub }) {
                 formatter={(v) => `KES ${v.toLocaleString()}`}
               />
               <Legend wrapperStyle={{ color: "var(--muted)", fontSize: 12 }} />
-              <Area type="monotone" dataKey="Sales" stroke="#22c55e" fill="url(#gSales)" strokeWidth={2} />
-              <Area type="monotone" dataKey="Expenses" stroke="#a855f7" fill="url(#gExp)" strokeWidth={2} />
-              <Area type="monotone" dataKey="Losses" stroke="#ef4444" fill="url(#gLoss)" strokeWidth={2} />
-              <Area type="monotone" dataKey="Profit" stroke="#3b82f6" fill="url(#gProfit)" strokeWidth={2} />
+              <Area
+                type="monotone"
+                dataKey="Sales"
+                stroke="#22c55e"
+                fill="url(#gSales)"
+                strokeWidth={2}
+              />
+              <Area
+                type="monotone"
+                dataKey="Expenses"
+                stroke="#a855f7"
+                fill="url(#gExp)"
+                strokeWidth={2}
+              />
+              <Area
+                type="monotone"
+                dataKey="Losses"
+                stroke="#ef4444"
+                fill="url(#gLoss)"
+                strokeWidth={2}
+              />
+              <Area
+                type="monotone"
+                dataKey="Profit"
+                stroke="#3b82f6"
+                fill="url(#gProfit)"
+                strokeWidth={2}
+              />
             </AreaChart>
           </ResponsiveContainer>
         </div>
@@ -178,15 +266,21 @@ export default function Dashboard({ setActiveTab, sub }) {
           </button>
         </div>
         {recent.length === 0 ? (
-          <div className="empty-state">
-            {t.noTransactions}
-          </div>
+          <div className="empty-state">{t.noTransactions}</div>
         ) : (
           <div className="recent-list">
             {recent.map((item, i) => (
               <div className="recent-row" key={i}>
                 <div className="recent-icon">
-                  <FontAwesomeIcon icon={item.type === "sale" ? faMoneyBillTrendUp : item.type === "purchase" ? faCartPlus : faReceipt} />
+                  <FontAwesomeIcon
+                    icon={
+                      item.type === "sale"
+                        ? faMoneyBillTrendUp
+                        : item.type === "purchase"
+                          ? faCartPlus
+                          : faReceipt
+                    }
+                  />
                 </div>
                 <div className="recent-info">
                   <div className="recent-desc">
@@ -196,7 +290,12 @@ export default function Dashboard({ setActiveTab, sub }) {
                       item.type}
                   </div>
                   <div className="recent-meta">
-                    {item.type === "sale" ? t.sales : item.type === "purchase" ? t.purchases : t.expenses} · {item.date || "-"}
+                    {item.type === "sale"
+                      ? t.sales
+                      : item.type === "purchase"
+                        ? t.purchases
+                        : t.expenses}{" "}
+                    · {item.date || "-"}
                   </div>
                 </div>
                 <div
@@ -212,21 +311,41 @@ export default function Dashboard({ setActiveTab, sub }) {
             ))}
           </div>
         )}
+      </div>
+      {/* end recent-section */}
 
-      </div>{/* end recent-section */}
-
-      {/* ── Plan-gated sections ── */}
+      {/*  Plan-gated sections  */}
       {sub && (
-        <div style={{ marginTop: 24, display: "flex", flexDirection: "column", gap: 12 }}>
-          <FeatureGate feature="combinedReporting" sub={sub} lockedLabel="Combined Branch Reports">
+        <div
+          style={{
+            marginTop: 24,
+            display: "flex",
+            flexDirection: "column",
+            gap: 12,
+          }}
+        >
+          <FeatureGate
+            feature="combinedReporting"
+            sub={sub}
+            lockedLabel="Combined Branch Reports"
+          >
             {/* Placeholder: real combined report component goes here */}
-            <div style={{ padding: 16, borderRadius: 10, background: "var(--bg2)", border: "1px solid var(--border)", fontSize: 13, color: "var(--muted)" }}>
-              Combined reporting across branches is enabled on your Business plan.
+            <div
+              style={{
+                padding: 16,
+                borderRadius: 10,
+                background: "var(--bg2)",
+                border: "1px solid var(--border)",
+                fontSize: 13,
+                color: "var(--muted)",
+              }}
+            >
+              Combined reporting across branches is enabled on your Business
+              plan.
             </div>
           </FeatureGate>
         </div>
       )}
-
     </div>
-  )
+  );
 }

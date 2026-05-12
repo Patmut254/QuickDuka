@@ -147,16 +147,20 @@ body {
     7px 7px;
 
   /* Gradient mask: fully visible on the RIGHT, transparent on the LEFT */
-  -webkit-mask-image: linear-gradient(to left,
-      rgba(0, 0, 0, 1) 0%,
-      rgba(0, 0, 0, 0.7) 30%,
-      rgba(0, 0, 0, 0.25) 60%,
-      rgba(0, 0, 0, 0) 85%);
-  mask-image: linear-gradient(to left,
-      rgba(0, 0, 0, 1) 0%,
-      rgba(0, 0, 0, 0.7) 30%,
-      rgba(0, 0, 0, 0.25) 60%,
-      rgba(0, 0, 0, 0) 85%);
+  -webkit-mask-image: linear-gradient(
+    to left,
+    rgba(0, 0, 0, 1) 0%,
+    rgba(0, 0, 0, 0.7) 30%,
+    rgba(0, 0, 0, 0.25) 60%,
+    rgba(0, 0, 0, 0) 85%
+  );
+  mask-image: linear-gradient(
+    to left,
+    rgba(0, 0, 0, 1) 0%,
+    rgba(0, 0, 0, 0.7) 30%,
+    rgba(0, 0, 0, 0.25) 60%,
+    rgba(0, 0, 0, 0) 85%
+  );
 
   animation: dotsPulse 8s ease-in-out infinite alternate;
 }
@@ -168,22 +172,28 @@ body {
   width: 100vw;
   height: 100vh;
 
-  background: radial-gradient(circle,
-      rgba(46, 204, 113, 0.15) 1px,
-      transparent 1px);
+  background: radial-gradient(
+    circle,
+    rgba(46, 204, 113, 0.15) 1px,
+    transparent 1px
+  );
   background-size: 48px 48px;
   background-position: 16px 16px;
 
-  -webkit-mask-image: linear-gradient(135deg,
-      rgba(0, 0, 0, 0) 0%,
-      rgba(0, 0, 0, 0.4) 40%,
-      rgba(0, 0, 0, 0.9) 70%,
-      rgba(0, 0, 0, 1) 100%);
-  mask-image: linear-gradient(135deg,
-      rgba(0, 0, 0, 0) 0%,
-      rgba(0, 0, 0, 0.4) 40%,
-      rgba(0, 0, 0, 0.9) 70%,
-      rgba(0, 0, 0, 1) 100%);
+  -webkit-mask-image: linear-gradient(
+    135deg,
+    rgba(0, 0, 0, 0) 0%,
+    rgba(0, 0, 0, 0.4) 40%,
+    rgba(0, 0, 0, 0.9) 70%,
+    rgba(0, 0, 0, 1) 100%
+  );
+  mask-image: linear-gradient(
+    135deg,
+    rgba(0, 0, 0, 0) 0%,
+    rgba(0, 0, 0, 0.4) 40%,
+    rgba(0, 0, 0, 0.9) 70%,
+    rgba(0, 0, 0, 1) 100%
+  );
 
   animation: dotsPulse 12s ease-in-out infinite alternate-reverse;
 }
@@ -220,9 +230,11 @@ body {
 
   .login-dots-br {
     background:
-      radial-gradient(circle,
+      radial-gradient(
+        circle,
         rgba(46, 204, 113, 0.18) 1.5px,
-        transparent 1.5px),
+        transparent 1.5px
+      ),
       radial-gradient(circle, rgba(26, 122, 60, 0.08) 2.5px, transparent 2.5px);
     background-size:
       48px 48px,
@@ -246,9 +258,11 @@ body {
 }
 
 [data-theme="dark"] .login-dots-br {
-  background: radial-gradient(circle,
-      rgba(46, 204, 113, 0.12) 1px,
-      transparent 1px);
+  background: radial-gradient(
+    circle,
+    rgba(46, 204, 113, 0.12) 1px,
+    transparent 1px
+  );
   background-size: 48px 48px;
   background-position: 16px 16px;
 }
@@ -262,9 +276,11 @@ body {
   left: -80px;
   width: 520px;
   height: 520px;
-  background: radial-gradient(circle at 35% 40%,
-      rgba(26, 122, 60, 0.1) 0%,
-      transparent 65%);
+  background: radial-gradient(
+    circle at 35% 40%,
+    rgba(26, 122, 60, 0.1) 0%,
+    transparent 65%
+  );
 }
 
 .login-blob::after {
@@ -274,9 +290,11 @@ body {
   right: -80px;
   width: 400px;
   height: 400px;
-  background: radial-gradient(circle at 60% 60%,
-      rgba(26, 122, 60, 0.07) 0%,
-      transparent 65%);
+  background: radial-gradient(
+    circle at 60% 60%,
+    rgba(26, 122, 60, 0.07) 0%,
+    transparent 65%
+  );
   display: block;
 }
 
@@ -549,7 +567,7 @@ body {
   gap: 5px;
 }
 
-.field-group>label {
+.field-group > label {
   font-size: 11.5px;
   font-weight: 700;
   color: var(--muted);
@@ -1717,16 +1735,20 @@ body {
   background-position:
     0 0,
     7px 7px;
-  -webkit-mask-image: linear-gradient(to left,
-      rgba(0, 0, 0, 1) 0%,
-      rgba(0, 0, 0, 0.7) 30%,
-      rgba(0, 0, 0, 0.2) 65%,
-      rgba(0, 0, 0, 0) 85%);
-  mask-image: linear-gradient(to left,
-      rgba(0, 0, 0, 1) 0%,
-      rgba(0, 0, 0, 0.7) 30%,
-      rgba(0, 0, 0, 0.2) 65%,
-      rgba(0, 0, 0, 0) 85%);
+  -webkit-mask-image: linear-gradient(
+    to left,
+    rgba(0, 0, 0, 1) 0%,
+    rgba(0, 0, 0, 0.7) 30%,
+    rgba(0, 0, 0, 0.2) 65%,
+    rgba(0, 0, 0, 0) 85%
+  );
+  mask-image: linear-gradient(
+    to left,
+    rgba(0, 0, 0, 1) 0%,
+    rgba(0, 0, 0, 0.7) 30%,
+    rgba(0, 0, 0, 0.2) 65%,
+    rgba(0, 0, 0, 0) 85%
+  );
   animation: dotsPulse 8s ease-in-out infinite alternate;
 }
 
@@ -1735,21 +1757,27 @@ body {
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: radial-gradient(circle,
-      rgba(46, 204, 113, 0.15) 1px,
-      transparent 1px);
+  background: radial-gradient(
+    circle,
+    rgba(46, 204, 113, 0.15) 1px,
+    transparent 1px
+  );
   background-size: 48px 48px;
   background-position: 16px 16px;
-  -webkit-mask-image: linear-gradient(135deg,
-      rgba(0, 0, 0, 0) 0%,
-      rgba(0, 0, 0, 0.4) 40%,
-      rgba(0, 0, 0, 0.9) 70%,
-      rgba(0, 0, 0, 1) 100%);
-  mask-image: linear-gradient(135deg,
-      rgba(0, 0, 0, 0) 0%,
-      rgba(0, 0, 0, 0.4) 40%,
-      rgba(0, 0, 0, 0.9) 70%,
-      rgba(0, 0, 0, 1) 100%);
+  -webkit-mask-image: linear-gradient(
+    135deg,
+    rgba(0, 0, 0, 0) 0%,
+    rgba(0, 0, 0, 0.4) 40%,
+    rgba(0, 0, 0, 0.9) 70%,
+    rgba(0, 0, 0, 1) 100%
+  );
+  mask-image: linear-gradient(
+    135deg,
+    rgba(0, 0, 0, 0) 0%,
+    rgba(0, 0, 0, 0.4) 40%,
+    rgba(0, 0, 0, 0.9) 70%,
+    rgba(0, 0, 0, 1) 100%
+  );
   animation: dotsPulse 12s ease-in-out infinite alternate-reverse;
 }
 
@@ -3192,9 +3220,11 @@ a[href^="tel:"]:hover {
 }
 
 [data-theme="dark"] .login-blob {
-  background: radial-gradient(circle at 30% 40%,
-      rgba(46, 204, 113, 0.07) 0%,
-      transparent 65%);
+  background: radial-gradient(
+    circle at 30% 40%,
+    rgba(46, 204, 113, 0.07) 0%,
+    transparent 65%
+  );
 }
 
 [data-theme="dark"] .login-card {
@@ -4592,7 +4622,7 @@ a[href^="tel:"]:hover {
 }
 
 /* Auth pages (login / register / referrer) → static below content */
-.login-page+.app-footer,
+.login-page + .app-footer,
 .app-footer:not(.app-shell .app-footer) {
   position: static;
   height: auto;
@@ -4615,7 +4645,6 @@ a[href^="tel:"]:hover {
 
 /* MOBILE OVERRIDES */
 @media (max-width: 768px) {
-
   /* On mobile, even inside app-shell, footer goes ABOVE mobile nav bar */
   .app-shell .app-footer {
     display: none;
@@ -4928,7 +4957,7 @@ a[href^="tel:"]:hover {
 }
 
 /* FIXES: INFO PAGE TABS */
-.info-page>div>button {
+.info-page > div > button {
   border-radius: 0;
 }
 
@@ -6531,7 +6560,7 @@ a[href^="tel:"]:hover {
   border: 1px solid #f5c898;
   color: var(--orange);
 }
-/* ── Prevent iOS/Android zoom on input focus ───────────────────────────── */
+/*  Prevent iOS/Android zoom on input focus*/
 /* iOS zooms when input font-size < 16px. This overrides all inputs globally */
 input,
 select,
