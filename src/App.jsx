@@ -126,7 +126,7 @@ async function resolveLoginEmail(input) {
     const q = query(collection(db, "users"), where("phone", "==", normalized));
     const snap = await getDocs(q);
     if (!snap.empty) return snap.docs[0].data().email;
-    return `${normalized.replace("+", "")}@quickduka.app`;
+    return `${normalized.replace("+", "")}@quickduka.com`;
   }
   return trimmed;
 }
@@ -595,7 +595,7 @@ export default function App() {
       if (
         !emailToReset ||
         !emailToReset.includes("@") ||
-        emailToReset.endsWith("@quickduka.app")
+        emailToReset.endsWith("@quickduka.com")
       ) {
         setResetStatus("error");
         setResetMsg(
