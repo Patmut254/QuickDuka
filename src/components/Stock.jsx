@@ -6,10 +6,10 @@ import { Toast, useToast } from "./Toast";
 import AlertDialog from "./AlertDialog";
 import FeatureGate from "./FeatureGate";
 
-export default function Stock({ sub }) {
+export default function Stock({ sub, ownerUid }) {
   const { t } = useLang();
   const { items, loading, addItem, deleteItem, updateItem } =
-    useCollection("stock");
+    useCollection("stock", ownerUid ? { ownerUid } : undefined);
   const { toast, showToast } = useToast();
 
   const emptyForm = { name: "", price: "", unit: "", notes: "" };

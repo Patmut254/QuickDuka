@@ -5,10 +5,10 @@ import { useLang } from "../LangContext";
 import EntryTable from "./EntryTable";
 import { Toast, useToast } from "./Toast";
 
-export default function Expenses() {
+export default function Expenses({ ownerUid }) {
   const { t } = useLang();
   const { items, loading, addItem, deleteItem, updateItem } =
-    useCollection("expenses");
+    useCollection("expenses", ownerUid ? { ownerUid } : undefined);
   const stock = useStock();
   const { toast, showToast } = useToast();
 

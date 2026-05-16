@@ -32,12 +32,12 @@ import {
 
 import FeatureGate from "./FeatureGate";
 
-export default function Dashboard({ setActiveTab, sub }) {
+export default function Dashboard({ setActiveTab, sub, ownerUid }) {
   const { t } = useLang();
-  const { items: sales } = useCollection("sales");
-  const { items: purchases } = useCollection("purchases");
-  const { items: expenses } = useCollection("expenses");
-  const { items: losses } = useCollection("losses");
+  const { items: sales } = useCollection("sales", ownerUid ? { ownerUid } : undefined);
+  const { items: purchases } = useCollection("purchases", ownerUid ? { ownerUid } : undefined);
+  const { items: expenses } = useCollection("expenses", ownerUid ? { ownerUid } : undefined);
+  const { items: losses } = useCollection("losses", ownerUid ? { ownerUid } : undefined);
 
   const now = new Date();
   const monthStart = startOfMonth(now);

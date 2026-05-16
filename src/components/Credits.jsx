@@ -22,7 +22,7 @@ import {
   faChartBar,
 } from "@fortawesome/free-solid-svg-icons";
 
-export default function Credits() {
+export default function Credits({ ownerUid }) {
   const { t } = useLang();
   const {
     items: credits,
@@ -30,7 +30,7 @@ export default function Credits() {
     addItem,
     deleteItem,
     updateItem,
-  } = useCollection("credits");
+  } = useCollection("credits", ownerUid ? { ownerUid } : undefined);
   const stock = useStock();
   const { toast, showToast } = useToast();
 

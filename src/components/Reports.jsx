@@ -10,12 +10,12 @@ import { format, parseISO, startOfMonth, endOfMonth, isWithinInterval } from "da
 
 const COLORS = ["#22c55e", "#f97316", "#a855f7", "#3b82f6", "#ec4899", "#14b8a6"];
 
-export default function Reports() {
+export default function Reports({ ownerUid }) {
   const { t } = useLang();
-  const { items: sales } = useCollection("sales");
-  const { items: purchases } = useCollection("purchases");
-  const { items: expenses } = useCollection("expenses");
-  const { items: losses } = useCollection("losses");
+  const { items: sales } = useCollection("sales", ownerUid ? { ownerUid } : undefined);
+  const { items: purchases } = useCollection("purchases", ownerUid ? { ownerUid } : undefined);
+  const { items: expenses } = useCollection("expenses", ownerUid ? { ownerUid } : undefined);
+  const { items: losses } = useCollection("losses", ownerUid ? { ownerUid } : undefined);
 
   const [selectedMonth, setSelectedMonth] = useState(format(new Date(), "yyyy-MM"));
 

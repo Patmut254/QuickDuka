@@ -39,10 +39,7 @@ async function logAction(
   }
 }
 
-export function useCollection(
-  collectionName,
-  { ownerUid: overrideOwnerUid } = {},
-) {
+export function useCollection(collectionName, { ownerUid: overrideOwnerUid } = {}) {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [uid, setUid] = useState(null);
@@ -68,10 +65,7 @@ export function useCollection(
     // Normal mode: query by userId (staff querying their own entries)
     const queryUid = overrideOwnerUid || uid;
     const queryField = overrideOwnerUid ? "ownerUid" : "userId";
-    const q = query(
-      collection(db, collectionName),
-      where(queryField, "==", queryUid),
-    );
+    const q = query(collection(db, collectionName), where(queryField, "==", queryUid));
 
     // Real-time listener — updates immediately without any reload
     const unsub = onSnapshot(
@@ -94,10 +88,10 @@ export function useCollection(
     );
 
     return unsub;
-    // ✅ FIX 1: Added overrideOwnerUid to the dependency array so the query
-    // re-runs correctly when switching between owner and staff context.
-    // Previously missing, causing the hook to use stale query field/value
-    // and making owner-mode data appear invisible after re-renders.
+  // ✅ FIX 1: Added overrideOwnerUid to the dependency array so the query
+  // re-runs correctly when switching between owner and staff context.
+  // Previously missing, causing the hook to use stale query field/value
+  // and making owner-mode data appear invisible after re-renders.
   }, [collectionName, uid, overrideOwnerUid]);
 
   // addItem

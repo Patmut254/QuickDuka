@@ -474,17 +474,17 @@ function AppShell({ user, profile, theme, toggleTheme }) {
 
           <div className="page-body">
             {activeTab === "dashboard" && (
-              <Dashboard setActiveTab={handleTabChange} sub={sub} />
+              <Dashboard setActiveTab={handleTabChange} sub={sub} ownerUid={user.uid} />
             )}
             {activeTab === "sales" && <Sales ownerUid={user.uid} />}
-            {activeTab === "credits" && <Credits />}
-            {activeTab === "purchases" && <Purchases />}
-            {activeTab === "expenses" && <Expenses />}
-            {activeTab === "losses" && <Losses />}
+            {activeTab === "credits" && <Credits ownerUid={user.uid} />}
+            {activeTab === "purchases" && <Purchases ownerUid={user.uid} />}
+            {activeTab === "expenses" && <Expenses ownerUid={user.uid} />}
+            {activeTab === "losses" && <Losses ownerUid={user.uid} />}
             {activeTab === "team" && <StaffPage sub={sub} profile={profile} />}
             {activeTab === "branches" && <BranchesPage sub={sub} />}
-            {activeTab === "stock" && <Stock sub={sub} />}
-            {activeTab === "reports" && <Reports />}
+            {activeTab === "stock" && <Stock sub={sub} ownerUid={user.uid} />}
+            {activeTab === "reports" && <Reports ownerUid={user.uid} />}
             {activeTab === "history" && <History />}
             {activeTab === "profile" && (
               <ProfilePage user={user} profile={profile} />
