@@ -39,7 +39,10 @@ async function logAction(
   }
 }
 
-export function useCollection(collectionName, { ownerUid: overrideOwnerUid } = {}) {
+export function useCollection(
+  collectionName,
+  { ownerUid: overrideOwnerUid } = {},
+) {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [uid, setUid] = useState(null);
@@ -65,7 +68,10 @@ export function useCollection(collectionName, { ownerUid: overrideOwnerUid } = {
     // Normal mode: query by userId (staff querying their own entries)
     const queryUid = overrideOwnerUid || uid;
     const queryField = overrideOwnerUid ? "ownerUid" : "userId";
-    const q = query(collection(db, collectionName), where(queryField, "==", queryUid));
+    const q = query(
+      collection(db, collectionName),
+      where(queryField, "==", queryUid),
+    );
 
     // Real-time listener — updates immediately without any reload
     const unsub = onSnapshot(
@@ -88,7 +94,11 @@ export function useCollection(collectionName, { ownerUid: overrideOwnerUid } = {
     );
 
     return unsub;
-  }, [collectionName, uid]);
+    // ✅ FIX 1: Added overrideOwnerUid to the dependency array so the query
+    // re-runs correctly when switching between owner and staff context.
+    // Previously missing, causing the hook to use stale query field/value
+    // and making owner-mode data appear invisible after re-renders.
+  }, [collectionName, uid, overrideOwnerUid]);
 
   // addItem
   // ownerUid is stamped on every record so the business owner can query
@@ -145,10 +155,15 @@ export function useCollection(collectionName, { ownerUid: overrideOwnerUid } = {
   // clearCollection
   // Deletes all user's docs in a collection WITHOUT writing audit entries.
   // Used by History to wipe the auditLog itself.
+  // ✅ FIX 2: Now respects ownerUid mode so it queries by the correct field,
+  // matching the same records that are visible in the UI. Previously always
+  // queried by userId which would miss staff entries in owner-mode context.
   const clearCollection = async (overrideName) => {
     const target = overrideName || collectionName;
     if (!uid) return;
-    const q = query(collection(db, target), where("userId", "==", uid));
+    const queryField = overrideOwnerUid ? "ownerUid" : "userId";
+    const queryUid = overrideOwnerUid || uid;
+    const q = query(collection(db, target), where(queryField, "==", queryUid));
     const snap = await getDocs(q);
     const deletes = snap.docs.map((d) => deleteDoc(doc(db, target, d.id)));
     await Promise.all(deletes);
