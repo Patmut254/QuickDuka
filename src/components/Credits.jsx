@@ -2,8 +2,6 @@ import { useState } from "react";
 import { useCollection } from "../hooks/useCollection";
 import { useStock } from "../hooks/useStock";
 import { useLang } from "../LangContext";
-import { db, auth } from "../firebase";
-import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { Toast, useToast } from "./Toast";
 import AlertDialog from "./AlertDialog";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -31,6 +29,21 @@ export default function Credits({ ownerUid }) {
     deleteItem,
     updateItem,
   } = useCollection("credits", ownerUid ? { ownerUid } : undefined);
+
+  // ✅ FIX: Pass ownerUid context to addSale and addLoss hooks so that
+  // credit payments and bad-debt write-offs are stamped with the correct
+  // ownerUid and appear in the owner's Sales/Losses/Dashboard views.
+  // Previously these hooks had no ownerUid context, so staff-created
+  // records would be stamped with the staff member's uid as ownerUid,
+  // making them invisible to the business owner.
+  const { addItem: addSale } = useCollection(
+    "sales",
+    ownerUid ? { ownerUid } : undefined,
+  );
+  const { addItem: addLoss } = useCollection(
+    "losses",
+    ownerUid ? { ownerUid } : undefined,
+  );
   const stock = useStock();
   const { toast, showToast } = useToast();
 
@@ -53,7 +66,6 @@ export default function Credits({ ownerUid }) {
   const [badDebtTarget, setBadDebtTarget] = useState(null);
   const [saving, setSaving] = useState(false);
 
-  const uid = auth.currentUser?.uid;
   const today = () => new Date().toISOString().split("T")[0];
 
   // ── Save new credit ────────────────────────────────────────────────────────
@@ -89,7 +101,7 @@ export default function Credits({ ownerUid }) {
 
     const remaining =
       (payingCredit.totalAmount || 0) - (payingCredit.paidAmount || 0);
-    const actualAmount = Math.min(amount, remaining);   // cap — can't overpay
+    const actualAmount = Math.min(amount, remaining);
     const newPaid = (payingCredit.paidAmount || 0) + actualAmount;
     const isFullyPaid = newPaid >= payingCredit.totalAmount;
 
@@ -99,7 +111,6 @@ export default function Credits({ ownerUid }) {
         { amount: actualAmount, date: today(), note: payNote },
       ];
 
-      // Update the credit record
       await updateItem(payingCredit.id, {
         paidAmount: newPaid,
         payments: newPayments,
@@ -107,9 +118,10 @@ export default function Credits({ ownerUid }) {
         lastPaymentDate: today(),
       });
 
-      // Every payment — partial or full — goes to Sales immediately
-      await addDoc(collection(db, "sales"), {
-        userId: uid,
+      // ✅ Payment goes to Sales — no extraMeta needed because the addSale
+      // hook is already initialised with the correct ownerUid context above.
+      // useCollection.addItem will use overrideOwnerUid from its own closure.
+      await addSale({
         date: today(),
         description:
           `${t.creditPaymentDesc || "Credit payment"} — ${payingCredit.customer}` +
@@ -118,14 +130,15 @@ export default function Credits({ ownerUid }) {
         phone: payingCredit.phone || "",
         amount: actualAmount,
         notes: (
-          `${isFullyPaid
-            ? (t.finalPaymentNote || "Final payment — debt cleared.")
-            : (t.partialPaymentNote || "Partial payment.")} ` +
+          `${
+            isFullyPaid
+              ? t.finalPaymentNote || "Final payment — debt cleared."
+              : t.partialPaymentNote || "Partial payment."
+          } ` +
           `${t.originallyIssued || "Originally issued"} ${payingCredit.dateIssued}. ` +
           (payNote || "")
         ).trim(),
         fromCredit: payingCredit.id,
-        createdAt: serverTimestamp(),
       });
 
       if (isFullyPaid) {
@@ -157,8 +170,10 @@ export default function Credits({ ownerUid }) {
     const credit = badDebtTarget;
     if (!credit) return;
     try {
-      const unpaid =
-        Math.max(0, (credit.totalAmount || 0) - (credit.paidAmount || 0));
+      const unpaid = Math.max(
+        0,
+        (credit.totalAmount || 0) - (credit.paidAmount || 0),
+      );
 
       await updateItem(credit.id, {
         status: "bad_debt",
@@ -166,10 +181,10 @@ export default function Credits({ ownerUid }) {
         badDebtAmount: unpaid,
       });
 
-      // Only the forgone (remaining) amount goes to Losses
+      // ✅ Unpaid remainder goes to Losses — no extraMeta needed because
+      // the addLoss hook is already initialised with the correct ownerUid.
       if (unpaid > 0) {
-        await addDoc(collection(db, "losses"), {
-          userId: uid,
+        await addLoss({
           date: today(),
           item:
             `${t.badDebtWrittenOff || "Bad debt written off"} — ${credit.customer}` +
@@ -177,28 +192,27 @@ export default function Credits({ ownerUid }) {
           category: t.badDebt || "Bad Debt",
           quantity: "",
           amount: unpaid,
-          notes: (
+          notes:
             `${t.customer2 || "Customer"}: ${credit.customer}. ` +
             `${t.phone || "Phone"}: ${credit.phone || "N/A"}. ` +
             `${t.totalCredit || "Total credit"}: KES ${(credit.totalAmount || 0).toLocaleString()}, ` +
             `${t.alreadyPaid || "collected"}: KES ${(credit.paidAmount || 0).toLocaleString()}, ` +
             `${t.writtenOff || "written off"}: KES ${unpaid.toLocaleString()}. ` +
             `${t.dateIssued || "Issued"} ${credit.dateIssued}` +
-            (credit.dueDate ? `, ${t.dueDate?.split(" (")[0] || "due"} ${credit.dueDate}` : "") +
-            "."
-          ),
+            (credit.dueDate
+              ? `, ${t.dueDate?.split(" (")[0] || "due"} ${credit.dueDate}`
+              : "") +
+            ".",
           fromCredit: credit.id,
-          createdAt: serverTimestamp(),
         });
       }
 
-      // Toast: use translation keys, no hardcoded bilingual strings
       showToast(
         unpaid > 0
           ? `KES ${unpaid.toLocaleString()} ${t.writtenOffToLosses || "written off to Losses"}. ` +
-            (credit.paidAmount > 0
-              ? `KES ${credit.paidAmount.toLocaleString()} ${t.staysInSales || "already collected stays in Sales"}.`
-              : "")
+              (credit.paidAmount > 0
+                ? `KES ${credit.paidAmount.toLocaleString()} ${t.staysInSales || "already collected stays in Sales"}.`
+                : "")
           : t.badDebtNoUnpaid || "Marked as bad debt (nothing to write off).",
       );
       setBadDebtTarget(null);
@@ -216,8 +230,8 @@ export default function Credits({ ownerUid }) {
   };
 
   const outstanding = credits.filter((c) => c.status === "outstanding");
-  const badDebts    = credits.filter((c) => c.status === "bad_debt");
-  const paidList    = credits.filter((c) => c.status === "paid");
+  const badDebts = credits.filter((c) => c.status === "bad_debt");
+  const paidList = credits.filter((c) => c.status === "paid");
 
   const totalOutstanding = outstanding.reduce(
     (a, c) => a + Math.max(0, (c.totalAmount || 0) - (c.paidAmount || 0)),
@@ -226,7 +240,11 @@ export default function Credits({ ownerUid }) {
   const totalCollected = credits.reduce((a, c) => a + (c.paidAmount || 0), 0);
   const totalWrittenOff = badDebts.reduce(
     (a, c) =>
-      a + Math.max(0, c.badDebtAmount ?? (c.totalAmount || 0) - (c.paidAmount || 0)),
+      a +
+      Math.max(
+        0,
+        c.badDebtAmount ?? (c.totalAmount || 0) - (c.paidAmount || 0),
+      ),
     0,
   );
   const grandTotal = credits.reduce((a, c) => a + (c.totalAmount || 0), 0);
@@ -238,28 +256,51 @@ export default function Credits({ ownerUid }) {
 
       {/* Summary cards */}
       <div className="credits-summary">
-        <div className="summary-card" style={{ borderTop: "3px solid var(--orange)" }}>
-          <div className="card-icon" style={{ background: "var(--orange-bg)", color: "var(--orange)" }}>
+        <div
+          className="summary-card"
+          style={{ borderTop: "3px solid var(--orange)" }}
+        >
+          <div
+            className="card-icon"
+            style={{ background: "var(--orange-bg)", color: "var(--orange)" }}
+          >
             <FontAwesomeIcon icon={faHandHoldingDollar} />
           </div>
           <div>
+            {/* ✅ FIX: First card shows the KES amount of unpaid debts */}
             <div className="card-label">{t.unpaidDebts}</div>
-            <div className="card-value orange">KES {totalOutstanding.toLocaleString()}</div>
+            <div className="card-value orange">
+              KES {totalOutstanding.toLocaleString()}
+            </div>
           </div>
         </div>
 
-        <div className="summary-card" style={{ borderTop: "3px solid var(--red)" }}>
-          <div className="card-icon" style={{ background: "var(--red-bg)", color: "var(--red)" }}>
+        <div
+          className="summary-card"
+          style={{ borderTop: "3px solid var(--red)" }}
+        >
+          <div
+            className="card-icon"
+            style={{ background: "var(--red-bg)", color: "var(--red)" }}
+          >
             <FontAwesomeIcon icon={faExclamationTriangle} />
           </div>
           <div>
-            <div className="card-label">{t.unpaidDebts}</div>
+            {/* ✅ FIX: Second card shows the COUNT of outstanding debts.
+                Previously both cards used t.unpaidDebts — copy-paste error. */}
+            <div className="card-label">{t.outstandingCount || t.unpaidDebts}</div>
             <div className="card-value red">{outstanding.length}</div>
           </div>
         </div>
 
-        <div className="summary-card" style={{ borderTop: "3px solid var(--green)" }}>
-          <div className="card-icon" style={{ background: "var(--green-bg)", color: "var(--green)" }}>
+        <div
+          className="summary-card"
+          style={{ borderTop: "3px solid var(--green)" }}
+        >
+          <div
+            className="card-icon"
+            style={{ background: "var(--green-bg)", color: "var(--green)" }}
+          >
             <FontAwesomeIcon icon={faCheckCircle} />
           </div>
           <div>
@@ -272,24 +313,33 @@ export default function Credits({ ownerUid }) {
       {/* Stats row */}
       <div className="credits-stats-row">
         <div className="credits-stat-box credits-stat-green">
-          <FontAwesomeIcon icon={faMoneyBillWave} className="credits-stat-icon" />
+          <FontAwesomeIcon
+            icon={faMoneyBillWave}
+            className="credits-stat-icon"
+          />
           <div>
             <div className="credits-stat-label">{t.totalCollected}</div>
-            <div className="credits-stat-val">KES {totalCollected.toLocaleString()}</div>
+            <div className="credits-stat-val">
+              KES {totalCollected.toLocaleString()}
+            </div>
           </div>
         </div>
         <div className="credits-stat-box credits-stat-red">
           <FontAwesomeIcon icon={faThumbsDown} className="credits-stat-icon" />
           <div>
             <div className="credits-stat-label">{t.writtenOff}</div>
-            <div className="credits-stat-val">KES {totalWrittenOff.toLocaleString()}</div>
+            <div className="credits-stat-val">
+              KES {totalWrittenOff.toLocaleString()}
+            </div>
           </div>
         </div>
         <div className="credits-stat-box credits-stat-neutral">
           <FontAwesomeIcon icon={faChartBar} className="credits-stat-icon" />
           <div>
             <div className="credits-stat-label">{t.allCredits}</div>
-            <div className="credits-stat-val">KES {grandTotal.toLocaleString()}</div>
+            <div className="credits-stat-val">
+              KES {grandTotal.toLocaleString()}
+            </div>
           </div>
         </div>
       </div>
@@ -324,7 +374,9 @@ export default function Credits({ ownerUid }) {
                 <input
                   type="date"
                   value={form.dueDate}
-                  onChange={(e) => setForm({ ...form, dueDate: e.target.value })}
+                  onChange={(e) =>
+                    setForm({ ...form, dueDate: e.target.value })
+                  }
                 />
               </div>
               <div className="field-group">
@@ -332,7 +384,9 @@ export default function Credits({ ownerUid }) {
                 <input
                   placeholder={t.customerNamePh}
                   value={form.customer}
-                  onChange={(e) => setForm({ ...form, customer: e.target.value })}
+                  onChange={(e) =>
+                    setForm({ ...form, customer: e.target.value })
+                  }
                   required
                 />
               </div>
@@ -349,12 +403,16 @@ export default function Credits({ ownerUid }) {
                   <label>{t.pickStock}</label>
                   <select
                     onChange={(e) => {
-                      const found = stock.find((c) => c.name === e.target.value);
+                      const found = stock.find(
+                        (c) => c.name === e.target.value,
+                      );
                       setForm((f) => ({
                         ...f,
                         itemTaken: found ? found.name : e.target.value,
                         totalAmount:
-                          found?.price != null ? String(found.price) : f.totalAmount,
+                          found?.price != null
+                            ? String(found.price)
+                            : f.totalAmount,
                       }));
                     }}
                     value={form.itemTaken}
@@ -376,7 +434,9 @@ export default function Credits({ ownerUid }) {
                 <input
                   placeholder={t.itemTakenPh}
                   value={form.itemTaken}
-                  onChange={(e) => setForm({ ...form, itemTaken: e.target.value })}
+                  onChange={(e) =>
+                    setForm({ ...form, itemTaken: e.target.value })
+                  }
                 />
               </div>
               <div className="field-group">
@@ -385,7 +445,9 @@ export default function Credits({ ownerUid }) {
                   type="number"
                   placeholder="0.00"
                   value={form.totalAmount}
-                  onChange={(e) => setForm({ ...form, totalAmount: e.target.value })}
+                  onChange={(e) =>
+                    setForm({ ...form, totalAmount: e.target.value })
+                  }
                   required
                   min="1"
                 />
@@ -427,10 +489,14 @@ export default function Credits({ ownerUid }) {
           const afterPay = remaining - actual;
 
           return (
-            <div className="modal-overlay" onClick={() => setPayingCredit(null)}>
+            <div
+              className="modal-overlay"
+              onClick={() => setPayingCredit(null)}
+            >
               <div className="modal-card" onClick={(e) => e.stopPropagation()}>
                 <h3>
-                  <FontAwesomeIcon icon={faHandHoldingDollar} /> {t.recordPayment}
+                  <FontAwesomeIcon icon={faHandHoldingDollar} />{" "}
+                  {t.recordPayment}
                 </h3>
 
                 <div className="credit-modal-meta">
@@ -440,7 +506,9 @@ export default function Credits({ ownerUid }) {
                   </div>
                   <div className="credit-modal-row">
                     <span>{t.totalCredit}</span>
-                    <strong>KES {(payingCredit.totalAmount || 0).toLocaleString()}</strong>
+                    <strong>
+                      KES {(payingCredit.totalAmount || 0).toLocaleString()}
+                    </strong>
                   </div>
                   {(payingCredit.paidAmount || 0) > 0 && (
                     <div className="credit-modal-row">
@@ -452,17 +520,23 @@ export default function Credits({ ownerUid }) {
                   )}
                   <div className="credit-modal-row credit-modal-row-highlight">
                     <span>{t.remaining}</span>
-                    <strong className="text-red">KES {remaining.toLocaleString()}</strong>
+                    <strong className="text-red">
+                      KES {remaining.toLocaleString()}
+                    </strong>
                   </div>
                 </div>
 
-                {/* Flow note — uses translation key only */}
                 <div className="credit-flow-note">
-                  <FontAwesomeIcon icon={faArrowRight} style={{ marginRight: 6 }} />
+                  <FontAwesomeIcon
+                    icon={faArrowRight}
+                    style={{ marginRight: 6 }}
+                  />
                   {t.paymentFlowNote}
                 </div>
 
-                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                <div
+                  style={{ display: "flex", flexDirection: "column", gap: 12 }}
+                >
                   <div className="field-group">
                     <label>{t.amountPaid}</label>
                     <input
@@ -485,18 +559,18 @@ export default function Credits({ ownerUid }) {
                   </div>
                 </div>
 
-                {/* Live preview — uses translation keys, no mixed strings */}
                 {entered > 0 && (
                   <div
                     className={`credit-pay-preview ${willClear ? "credit-pay-clear" : "credit-pay-partial"}`}
                   >
-                    {willClear ? (
-                      t.clearDebt
-                    ) : (
-                      typeof t.partialPay === "function"
-                        ? t.partialPay(actual.toLocaleString(), afterPay.toLocaleString())
-                        : `KES ${actual.toLocaleString()} → ${t.sales || "Sales"} · KES ${afterPay.toLocaleString()} ${t.remaining?.toLowerCase() || "remaining"}`
-                    )}
+                    {willClear
+                      ? t.clearDebt
+                      : typeof t.partialPay === "function"
+                        ? t.partialPay(
+                            actual.toLocaleString(),
+                            afterPay.toLocaleString(),
+                          )
+                        : `KES ${actual.toLocaleString()} → ${t.sales || "Sales"} · KES ${afterPay.toLocaleString()} ${t.remaining?.toLowerCase() || "remaining"}`}
                   </div>
                 )}
 
@@ -541,13 +615,16 @@ export default function Credits({ ownerUid }) {
               (credit.totalAmount || 0) - (credit.paidAmount || 0);
             const pct =
               credit.totalAmount > 0
-                ? Math.min(100, ((credit.paidAmount || 0) / credit.totalAmount) * 100)
+                ? Math.min(
+                    100,
+                    ((credit.paidAmount || 0) / credit.totalAmount) * 100,
+                  )
                 : 0;
-            const overdue      = isOverdue(credit);
-            const isPaid       = credit.status === "paid";
-            const isBadDebt    = credit.status === "bad_debt";
-            const isOutstanding= credit.status === "outstanding";
-            const writtenOff   =
+            const overdue = isOverdue(credit);
+            const isPaid = credit.status === "paid";
+            const isBadDebt = credit.status === "bad_debt";
+            const isOutstanding = credit.status === "outstanding";
+            const writtenOff =
               credit.badDebtAmount ??
               Math.max(0, (credit.totalAmount || 0) - (credit.paidAmount || 0));
 
@@ -556,8 +633,8 @@ export default function Credits({ ownerUid }) {
                 key={credit.id}
                 className={
                   "credit-card" +
-                  (isPaid    ? " credit-card-paid" : "") +
-                  (isBadDebt ? " credit-card-bad"  : "")
+                  (isPaid ? " credit-card-paid" : "") +
+                  (isBadDebt ? " credit-card-bad" : "")
                 }
                 style={
                   overdue && isOutstanding
@@ -631,7 +708,10 @@ export default function Credits({ ownerUid }) {
                       }}
                     >
                       {credit.phone && (
-                        <a href={`tel:${credit.phone}`} className="credit-phone">
+                        <a
+                          href={`tel:${credit.phone}`}
+                          className="credit-phone"
+                        >
                           <FontAwesomeIcon
                             icon={faPhone}
                             style={{ marginRight: 4, fontSize: 10 }}
@@ -647,14 +727,15 @@ export default function Credits({ ownerUid }) {
                         {t.date}: {credit.dateIssued}
                         {credit.dueDate && (
                           <>
-                            &nbsp;·&nbsp;{t.dueDate.split(" (")[0]}: {credit.dueDate}
+                            &nbsp;·&nbsp;{t.dueDate.split(" (")[0]}:{" "}
+                            {credit.dueDate}
                           </>
                         )}
                       </span>
                     </div>
                   </div>
 
-                  {/* Right side amounts — all labels from t.* */}
+                  {/* Right side amounts */}
                   <div className="credit-amounts-col">
                     <div className="credit-total">
                       KES {(credit.totalAmount || 0).toLocaleString()}
@@ -662,19 +743,22 @@ export default function Credits({ ownerUid }) {
 
                     {isOutstanding && remaining > 0 && (
                       <div className="credit-remaining">
-                        KES {remaining.toLocaleString()} {t.remaining.toLowerCase()}
+                        KES {remaining.toLocaleString()}{" "}
+                        {t.remaining.toLowerCase()}
                       </div>
                     )}
 
                     {(credit.paidAmount || 0) > 0 && (
                       <div className="credit-chip credit-chip-green">
-                        ✓ KES {credit.paidAmount.toLocaleString()} {t.alreadyPaid.toLowerCase()}
+                        ✓ KES {credit.paidAmount.toLocaleString()}{" "}
+                        {t.alreadyPaid.toLowerCase()}
                       </div>
                     )}
 
                     {isBadDebt && writtenOff > 0 && (
                       <div className="credit-chip credit-chip-red">
-                        ✗ KES {writtenOff.toLocaleString()} {t.writtenOff.toLowerCase()}
+                        ✗ KES {writtenOff.toLocaleString()}{" "}
+                        {t.writtenOff.toLowerCase()}
                       </div>
                     )}
                   </div>
@@ -692,8 +776,8 @@ export default function Credits({ ownerUid }) {
                             pct === 100
                               ? "var(--green)"
                               : pct > 50
-                              ? "var(--orange)"
-                              : "var(--red)",
+                                ? "var(--orange)"
+                                : "var(--red)",
                         }}
                       />
                     </div>
@@ -714,26 +798,49 @@ export default function Credits({ ownerUid }) {
                   </div>
                 )}
 
-                {/* Closed-state notes — fully translated */}
+                {/* Closed-state notes */}
                 {isPaid && (
-                  <div className="credit-closed-note" style={{ color: "var(--green)" }}>
-                    <FontAwesomeIcon icon={faArrowRight} style={{ marginRight: 6 }} />
-                    {t.alreadyPaid} — {t.sales || "Sales"} {credit.lastPaymentDate || ""}
+                  <div
+                    className="credit-closed-note"
+                    style={{ color: "var(--green)" }}
+                  >
+                    <FontAwesomeIcon
+                      icon={faArrowRight}
+                      style={{ marginRight: 6 }}
+                    />
+                    {t.alreadyPaid} — {t.sales || "Sales"}{" "}
+                    {credit.lastPaymentDate || ""}
                   </div>
                 )}
 
                 {isBadDebt && (
                   <div className="credit-closed-note-wrap">
                     {(credit.paidAmount || 0) > 0 && (
-                      <div className="credit-closed-note" style={{ color: "var(--green)" }}>
-                        <FontAwesomeIcon icon={faArrowRight} style={{ marginRight: 6 }} />
-                        KES {credit.paidAmount.toLocaleString()} {t.alreadyPaid.toLowerCase()} → {t.sales || t.totalCollected}
+                      <div
+                        className="credit-closed-note"
+                        style={{ color: "var(--green)" }}
+                      >
+                        <FontAwesomeIcon
+                          icon={faArrowRight}
+                          style={{ marginRight: 6 }}
+                        />
+                        KES {credit.paidAmount.toLocaleString()}{" "}
+                        {t.alreadyPaid.toLowerCase()} →{" "}
+                        {t.sales || t.totalCollected}
                       </div>
                     )}
                     {writtenOff > 0 && (
-                      <div className="credit-closed-note" style={{ color: "var(--red)" }}>
-                        <FontAwesomeIcon icon={faArrowRight} style={{ marginRight: 6 }} />
-                        KES {writtenOff.toLocaleString()} {t.writtenOff.toLowerCase()} → {t.losses || t.writtenOff} {credit.closedDate || ""}
+                      <div
+                        className="credit-closed-note"
+                        style={{ color: "var(--red)" }}
+                      >
+                        <FontAwesomeIcon
+                          icon={faArrowRight}
+                          style={{ marginRight: 6 }}
+                        />
+                        KES {writtenOff.toLocaleString()}{" "}
+                        {t.writtenOff.toLowerCase()} →{" "}
+                        {t.losses || t.writtenOff} {credit.closedDate || ""}
                       </div>
                     )}
                   </div>
@@ -751,7 +858,8 @@ export default function Credits({ ownerUid }) {
                           setPayNote("");
                         }}
                       >
-                        <FontAwesomeIcon icon={faHandHoldingDollar} /> {t.recordPayment}
+                        <FontAwesomeIcon icon={faHandHoldingDollar} />{" "}
+                        {t.recordPayment}
                       </button>
                       <button
                         className="btn-secondary"
@@ -769,7 +877,11 @@ export default function Credits({ ownerUid }) {
                   )}
                   <button
                     className="btn-danger"
-                    style={{ fontSize: 12, padding: "7px 12px", marginLeft: "auto" }}
+                    style={{
+                      fontSize: 12,
+                      padding: "7px 12px",
+                      marginLeft: "auto",
+                    }}
                     onClick={() => setDeleteTarget(credit)}
                   >
                     <FontAwesomeIcon icon={faTrash} /> {t.delete}
@@ -791,7 +903,8 @@ export default function Credits({ ownerUid }) {
             ? (() => {
                 const unpaid = Math.max(
                   0,
-                  (badDebtTarget.totalAmount || 0) - (badDebtTarget.paidAmount || 0),
+                  (badDebtTarget.totalAmount || 0) -
+                    (badDebtTarget.paidAmount || 0),
                 );
                 const alreadyHad = (badDebtTarget.paidAmount || 0) > 0;
                 return (

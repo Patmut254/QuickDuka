@@ -16,7 +16,6 @@ import {
 import { onAuthStateChanged } from "firebase/auth";
 
 // Audit logger
-// Writes a record to the "auditLog" collection so History.jsx can display it.
 async function logAction(
   uid,
   collectionName,
@@ -27,19 +26,21 @@ async function logAction(
     await addDoc(collection(db, "auditLog"), {
       userId: uid,
       collectionName,
-      action, // "CREATE" | "UPDATE" | "DELETE" | "RESTORE"
+      action,
       before,
       after,
       description,
       timestamp: serverTimestamp(),
     });
   } catch (err) {
-    // Never let audit failures crash the main operation
     console.warn("Audit log write failed:", err.message);
   }
 }
 
-export function useCollection(collectionName, { ownerUid: overrideOwnerUid } = {}) {
+export function useCollection(
+  collectionName,
+  { ownerUid: overrideOwnerUid } = {},
+) {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [uid, setUid] = useState(null);
@@ -60,50 +61,106 @@ export function useCollection(collectionName, { ownerUid: overrideOwnerUid } = {
 
     setLoading(true);
 
-    // ownerUid mode: owner queries all records tagged with their uid as ownerUid
-    // (captures their own entries + all staff entries for their business)
-    // Normal mode: query by userId (staff querying their own entries)
+    // ✅ FIX: Run TWO parallel queries and merge results.
+    //
+    // Query A — the primary query:
+    //   • Owner mode (overrideOwnerUid set): ownerUid == ownerUid
+    //   • Staff mode (no override):          userId   == uid
+    //
+    // Query B — the legacy fallback:
+    //   • Always queries userId == uid
+    //   This catches records written before the ownerUid stamping fix
+    //   was deployed. Those records have no ownerUid field so they never
+    //   match Query A, making them invisible on the dashboard.
+    //   Merging by document id deduplicates any overlap.
+
     const queryUid = overrideOwnerUid || uid;
     const queryField = overrideOwnerUid ? "ownerUid" : "userId";
-    const q = query(collection(db, collectionName), where(queryField, "==", queryUid));
 
-    // Real-time listener — updates immediately without any reload
-    const unsub = onSnapshot(
-      q,
-      (snap) => {
-        const docs = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-        // Sort newest-first by createdAt (Firestore Timestamp or missing)
-        docs.sort((a, b) => {
-          const ta = a.createdAt?.toMillis?.() ?? 0;
-          const tb = b.createdAt?.toMillis?.() ?? 0;
-          return tb - ta;
+    const qPrimary = query(
+      collection(db, collectionName),
+      where(queryField, "==", queryUid),
+    );
+
+    // Legacy fallback: records stamped with userId but missing ownerUid
+    const qLegacy = overrideOwnerUid
+      ? query(collection(db, collectionName), where("userId", "==", uid))
+      : null;
+
+    // Merge helper — deduplicates by document id and sorts newest-first
+    const merge = (snapA, snapB) => {
+      const map = new Map();
+      snapA.docs.forEach((d) => map.set(d.id, { id: d.id, ...d.data() }));
+      if (snapB) {
+        snapB.docs.forEach((d) => {
+          if (!map.has(d.id)) map.set(d.id, { id: d.id, ...d.data() });
         });
-        setItems(docs);
+      }
+      const docs = Array.from(map.values());
+      docs.sort((a, b) => {
+        const ta = a.createdAt?.toMillis?.() ?? 0;
+        const tb = b.createdAt?.toMillis?.() ?? 0;
+        return tb - ta;
+      });
+      return docs;
+    };
+
+    // Track latest snapshot from each listener so we can re-merge on any update
+    let snapA = null;
+    let snapB = null;
+    let unsub1 = () => {};
+    let unsub2 = () => {};
+    let active = true;
+
+    unsub1 = onSnapshot(
+      qPrimary,
+      (snap) => {
+        if (!active) return;
+        snapA = snap;
+        setItems(merge(snapA, snapB));
         setLoading(false);
       },
       (err) => {
-        console.error("Firestore listener error:", err.message);
-        setLoading(false);
+        console.error("Firestore listener error (primary):", err.message);
+        if (active) setLoading(false);
       },
     );
 
-    return unsub;
-  // ✅ FIX 1: Added overrideOwnerUid to the dependency array so the query
-  // re-runs correctly when switching between owner and staff context.
-  // Previously missing, causing the hook to use stale query field/value
-  // and making owner-mode data appear invisible after re-renders.
+    if (qLegacy) {
+      unsub2 = onSnapshot(
+        qLegacy,
+        (snap) => {
+          if (!active) return;
+          snapB = snap;
+          if (snapA !== null) {
+            setItems(merge(snapA, snapB));
+          }
+        },
+        (err) => {
+          // Legacy query failing is non-fatal — primary results still show
+          console.warn(
+            "Firestore listener error (legacy fallback):",
+            err.message,
+          );
+        },
+      );
+    }
+
+    return () => {
+      active = false;
+      unsub1();
+      unsub2();
+    };
   }, [collectionName, uid, overrideOwnerUid]);
 
-  // addItem
-  // ownerUid is stamped on every record so the business owner can query
-  // all entries across their account + all their staff accounts.
-  // For owner accounts: ownerUid === userId.
-  // For staff accounts: ownerUid = the owner they belong to, userId = their own uid.
   const addItem = async (data, extraMeta = {}) => {
+    // ownerUid priority: extraMeta > hook's overrideOwnerUid > current user's uid
+    const resolvedOwnerUid = extraMeta.ownerUid || overrideOwnerUid || uid;
+
     const ref = await addDoc(collection(db, collectionName), {
       ...data,
       userId: uid,
-      ownerUid: extraMeta.ownerUid || uid,
+      ownerUid: resolvedOwnerUid,
       staffName: extraMeta.staffName || null,
       branchId: extraMeta.branchId || null,
       branchName: extraMeta.branchName || null,
@@ -118,14 +175,9 @@ export function useCollection(collectionName, { ownerUid: overrideOwnerUid } = {
     return ref;
   };
 
-  // deleteItem
-  // EntryTable calls onDelete(id, item) — we accept both params.
   const deleteItem = async (id, itemData) => {
-    // Capture the item data before deleting so History can restore it
     const before = itemData || items.find((i) => i.id === id) || null;
-
     await deleteDoc(doc(db, collectionName, id));
-
     await logAction(uid, collectionName, "DELETE", {
       before,
       description:
@@ -133,11 +185,8 @@ export function useCollection(collectionName, { ownerUid: overrideOwnerUid } = {
     });
   };
 
-  // updateItem
-  // EntryTable calls onUpdate(id, newData, oldData) — we accept the third param.
   const updateItem = async (id, newData, oldData) => {
     await updateDoc(doc(db, collectionName, id), newData);
-
     await logAction(uid, collectionName, "UPDATE", {
       before: oldData || null,
       after: newData,
@@ -146,12 +195,6 @@ export function useCollection(collectionName, { ownerUid: overrideOwnerUid } = {
     });
   };
 
-  // clearCollection
-  // Deletes all user's docs in a collection WITHOUT writing audit entries.
-  // Used by History to wipe the auditLog itself.
-  // ✅ FIX 2: Now respects ownerUid mode so it queries by the correct field,
-  // matching the same records that are visible in the UI. Previously always
-  // queried by userId which would miss staff entries in owner-mode context.
   const clearCollection = async (overrideName) => {
     const target = overrideName || collectionName;
     if (!uid) return;
@@ -163,16 +206,10 @@ export function useCollection(collectionName, { ownerUid: overrideOwnerUid } = {
     await Promise.all(deletes);
   };
 
-  // silentDelete
-  // Deletes a single doc WITHOUT writing an audit log entry.
-  // Used by History.jsx to remove individual log entries.
   const silentDelete = async (id) => {
     await deleteDoc(doc(db, collectionName, id));
   };
 
-  // restoreItem
-  // Re-adds a previously deleted item back into its original collection.
-  // Called by History.jsx when the user clicks "Restore" on a DELETE log entry.
   const restoreItem = async (logEntry) => {
     if (!logEntry?.before || !logEntry?.collectionName) {
       throw new Error("Cannot restore: missing data in log entry");
@@ -182,12 +219,16 @@ export function useCollection(collectionName, { ownerUid: overrideOwnerUid } = {
       id: _id,
       createdAt: _c,
       userId: _u,
+      ownerUid: _o,
       ...cleanData
     } = logEntry.before;
+
+    const resolvedOwnerUid = overrideOwnerUid || uid;
 
     const ref = await addDoc(collection(db, logEntry.collectionName), {
       ...cleanData,
       userId: uid,
+      ownerUid: resolvedOwnerUid,
       createdAt: serverTimestamp(),
     });
 
