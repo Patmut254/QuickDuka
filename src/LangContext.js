@@ -184,6 +184,17 @@ export const T = {
     badDebtLabel: "BAD DEBT",
     overdueLabel: "OVERDUE",
     noPayments: "No payments recorded",
+    sales: "Sales",
+    losses: "Losses",
+    creditPaymentDesc: "Credit payment",
+    finalPaymentNote: "Final payment — debt cleared.",
+    partialPaymentNote: "Partial payment.",
+    originallyIssued: "Originally issued",
+    writtenOffToLosses: "written off to Losses",
+    staysInSales: "already collected stays in Sales",
+    badDebtWrittenOff: "Bad debt written off",
+    badDebtNoUnpaid: "Marked as bad debt (nothing to write off — already fully collected).",
+    cannotBeUndone: "This cannot be undone.",
 
     // Stock
     totalItems: "Total Items",
@@ -202,7 +213,8 @@ export const T = {
     editItem: "Edit Item",
     removeItem: "Remove from stock?",
     // Function: called with (itemName string)
-    removeMsg: (name) => `Remove "${name}" from stock? This cannot be undone.`,
+    removeMsg: (name) =>
+      `Remove "${name}" from stock? This cannot be undone.`,
     removeConfirm: "Remove",
     itemRemoved: "Item removed.",
     searchItems: "Search items...",
@@ -698,7 +710,7 @@ export const T = {
     recordPayment: "Rekodi Malipo",
     customer2: "Mteja",
     totalCredit: "Mkopo wote",
-    alreadyPaid: "Aliyeshalipa",
+    alreadyPaid: "Ashalipwa",
     remaining: "Iliyobaki",
     paymentFlowNote:
       "Kila malipo — sehemu au yote — yanaenda moja kwa moja kwenye Mauzo",
@@ -718,6 +730,17 @@ export const T = {
     badDebtLabel: "DENI BAYA",
     overdueLabel: "IMECHELEWA",
     noPayments: "Hakuna malipo yaliyorekodiwa",
+    sales: "Mauzo",
+    losses: "Hasara",
+    creditPaymentDesc: "Malipo ya mkopo",
+    finalPaymentNote: "Malipo ya mwisho — deni limeisha.",
+    partialPaymentNote: "Malipo ya sehemu.",
+    originallyIssued: "Ilitolewa tarehe",
+    writtenOffToLosses: "imeandikwa kwenye Hasara",
+    staysInSales: "iliyokusanywa inabaki Mauzo",
+    badDebtWrittenOff: "Deni baya limeandikwa",
+    badDebtNoUnpaid: "Imeandikwa kama deni baya (hakuna kilichobaki — kimekusanywa chote).",
+    cannotBeUndone: "Haiwezi kurudishwa.",
 
     // Stock
     totalItems: "Jumla ya Bidhaa",
