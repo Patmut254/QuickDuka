@@ -83,10 +83,12 @@ export default function Sales({ ownerUid }) {
       format: (v) => `KES ${Number(v).toLocaleString()}`,
     },
     { key: "notes", label: t.notes },
+    // staffName is display-only — mark readOnly so EntryTable skips it in edit mode
     ...(ownerUid
       ? [{
           key: "staffName",
           label: "By",
+          readOnly: true,
           format: (v) => v
             ? <span style={{ fontSize: 11, fontWeight: 600, padding: "2px 7px", borderRadius: 20, background: "var(--accent)15", color: "var(--accent)" }}>{v}</span>
             : <span style={{ fontSize: 11, color: "var(--muted)" }}>Owner</span>,

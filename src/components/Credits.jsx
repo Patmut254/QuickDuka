@@ -124,10 +124,12 @@ export default function Credits({ ownerUid }) {
         showToast(t.paidSales);
       } else {
         showToast(
-          t.partialPay(
-            actualAmount.toLocaleString(),
-            (payingCredit.totalAmount - newPaid).toLocaleString(),
-          ),
+          typeof t.partialPay === "function"
+            ? t.partialPay(
+                actualAmount.toLocaleString(),
+                (payingCredit.totalAmount - newPaid).toLocaleString(),
+              )
+            : `KES ${actualAmount.toLocaleString()} received. KES ${(payingCredit.totalAmount - newPaid).toLocaleString()} remaining.`,
         );
       }
 

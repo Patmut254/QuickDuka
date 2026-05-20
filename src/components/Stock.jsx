@@ -345,7 +345,13 @@ export default function Stock({ sub, ownerUid }) {
       <AlertDialog
         open={!!deleteTarget}
         title={t.removeItem}
-        message={deleteTarget ? t.removeMsg(deleteTarget.name) : ""}
+        message={
+          deleteTarget
+            ? typeof t.removeMsg === "function"
+              ? t.removeMsg(deleteTarget.name)
+              : `Remove "${deleteTarget.name}" from stock? This cannot be undone.`
+            : ""
+        }
         onCancel={() => setDeleteTarget(null)}
         onConfirm={async () => {
           await deleteItem(deleteTarget.id, deleteTarget);

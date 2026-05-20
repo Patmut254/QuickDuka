@@ -70,6 +70,7 @@ import StaffShell from "./components/StaffShell";
 import BranchesPage from "./components/BranchesPage";
 import ReferrerDashboard from "./components/ReferrerDashboard";
 import { LangContext, T } from "./LangContext";
+import ErrorBoundary from "./components/ErrorBoundary";
 import "./App.css";
 
 const db = getFirestore();
@@ -473,36 +474,38 @@ function AppShell({ user, profile, theme, toggleTheme }) {
           </header>
 
           <div className="page-body">
-            {activeTab === "dashboard" && (
-              <Dashboard setActiveTab={handleTabChange} sub={sub} ownerUid={user.uid} />
-            )}
-            {activeTab === "sales" && <Sales ownerUid={user.uid} />}
-            {activeTab === "credits" && <Credits ownerUid={user.uid} />}
-            {activeTab === "purchases" && <Purchases ownerUid={user.uid} />}
-            {activeTab === "expenses" && <Expenses ownerUid={user.uid} />}
-            {activeTab === "losses" && <Losses ownerUid={user.uid} />}
-            {activeTab === "team" && <StaffPage sub={sub} profile={profile} />}
-            {activeTab === "branches" && <BranchesPage sub={sub} />}
-            {activeTab === "stock" && <Stock sub={sub} ownerUid={user.uid} />}
-            {activeTab === "reports" && <Reports ownerUid={user.uid} />}
-            {activeTab === "history" && <History />}
-            {activeTab === "profile" && (
-              <ProfilePage user={user} profile={profile} />
-            )}
-            {activeTab === "admin" && admin && <AdminPanel />}
-            {activeTab === "referrer-dashboard" && isReferrer && (
-              <ReferrerDashboard
-                referrerName={
-                  profile?.referrerName ||
-                  profile?.ownerName ||
-                  profile?.businessName
-                }
-                referrerId={profile?.referrerId}
-              />
-            )}
-            {activeTab === "contact" && <ContactPage />}
-            {activeTab === "faq" && <FAQPage />}
-            {activeTab === "privacy" && <PrivacyPage />}
+            <ErrorBoundary>
+              {activeTab === "dashboard" && (
+                <Dashboard setActiveTab={handleTabChange} sub={sub} ownerUid={user.uid} />
+              )}
+              {activeTab === "sales" && <Sales ownerUid={user.uid} />}
+              {activeTab === "credits" && <Credits ownerUid={user.uid} />}
+              {activeTab === "purchases" && <Purchases ownerUid={user.uid} />}
+              {activeTab === "expenses" && <Expenses ownerUid={user.uid} />}
+              {activeTab === "losses" && <Losses ownerUid={user.uid} />}
+              {activeTab === "team" && <StaffPage sub={sub} profile={profile} />}
+              {activeTab === "branches" && <BranchesPage sub={sub} />}
+              {activeTab === "stock" && <Stock sub={sub} ownerUid={user.uid} />}
+              {activeTab === "reports" && <Reports ownerUid={user.uid} />}
+              {activeTab === "history" && <History />}
+              {activeTab === "profile" && (
+                <ProfilePage user={user} profile={profile} />
+              )}
+              {activeTab === "admin" && admin && <AdminPanel />}
+              {activeTab === "referrer-dashboard" && isReferrer && (
+                <ReferrerDashboard
+                  referrerName={
+                    profile?.referrerName ||
+                    profile?.ownerName ||
+                    profile?.businessName
+                  }
+                  referrerId={profile?.referrerId}
+                />
+              )}
+              {activeTab === "contact" && <ContactPage />}
+              {activeTab === "faq" && <FAQPage />}
+              {activeTab === "privacy" && <PrivacyPage />}
+            </ErrorBoundary>
           </div>
         </main>
       </div>

@@ -29,8 +29,24 @@ export default function EntryTable({
   );
 
   const startEdit = (item) => {
+    // Sanitise editData: convert any non-primitive values (e.g. Firestore
+    // Timestamps, objects) to strings so they don't crash controlled inputs.
+    const sanitised = {};
+    Object.entries(item).forEach(([k, v]) => {
+      if (v === null || v === undefined) {
+        sanitised[k] = "";
+      } else if (typeof v === "object" && typeof v.toDate === "function") {
+        // Firestore Timestamp → ISO date string
+        sanitised[k] = v.toDate().toISOString().split("T")[0];
+      } else if (typeof v === "object") {
+        // Any other object: skip (don't put it in an input)
+        sanitised[k] = "";
+      } else {
+        sanitised[k] = v;
+      }
+    });
     setEditId(item.id);
-    setEditData({ ...item });
+    setEditData(sanitised);
     setOriginalData({ ...item });
   };
 
@@ -53,7 +69,7 @@ export default function EntryTable({
       showToast && showToast(t.updatedToast, "success");
     } catch (err) {
       console.error("Update failed:", err);
-      showToast && showToast("Update failed. Please try again.", "error");
+      showToast && showToast(t.updatedToast ? "Update failed. Please try again." : "Update failed.", "error");
     } finally {
       setSaving(false);
     }
@@ -67,11 +83,28 @@ export default function EntryTable({
       showToast && showToast(t.deletedToast, "delete");
     } catch (err) {
       console.error("Delete failed:", err);
-      showToast && showToast(t.failedDelete, "error");
+      showToast && showToast(t.failedDelete || "Delete failed. Please try again.", "error");
     } finally {
       setDeleting(false);
       setDeleteTarget(null);
     }
+  };
+
+  // Safely build the delete confirmation message.
+  // Guards against t.deleteMsg being undefined (e.g. if a custom LangContext
+  // is provided that doesn't include it).
+  const getDeleteMessage = () => {
+    if (!deleteTarget) return "";
+    const name =
+      deleteTarget.item?.description ||
+      deleteTarget.item?.item ||
+      deleteTarget.item?.category ||
+      "this record";
+    const amount = Number(deleteTarget.item?.amount || 0).toLocaleString();
+    if (typeof t.deleteMsg === "function") {
+      return t.deleteMsg(name, amount);
+    }
+    return `Delete "${name}" (KES ${amount})? This cannot be undone.`;
   };
 
   return (
@@ -79,20 +112,10 @@ export default function EntryTable({
       <AlertDialog
         open={!!deleteTarget}
         danger
-        title={t.delete}
-        message={
-          deleteTarget
-            ? t.deleteMsg(
-                deleteTarget.item?.description ||
-                  deleteTarget.item?.item ||
-                  deleteTarget.item?.category ||
-                  "this record",
-                Number(deleteTarget.item?.amount || 0).toLocaleString(),
-              )
-            : ""
-        }
-        confirmLabel={deleting ? t.deleting : t.confirmDelete}
-        cancelLabel={t.cancel}
+        title={t.delete || "Delete"}
+        message={getDeleteMessage()}
+        confirmLabel={deleting ? (t.deleting || "Deleting…") : (t.confirmDelete || "Delete")}
+        cancelLabel={t.cancel || "Cancel"}
         onConfirm={confirmDelete}
         onCancel={() => !deleting && setDeleteTarget(null)}
       />
@@ -106,19 +129,19 @@ export default function EntryTable({
           name="table-search"
           className="search-input"
           autoComplete="off"
-          placeholder={"🔍 " + t.search}
+          placeholder={"🔍 " + (t.search || "Search")}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
         <span className="table-count">
-          {filtered.length} {t.records}
+          {filtered.length} {t.records || "records"}
         </span>
       </div>
 
       {loading ? (
-        <div className="table-loading">{t.loading}</div>
+        <div className="table-loading">{t.loading || "Loading…"}</div>
       ) : filtered.length === 0 ? (
-        <div className="empty-state">{search ? t.noResults : emptyMessage}</div>
+        <div className="empty-state">{search ? (t.noResults || "No results") : emptyMessage}</div>
       ) : (
         <div className="table-scroll">
           <table className="data-table">
@@ -127,7 +150,7 @@ export default function EntryTable({
                 {columns.map((c) => (
                   <th key={c.key}>{c.label}</th>
                 ))}
-                <th>{t.actions}</th>
+                <th>{t.actions || "Actions"}</th>
               </tr>
             </thead>
             <tbody>
@@ -139,7 +162,13 @@ export default function EntryTable({
                   {columns.map((c) => (
                     <td key={c.key}>
                       {editId === item.id ? (
-                        c.type === "select" ? (
+                        // Edit mode — only render editable columns (skip read-only ones like staffName)
+                        c.readOnly ? (
+                          // Read-only column: show plain text even in edit mode
+                          <span style={{ fontSize: 12, color: "var(--muted)" }}>
+                            {item[c.key] ?? "-"}
+                          </span>
+                        ) : c.type === "select" ? (
                           <select
                             className="inline-edit"
                             name={`edit-${c.key}`}
@@ -187,14 +216,14 @@ export default function EntryTable({
                           onClick={saveEdit}
                           disabled={saving}
                         >
-                          {saving ? t.saving : t.save + " ✓"}
+                          {saving ? (t.saving || "Saving…") : (t.save || "Save") + " ✓"}
                         </button>
                         <button
                           className="btn-cancel-sm"
                           onClick={cancelEdit}
                           disabled={saving}
                         >
-                          Cancel
+                          {t.cancel || "Cancel"}
                         </button>
                       </div>
                     ) : (
@@ -202,14 +231,14 @@ export default function EntryTable({
                         <button
                           className="edit-btn"
                           onClick={() => startEdit(item)}
-                          title="Edit"
+                          title={t.edit || "Edit"}
                         >
                           ✏️
                         </button>
                         <button
                           className="delete-btn"
                           onClick={() => setDeleteTarget({ id: item.id, item })}
-                          title="Delete"
+                          title={t.delete || "Delete"}
                         >
                           🗑
                         </button>
