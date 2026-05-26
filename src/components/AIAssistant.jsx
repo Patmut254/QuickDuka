@@ -19,6 +19,7 @@ import {
   faRobot,
   faTimes,
   faPaperPlane,
+  faBars,
   faSpinner,
   faLightbulb,
   faChartLine,
@@ -333,6 +334,7 @@ Ask me anything about your numbers!`;
     setActiveChat(null);
     setMessages([]);
     setInput("");
+    setSidebarOpen(false);
   };
 
   const selectChat = (id) => {
@@ -556,6 +558,8 @@ ${JSON.stringify(context, null, 2)}
     }
   };
 
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
   return (
     <>
       {/* TIP POPUP */}
@@ -581,10 +585,19 @@ ${JSON.stringify(context, null, 2)}
         <div className="ai-panel">
           {/* HEADER */}
           <div className="ai-panel-header">
-            <div className="ai-panel-title">
-              <FontAwesomeIcon icon={faRobot} style={{ marginRight: 8 }} />
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <button
+                className="ai-hamburger-btn"
+                onClick={() => setSidebarOpen((v) => !v)}
+                aria-label="Toggle chat history"
+              >
+                <FontAwesomeIcon icon={sidebarOpen ? faTimes : faBars} />
+              </button>
 
-              {t("QuickDuka Assistant") || "QuickDuka Assistant"}
+              <div className="ai-panel-title">
+                <FontAwesomeIcon icon={faRobot} />
+                {t("QuickDuka Assistant") || "QuickDuka Assistant"}
+              </div>
             </div>
 
             <button className="ai-panel-close" onClick={() => setOpen(false)}>
@@ -594,28 +607,41 @@ ${JSON.stringify(context, null, 2)}
 
           {/* BODY */}
           <div className="ai-body">
+            {/* OVERLAY */}
+            <div
+              className={`ai-sidebar-overlay-bg ${
+                sidebarOpen ? "show" : ""
+              }`}
+              onClick={() => setSidebarOpen(false)}
+            />
+
             {/* SIDEBAR */}
-            <div className="ai-sidebar">
+            <div className={`ai-sidebar ${sidebarOpen ? "open" : ""}`}>
               <div className="ai-sidebar-title">
                 {t("previousChats") || "Previous Chats"}
               </div>
 
               <button className="ai-sidebar-btn" onClick={startNewChat}>
                 <FontAwesomeIcon icon={faPlus} />
-
                 <span>{t("newChat") || "New Chat"}</span>
               </button>
 
               <div className="ai-chat-list">
                 {conversations.length === 0 ? (
-                  <div className="ai-chat-list-empty">No previous chats</div>
+                  <div className="ai-chat-list-empty">
+                    No previous chats
+                  </div>
                 ) : (
                   conversations.map((conv) => (
                     <div
                       key={conv.id}
-                      className={`ai-chat-item ${activeChatId === conv.id ? "active" : ""
-                        }`}
-                      onClick={() => selectChat(conv.id)}
+                      className={`ai-chat-item ${
+                        activeChatId === conv.id ? "active" : ""
+                      }`}
+                      onClick={() => {
+                        selectChat(conv.id);
+                        setSidebarOpen(false);
+                      }}
                     >
                       <FontAwesomeIcon
                         icon={faMessage}
@@ -638,7 +664,7 @@ ${JSON.stringify(context, null, 2)}
               </div>
             </div>
 
-            {/* CHAT AREA */}
+           {/* CHAT AREA */}
             <div className="ai-chat-area">
               {/* MESSAGES */}
               <div className="ai-messages">
