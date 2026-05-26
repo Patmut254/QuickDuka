@@ -69,6 +69,7 @@ import StaffPage from "./components/StaffPage";
 import StaffShell from "./components/StaffShell";
 import BranchesPage from "./components/BranchesPage";
 import ReferrerDashboard from "./components/ReferrerDashboard";
+import AIAssistant from "./components/AIAssistant";
 import { LangContext, T } from "./LangContext";
 import ErrorBoundary from "./components/ErrorBoundary";
 import "./App.css";
@@ -76,11 +77,6 @@ import "./App.css";
 const db = getFirestore();
 const GRACE_DAYS = 2;
 
-// Subscription gate
-// Admin emails bypass this entirely (handled separately).
-// trial  → active for 30 days from signup + grace
-// active → active until expiry + grace
-// anything else (expired/pending/undefined) → wall
 function isSubscriptionActive(profile) {
   if (!profile) return false;
   if (isAdmin({ email: profile.email })) return true;
@@ -93,13 +89,13 @@ function isSubscriptionActive(profile) {
       : null);
 
   if (status === "trial") {
-    if (!expiry) return true; // no expiry set = unlimited trial (shouldn't happen)
+    if (!expiry) return true;
     const grace = new Date(expiry.getTime() + GRACE_DAYS * 24 * 60 * 60 * 1000);
     return new Date() <= grace;
   }
 
   if (status === "active") {
-    if (!expiry) return true; // lifetime / admin-created without expiry
+    if (!expiry) return true;
     const grace = new Date(expiry.getTime() + GRACE_DAYS * 24 * 60 * 60 * 1000);
     return new Date() <= grace;
   }
@@ -107,7 +103,6 @@ function isSubscriptionActive(profile) {
   return false;
 }
 
-// Phone / email → Firebase Auth email
 async function resolveLoginEmail(input) {
   const trimmed = input.trim();
   if (/^(\+?254|07|011|01)/.test(trimmed)) {
@@ -132,7 +127,6 @@ async function resolveLoginEmail(input) {
   return trimmed;
 }
 
-// Online / Offline Banner
 function OnlineStatus() {
   const [online, setOnline] = useState(true);
   useEffect(() => {
@@ -171,7 +165,6 @@ function OnlineStatus() {
   );
 }
 
-// Footer
 function AppFooter({ offset }) {
   return (
     <div className={`app-footer${offset ? " app-footer-offset" : ""}`}>
@@ -180,20 +173,37 @@ function AppFooter({ offset }) {
   );
 }
 
-// Translations
-// App Shell
 function AppShell({ user, profile, theme, toggleTheme }) {
   const [activeTab, setActiveTab] = useState(
     () => sessionStorage.getItem("qd-active-tab") || "dashboard",
   );
 
-  // Persist tab so PWA install prompt / page refresh returns to the same page
+  // ── Prefill state — AI assistant populates this when user asks to record ──
+  // { sales: {...}, expenses: {...}, losses: {...}, credits: {...} }
+  const [prefillData, setPrefillData] = useState({});
+
   const handleTabChange = (tab) => {
     sessionStorage.setItem("qd-active-tab", tab);
     setActiveTab(tab);
   };
 
-  // Track page visits for admin analytics — fires on tab change, never blocks UI
+  // Called by AIAssistant when user asks to record something.
+  // Switches to the right tab and stores the prefill data.
+  const handleAIPrefill = (module, data) => {
+    handleTabChange(module);
+    setPrefillData((prev) => ({ ...prev, [module]: data }));
+  };
+
+  // Each form calls this once it has consumed the prefill data, so it
+  // doesn't re-populate if the user navigates away and back.
+  const clearPrefill = (module) => {
+    setPrefillData((prev) => {
+      const next = { ...prev };
+      delete next[module];
+      return next;
+    });
+  };
+
   useEffect(() => {
     if (!user?.uid || !activeTab) return;
     addDoc(collection(db, "pageVisits"), {
@@ -208,12 +218,10 @@ function AppShell({ user, profile, theme, toggleTheme }) {
     () => localStorage.getItem("qd-lang") || "en",
   );
 
-  // isAdmin checks the Firebase Auth user email — reliable, doesn't need Firestore
   const admin = isAdmin(user);
   const isReferrer = profile?.role === "referrer";
   const t = T[lang];
 
-  // Subscription feature gate hook — passed to child components that need plan checks
   const sub = useSubscription(profile, admin);
 
   const toggleLang = () => {
@@ -224,7 +232,6 @@ function AppShell({ user, profile, theme, toggleTheme }) {
 
   const tabs = [
     { id: "dashboard", label: t.dashboard, icon: faChartLine },
-    // Admin tab: shown when Firebase Auth email matches ADMIN_EMAIL
     ...(admin
       ? [
           {
@@ -235,7 +242,6 @@ function AppShell({ user, profile, theme, toggleTheme }) {
           },
         ]
       : []),
-    // Referrer dashboard tab
     ...(isReferrer
       ? [
           {
@@ -246,11 +252,9 @@ function AppShell({ user, profile, theme, toggleTheme }) {
           },
         ]
       : []),
-    // Team tab: Growth and Business plans only
     ...(["growth", "business"].includes(sub.plan)
       ? [{ id: "team", label: t.team || "Team", icon: faUsers }]
       : []),
-    // Branches tab: Business only
     ...(sub.plan === "business"
       ? [
           {
@@ -303,18 +307,15 @@ function AppShell({ user, profile, theme, toggleTheme }) {
 
         {/* Sidebar (desktop) */}
         <aside className="sidebar">
-          {/* Brand */}
           <div className="sidebar-brand">
             <img src="/logo-icon.png" alt="QuickDuka" />
             <span className="brand-name">QuickDuka</span>
           </div>
 
-          {/* Business name */}
           {profile?.businessName && (
             <div className="sidebar-biz-name">{profile.businessName}</div>
           )}
 
-          {/* Plan badge — visible at a glance */}
           {!admin && (
             <div
               style={{
@@ -339,7 +340,6 @@ function AppShell({ user, profile, theme, toggleTheme }) {
             </div>
           )}
 
-          {/* Nav — scrollable, fills available space */}
           <nav className="sidebar-nav">
             {mainTabs.map((tab) => (
               <button
@@ -379,7 +379,6 @@ function AppShell({ user, profile, theme, toggleTheme }) {
             ))}
           </nav>
 
-          {/* Subscription expiry chip — always visible above footer buttons */}
           {!admin && expiryDate && (
             <div className="sidebar-sub-info">
               <span
@@ -394,7 +393,6 @@ function AppShell({ user, profile, theme, toggleTheme }) {
             </div>
           )}
 
-          {/* Language toggle — always visible */}
           <button
             className="sidebar-lang-toggle"
             onClick={toggleLang}
@@ -403,7 +401,6 @@ function AppShell({ user, profile, theme, toggleTheme }) {
             {lang === "en" ? "🇰🇪 Swahili" : "🇬🇧 English"}
           </button>
 
-          {/* Sign out — always visible, never clipped */}
           <button className="logout-btn" onClick={() => signOut(auth)}>
             <FontAwesomeIcon icon={faRightFromBracket} /> {t.signOut}
           </button>
@@ -476,14 +473,44 @@ function AppShell({ user, profile, theme, toggleTheme }) {
           <div className="page-body">
             <ErrorBoundary>
               {activeTab === "dashboard" && (
-                <Dashboard setActiveTab={handleTabChange} sub={sub} ownerUid={user.uid} />
+                <Dashboard
+                  setActiveTab={handleTabChange}
+                  sub={sub}
+                  ownerUid={user.uid}
+                />
               )}
-              {activeTab === "sales" && <Sales ownerUid={user.uid} />}
-              {activeTab === "credits" && <Credits ownerUid={user.uid} />}
+              {activeTab === "sales" && (
+                <Sales
+                  ownerUid={user.uid}
+                  prefillData={prefillData.sales}
+                  onPrefillConsumed={() => clearPrefill("sales")}
+                />
+              )}
+              {activeTab === "credits" && (
+                <Credits
+                  ownerUid={user.uid}
+                  prefillData={prefillData.credits}
+                  onPrefillConsumed={() => clearPrefill("credits")}
+                />
+              )}
               {activeTab === "purchases" && <Purchases ownerUid={user.uid} />}
-              {activeTab === "expenses" && <Expenses ownerUid={user.uid} />}
-              {activeTab === "losses" && <Losses ownerUid={user.uid} />}
-              {activeTab === "team" && <StaffPage sub={sub} profile={profile} />}
+              {activeTab === "expenses" && (
+                <Expenses
+                  ownerUid={user.uid}
+                  prefillData={prefillData.expenses}
+                  onPrefillConsumed={() => clearPrefill("expenses")}
+                />
+              )}
+              {activeTab === "losses" && (
+                <Losses
+                  ownerUid={user.uid}
+                  prefillData={prefillData.losses}
+                  onPrefillConsumed={() => clearPrefill("losses")}
+                />
+              )}
+              {activeTab === "team" && (
+                <StaffPage sub={sub} profile={profile} />
+              )}
               {activeTab === "branches" && <BranchesPage sub={sub} />}
               {activeTab === "stock" && <Stock sub={sub} ownerUid={user.uid} />}
               {activeTab === "reports" && <Reports ownerUid={user.uid} />}
@@ -508,6 +535,9 @@ function AppShell({ user, profile, theme, toggleTheme }) {
             </ErrorBoundary>
           </div>
         </main>
+
+        {/* ── AI Assistant — floating bubble, visible on all pages ── */}
+        <AIAssistant ownerUid={user.uid} onPrefill={handleAIPrefill} />
       </div>
     </LangContext.Provider>
   );
@@ -515,8 +545,8 @@ function AppShell({ user, profile, theme, toggleTheme }) {
 
 // Root App
 export default function App() {
-  const [user, setUser] = useState(undefined); // undefined = still checking
-  const [view, setView] = useState("login"); // "login" | "register" | "reset" | "referrer"
+  const [user, setUser] = useState(undefined);
+  const [view, setView] = useState("login");
   const [loginId, setLoginId] = useState("");
   const [loginPw, setLoginPw] = useState("");
   const [showPw, setShowPw] = useState(false);
@@ -524,7 +554,7 @@ export default function App() {
   const [loggingIn, setLoggingIn] = useState(false);
 
   const [resetInput, setResetInput] = useState("");
-  const [resetStatus, setResetStatus] = useState("idle"); // idle|sending|sent|error
+  const [resetStatus, setResetStatus] = useState("idle");
   const [resetMsg, setResetMsg] = useState("");
   const [resetEmail, setResetEmail] = useState("");
 
@@ -552,7 +582,6 @@ export default function App() {
 
   const toggleTheme = () => setTheme((t) => (t === "dark" ? "light" : "dark"));
 
-  // Login
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoggingIn(true);
@@ -566,7 +595,6 @@ export default function App() {
     setLoggingIn(false);
   };
 
-  // Password reset
   const handleResetPassword = async (e) => {
     e.preventDefault();
     if (resetStatus === "sending") return;
@@ -624,7 +652,6 @@ export default function App() {
     }
   };
 
-  // Splash — Firebase still checking auth
   if (user === undefined) {
     return (
       <div className="splash">
@@ -634,7 +661,6 @@ export default function App() {
     );
   }
 
-  // Admin route: yoursite.com/#/admin
   if (isAdminRoute) {
     if (!user) {
       return (
@@ -741,7 +767,6 @@ export default function App() {
       );
     }
 
-    // Admin logged in on #/admin — full panel, no subscription check needed
     return (
       <div
         style={{
@@ -796,7 +821,6 @@ export default function App() {
     );
   }
 
-  // Not logged in (regular app)
   if (!user) {
     if (view === "register") {
       return (
@@ -915,7 +939,6 @@ export default function App() {
                   className="btn-register"
                   style={{
                     background: "transparent",
-                    // border: "1.5px solid var(--accent)",
                     border: "var(--accent)",
                     color: "var(--accent)",
                   }}
@@ -1016,7 +1039,6 @@ export default function App() {
     );
   }
 
-  // Admin bypasses all profile / subscription checks
   if (isAdmin(user)) {
     return (
       <AppShell
@@ -1028,7 +1050,6 @@ export default function App() {
     );
   }
 
-  // Profile loading
   if (profileLoading) {
     return (
       <div className="splash">
@@ -1038,7 +1059,6 @@ export default function App() {
     );
   }
 
-  // Profile not found after timeout
   if (!profile) {
     if (profileNotFound) {
       return (
@@ -1080,7 +1100,6 @@ export default function App() {
         </div>
       );
     }
-    // Still waiting for Firestore doc to appear
     return (
       <div className="splash">
         <img src="/logo-icon.png" alt="QuickDuka" />
@@ -1104,13 +1123,10 @@ export default function App() {
     );
   }
 
-  // Staff accounts: show stripped-down sales-only UI
   if (profile?.role === "staff") {
-    // If owner has deactivated them, StaffShell shows the deactivated screen
     return <StaffShell user={user} profile={profile} />;
   }
 
-  // Subscription gate — no bypass for regular users
   if (!isSubscriptionActive(profile)) {
     return (
       <>

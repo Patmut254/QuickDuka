@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/set-state-in-effect */
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { db, auth } from "../firebase";
 import {
   collection,
@@ -39,11 +39,25 @@ async function logAction(
 
 export function useCollection(
   collectionName,
-  { ownerUid: overrideOwnerUid } = {},
+  // ── FIX: destructure with a default so callers passing `undefined`
+  //    don't cause a new object reference every render.
+  options = {},
 ) {
+  const { ownerUid: overrideOwnerUid } = options;
+
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [uid, setUid] = useState(null);
+
+  // ── FIX: stabilise overrideOwnerUid in a ref so the Firestore
+  //    useEffect's dep array never changes SIZE — only value.
+  //    Without this, callers that pass `ownerUid ? {ownerUid} : undefined`
+  //    produce a new object on every render, which can cause React to
+  //    complain "the order and size of this array must remain constant".
+  const overrideOwnerUidRef = useRef(overrideOwnerUid);
+  useEffect(() => {
+    overrideOwnerUidRef.current = overrideOwnerUid;
+  }, [overrideOwnerUid]);
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (user) => {
@@ -74,8 +88,11 @@ export function useCollection(
     //   match Query A, making them invisible on the dashboard.
     //   Merging by document id deduplicates any overlap.
 
-    const queryUid = overrideOwnerUid || uid;
-    const queryField = overrideOwnerUid ? "ownerUid" : "userId";
+    // Read the stable ref value (not the raw prop) inside the effect
+    const currentOverride = overrideOwnerUidRef.current;
+
+    const queryUid = currentOverride || uid;
+    const queryField = currentOverride ? "ownerUid" : "userId";
 
     const qPrimary = query(
       collection(db, collectionName),
@@ -83,7 +100,7 @@ export function useCollection(
     );
 
     // Legacy fallback: records stamped with userId but missing ownerUid
-    const qLegacy = overrideOwnerUid
+    const qLegacy = currentOverride
       ? query(collection(db, collectionName), where("userId", "==", uid))
       : null;
 
@@ -151,11 +168,14 @@ export function useCollection(
       unsub1();
       unsub2();
     };
-  }, [collectionName, uid, overrideOwnerUid]);
+    // ── FIX: dep array is now always exactly [collectionName, uid] —
+    //    constant size. overrideOwnerUid changes are handled via the ref.
+  }, [collectionName, uid]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const addItem = async (data, extraMeta = {}) => {
     // ownerUid priority: extraMeta > hook's overrideOwnerUid > current user's uid
-    const resolvedOwnerUid = extraMeta.ownerUid || overrideOwnerUid || uid;
+    const resolvedOwnerUid =
+      extraMeta.ownerUid || overrideOwnerUidRef.current || uid;
 
     const ref = await addDoc(collection(db, collectionName), {
       ...data,
@@ -198,8 +218,9 @@ export function useCollection(
   const clearCollection = async (overrideName) => {
     const target = overrideName || collectionName;
     if (!uid) return;
-    const queryField = overrideOwnerUid ? "ownerUid" : "userId";
-    const queryUid = overrideOwnerUid || uid;
+    const currentOverride = overrideOwnerUidRef.current;
+    const queryField = currentOverride ? "ownerUid" : "userId";
+    const queryUid = currentOverride || uid;
     const q = query(collection(db, target), where(queryField, "==", queryUid));
     const snap = await getDocs(q);
     const deletes = snap.docs.map((d) => deleteDoc(doc(db, target, d.id)));
@@ -223,7 +244,7 @@ export function useCollection(
       ...cleanData
     } = logEntry.before;
 
-    const resolvedOwnerUid = overrideOwnerUid || uid;
+    const resolvedOwnerUid = overrideOwnerUidRef.current || uid;
 
     const ref = await addDoc(collection(db, logEntry.collectionName), {
       ...cleanData,

@@ -1,12 +1,5 @@
 import { createContext, useContext } from "react";
 
-export const LangContext = createContext({ lang: "en" });
-
-// Hook — call useLang() in any component to get { lang, t }
-export function useLang() {
-  return useContext(LangContext);
-}
-
 // Full translation strings for every component
 export const T = {
   en: {
@@ -173,7 +166,6 @@ export const T = {
     paymentNotePh: "e.g. M-Pesa, Cash...",
     confirmPayment: "Confirm Payment",
     clearDebt: "✓ This clears the full debt — moves to Sales",
-    // Function: called with (actualAmount string, remainingAmount string)
     partialPay: (actual, after) =>
       `KES ${actual} → Sales · KES ${after} still outstanding`,
     badDebt: "Bad Debt",
@@ -191,14 +183,14 @@ export const T = {
     writtenOffToLosses: "written off to Losses",
     staysInSales: "already collected stays in Sales",
     badDebtWrittenOff: "Bad debt written off",
-    badDebtNoUnpaid: "Marked as bad debt (nothing to write off — already fully collected).",
+    badDebtNoUnpaid:
+      "Marked as bad debt (nothing to write off — already fully collected).",
     cannotBeUndone: "This cannot be undone.",
 
     // Stock
     totalItems: "Total Items",
     addItem: "Add Item",
     addToStock: "Add to Stock",
-    // Fixed typo: "stockt a price" → "stock a price"
     stockHint:
       "Your product and item list. Set a price if it is fixed (e.g. Bread KES 50), or leave blank to enter manually when recording a sale.",
     itemName: "Item / Product Name",
@@ -210,9 +202,7 @@ export const T = {
     priceVaries: "Price varies",
     editItem: "Edit Item",
     removeItem: "Remove from stock?",
-    // Function: called with (itemName string)
-    removeMsg: (name) =>
-      `Remove "${name}" from stock? This cannot be undone.`,
+    removeMsg: (name) => `Remove "${name}" from stock? This cannot be undone.`,
     removeConfirm: "Remove",
     itemRemoved: "Item removed.",
     searchItems: "Search items...",
@@ -232,7 +222,6 @@ export const T = {
     deleteHistory: "Delete ALL history permanently? This cannot be undone.",
     historyCleared: "History cleared.",
     restoreRecord: "Restore this record?",
-    // Function: called with (description string, collectionName string)
     restoreMsg: (desc, col) => `This will re-add "${desc}" back to ${col}.`,
     restored: "Record restored successfully!",
     actAdded: "Added",
@@ -241,7 +230,6 @@ export const T = {
     actRestored: "Restored",
     deletedToast: "Deleted. Restore it anytime from History.",
     updatedToast: "Record updated!",
-    // Function: called with (itemName string, amount string)
     deleteMsg: (name, amount) =>
       `Delete "${name}" (KES ${amount})? This cannot be undone.`,
     failedSave: "Save failed. Please try again.",
@@ -266,6 +254,22 @@ export const T = {
     recentActivity: "Recent Activity",
     noTransactions:
       "No transactions yet. Start by adding sales, purchases or expenses.",
+
+    // AI Assistant
+    salesThisWeek: "How are my sales this week?",
+    whoOwes: "Who owes me money?",
+    bestSelling: "What is my best selling item?",
+    lossesMonth: "What losses did I have this month?",
+    chatWithAI: "Chat with QuickDuka AI!",
+    quickDukaAI: "QuickDuka AI",
+    previousChats: "Previous Chats",
+    newChat: "New Chat",
+    deleteChats: "Delete Chats",
+    aiGreeting: "Hello! 👋",
+    aiAskAnything: "Ask me anything about your business.",
+    thinking: "Thinking...",
+    aiPlaceholder: "Ask about your sales, debts, profit...",
+    aiError: "Sorry, something went wrong. Please try again.",
 
     // Profile
     businessDetails: "Business Details",
@@ -540,7 +544,6 @@ export const T = {
     noPaymentsYet:
       "No payments recorded yet. Payments will appear here once processed by admin.",
     noReferralsYet: "No referrals yet.",
-    // Function: called with (count number)
     inactiveWarning: (n) =>
       `${n} customer(s) are not paying or have gone inactive.`,
     statusPaying: "✅ Paying",
@@ -717,7 +720,6 @@ export const T = {
     paymentNotePh: "mfano: M-Pesa, Taslimu...",
     confirmPayment: "Thibitisha Malipo",
     clearDebt: "✓ Deni limeisha — inahamia Mauzo",
-    // Function: called with (actualAmount string, remainingAmount string)
     partialPay: (actual, after) =>
       `KES ${actual} → Mauzo · KES ${after} bado inadaiwa`,
     badDebt: "Deni Baya",
@@ -735,7 +737,8 @@ export const T = {
     writtenOffToLosses: "imeandikwa kwenye Hasara",
     staysInSales: "iliyokusanywa inabaki Mauzo",
     badDebtWrittenOff: "Deni baya limeandikwa",
-    badDebtNoUnpaid: "Imeandikwa kama deni baya (hakuna kilichobaki — kimekusanywa chote).",
+    badDebtNoUnpaid:
+      "Imeandikwa kama deni baya (hakuna kilichobaki — kimekusanywa chote).",
     cannotBeUndone: "Haiwezi kurudishwa.",
 
     // Stock
@@ -753,7 +756,6 @@ export const T = {
     priceVaries: "Bei inabadilika",
     editItem: "Hariri Bidhaa",
     removeItem: "Ondoa kutoka Katalogi?",
-    // Function: called with (itemName string)
     removeMsg: (name) =>
       `Ondoa "${name}" kutoka Katalogi? Haitaweza kurejeshwa.`,
     removeConfirm: "Ondoa",
@@ -775,7 +777,6 @@ export const T = {
     deleteHistory: "Futa historia YOTE kabisa? Haiwezi kurudishwa.",
     historyCleared: "Historia imefutwa.",
     restoreRecord: "Rudisha rekodi hii?",
-    // Function: called with (description string, collectionName string)
     restoreMsg: (desc, col) => `Hii itarudisha "${desc}" kwenye ${col}.`,
     restored: "Rekodi imerudishwa!",
     actAdded: "Imeongezwa",
@@ -784,7 +785,6 @@ export const T = {
     actRestored: "Imerudishwa",
     deletedToast: "Imefutwa. Irejesha kwenye Historia.",
     updatedToast: "Rekodi imesasishwa!",
-    // Function: called with (itemName string, amount string)
     deleteMsg: (name, amount) =>
       `Futa "${name}" (KES ${amount})? Haitaweza kurejeshwa.`,
     failedSave: "Imeshindwa kuhifadhi. Jaribu tena.",
@@ -809,6 +809,22 @@ export const T = {
     recentActivity: "Shughuli za Hivi Karibuni",
     noTransactions:
       "Hakuna shughuli bado. Anza kuongeza mauzo, manunuzi au gharama.",
+
+    // AI Assistant
+    salesThisWeek: "Mauzo yangu wiki hii ni vipi?",
+    whoOwes: "Nani ananidai pesa?",
+    bestSelling: "Bidhaa yangu inayouza zaidi ni ipi?",
+    lossesMonth: "Nilikuwa na hasara gani mwezi huu?",
+    chatWithAI: "Zungumza na QuickDuka AI!",
+    quickDukaAI: "QuickDuka AI",
+    previousChats: "Mazungumzo ya Awali",
+    newChat: "Mazungumzo Mapya",
+    deleteChats: "Futa Mazungumzo",
+    aiGreeting: "Habari! 👋",
+    aiAskAnything: "Niulize chochote kuhusu biashara yako.",
+    thinking: "Inafikiri...",
+    aiPlaceholder: "Uliza kuhusu mauzo, madeni, faida...",
+    aiError: "Samahani, kuna hitilafu. Tafadhali jaribu tena.",
 
     // Profile
     businessDetails: "Maelezo ya Biashara",
@@ -1086,7 +1102,6 @@ export const T = {
     noPaymentsYet:
       "Hakuna malipo bado. Malipo yataonekana hapa mara yatakapofanywa na msimamizi.",
     noReferralsYet: "Bado haujapeleka mteja yeyote.",
-    // Function: called with (count number)
     inactiveWarning: (n) =>
       `${n} mteja/wateja hawalipi au wamekimbia. Unaweza kuwapigia simu.`,
     statusPaying: "✅ Amelipa",
@@ -1098,3 +1113,14 @@ export const T = {
     paid: "✓ Imelipwa",
   },
 };
+
+// FIX: default context includes a fallback t function
+// so t is never undefined even before the Provider mounts
+export const LangContext = createContext({
+  lang: "en",
+  t: (key) => T.en[key] ?? key,
+});
+
+export function useLang() {
+  return useContext(LangContext);
+}
