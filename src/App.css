@@ -6571,42 +6571,65 @@ textarea {
 /* AI ASSISTANT */
 .ai-bubble {
   position: fixed;
-  bottom: 24px;
-  right: 24px;
-  z-index: 1000;
-  width: 58px;
-  height: 58px;
+  right: 20px;
+  bottom: 20px;
+
+  width: 72px;
+  height: 72px;
   border-radius: 50%;
-  background: var(--accent);
-  color: #fff;
+
   border: none;
-  cursor: pointer;
+  background: #1f8a3b;
+  color: white;
 
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 2px;
 
-  gap: 3px;
+  cursor: pointer;
+  z-index: 9999;
 
-  font-size: 20px;
-
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
 
   transition:
-    transform 0.18s ease,
-    background 0.15s ease;
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .ai-bubble:hover {
-  transform: scale(1.06);
-  background: var(--accent2);
+  transform: scale(1.05);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.3);
+}
+
+.ai-bubble svg {
+  font-size: 24px;
 }
 
 .ai-bubble-label {
-  font-size: 9px;
-  font-weight: 800;
-  letter-spacing: 0.5px;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+  margin-top: 2px;
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .ai-bubble {
+    width: 64px;
+    height: 64px;
+    right: 16px;
+    bottom: 16px;
+  }
+
+  .ai-bubble svg {
+    font-size: 20px;
+  }
+
+  .ai-bubble-label {
+    font-size: 11px;
+  }
 }
 
 /* ── MAIN PANEL ────────────────────────────── */
@@ -7199,5 +7222,70 @@ textarea {
   .ai-bubble {
     bottom: 16px;
     right: 16px;
+  }
+}
+
+/* AI TIP POPUP */
+.ai-tip-popup {
+  position: fixed;
+  bottom: 104px;
+  /* sits just above the AI bubble */
+  right: 20px;
+  z-index: 9998;
+
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  background: var(--bg2);
+  border: 1px solid var(--border2);
+  border-radius: 20px;
+  padding: 10px 14px 10px 16px;
+
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+
+  white-space: nowrap;
+
+  animation: aiTipIn 0.3s ease;
+}
+
+@keyframes aiTipIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.ai-tip-popup button {
+  background: none;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 13px;
+  padding: 2px 4px;
+  border-radius: 4px;
+  transition: color 0.13s;
+  line-height: 1;
+}
+
+.ai-tip-popup button:hover {
+  color: var(--text);
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .ai-tip-popup {
+    right: 16px;
+    bottom: 90px;
+    font-size: 12px;
   }
 }

@@ -285,10 +285,10 @@ Ask me anything about your numbers!`;
         if (error.message?.includes("index")) {
           console.warn(
             "👉 You need to create a Firestore composite index.\n" +
-              "   Go to Firebase Console → Firestore → Indexes → Add index:\n" +
-              "   Collection: aiChats\n" +
-              "   Fields: ownerUid (Ascending), updatedAt (Descending)\n" +
-              "   Or click the link in the error above.",
+            "   Go to Firebase Console → Firestore → Indexes → Add index:\n" +
+            "   Collection: aiChats\n" +
+            "   Fields: ownerUid (Ascending), updatedAt (Descending)\n" +
+            "   Or click the link in the error above.",
           );
         }
       },
@@ -313,7 +313,7 @@ Ask me anything about your numbers!`;
       setMessages(found.messages || []);
     }
     loadingFromSidebar.current = false;
-  }, [activeChatId]);  
+  }, [activeChatId]);
 
   useEffect(() => {
     const timer = setTimeout(() => setShowTip(false), 300000);
@@ -573,7 +573,7 @@ ${JSON.stringify(context, null, 2)}
       <button className="ai-bubble" onClick={() => setOpen((v) => !v)}>
         <FontAwesomeIcon icon={open ? faTimes : faRobot} />
 
-        <span className="ai-bubble-label">AI</span>
+        {!open && <span className="ai-bubble-label">AI</span>}
       </button>
 
       {/* MAIN PANEL */}
@@ -613,9 +613,8 @@ ${JSON.stringify(context, null, 2)}
                   conversations.map((conv) => (
                     <div
                       key={conv.id}
-                      className={`ai-chat-item ${
-                        activeChatId === conv.id ? "active" : ""
-                      }`}
+                      className={`ai-chat-item ${activeChatId === conv.id ? "active" : ""
+                        }`}
                       onClick={() => selectChat(conv.id)}
                     >
                       <FontAwesomeIcon
