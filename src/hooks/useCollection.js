@@ -170,7 +170,8 @@ export function useCollection(
     };
     // ── FIX: dep array is now always exactly [collectionName, uid] —
     //    constant size. overrideOwnerUid changes are handled via the ref.
-  }, [collectionName, uid]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [collectionName, uid]);
+   
 
   const addItem = async (data, extraMeta = {}) => {
     // ownerUid priority: extraMeta > hook's overrideOwnerUid > current user's uid

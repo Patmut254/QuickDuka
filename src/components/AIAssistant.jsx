@@ -313,10 +313,10 @@ Ask me anything about your numbers!`;
       setMessages(found.messages || []);
     }
     loadingFromSidebar.current = false;
-  }, [activeChatId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [activeChatId]);  
 
   useEffect(() => {
-    const timer = setTimeout(() => setShowTip(false), 6000);
+    const timer = setTimeout(() => setShowTip(false), 300000);
     return () => clearTimeout(timer);
   }, []);
 
@@ -394,6 +394,38 @@ Ask me anything about your numbers!`;
     setMessages(newMessages);
     setLoading(true);
 
+    // ── Friendly greeting handling ─────────────────
+    const isGreeting =
+      /^(hi|hello|hey|yo|sasa|niaje|mambo|good morning|good evening)$/i.test(
+        userText.trim(),
+      );
+
+    if (isGreeting) {
+      const greetingReplies = [
+        "Hello 👋 You're speaking to QuickDuka Assistant. How can I help with your business today?",
+        "Hi 👋 You're speaking to QuickDuka Assistant. Need help checking your sales, profits, or debts?",
+        "Hey 👋 You're speaking to QuickDuka Assistant. What would you like to know about your business?",
+      ];
+
+      const randomReply =
+        greetingReplies[Math.floor(Math.random() * greetingReplies.length)];
+
+      const updatedMessages = [
+        ...newMessages,
+        {
+          role: "assistant",
+          text: randomReply,
+        },
+      ];
+
+      setMessages(updatedMessages);
+      setLoading(false);
+
+      await _saveMessages(updatedMessages);
+
+      return;
+    }
+
     // Local shortcut for how-to questions
     const isHowTo =
       /how.*(use|work|app|start|begin|navigate)/i.test(userText) ||
@@ -419,20 +451,46 @@ Ask me anything about your numbers!`;
         credits,
       });
 
-      const systemPrompt = `You are QuickDuka AI — a business assistant for small shops in Kenya.
+      const newLocal = `
+You are QuickDuka Assistant — a smart and friendly business assistant for small businesses in Kenya.
 
-STRICT RULES:
-1. Reply in the same language as the user (English or Swahili).
-2. Be BRIEF and DIRECT. Maximum 5 sentences or 5 bullet points. No fluff.
-3. Use KES for all currency amounts.
-4. Only use numbers from the provided business data — never invent figures.
-5. For predictions: state the projected amount and one-line reason based on trend.
-6. For advice: give maximum 3 specific, actionable tips based on the actual data.
-7. No greetings, no sign-offs, no "I hope this helps", no filler phrases.
-8. If the data shows nothing relevant, say so in one sentence.
+PERSONALITY:
+- Friendly
+- Natural
+- Professional
+- Helpful
+- Conversational but concise
+
+RULES:
+1. Reply in the same language as the user.
+2. Use KES for all money amounts.
+3. Never invent business figures.
+4. Use only the provided business data.
+5. Keep responses short and useful.
+6. Give actionable business advice.
+7. Predictions must include a short reason.
+8. If information is missing, explain naturally.
+9. Never sound robotic.
+10. Never reply with phrases like:
+   - "No relevant data available"
+   - "No data to discuss"
+   - "Nothing relevant found"
+
+GOOD RESPONSE EXAMPLES:
+
+User: hello
+Assistant: Hello 👋 How can I help with your business today?
+
+User: sales this month
+Assistant: Your sales this month are KES 720. Honey is currently your top-selling item.
+
+User: debts
+Assistant: Mamake Brian still has an unpaid balance remaining.
 
 BUSINESS DATA:
-${JSON.stringify(context, null, 2)}`;
+${JSON.stringify(context, null, 2)}
+`;
+      const systemPrompt = newLocal;
 
       const apiMessages = [
         { role: "system", content: systemPrompt },
@@ -489,7 +547,7 @@ ${JSON.stringify(context, null, 2)}`;
     }
 
     setLoading(false);
-  };
+  };;
 
   const handleKeyDown = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -500,43 +558,52 @@ ${JSON.stringify(context, null, 2)}`;
 
   return (
     <>
+      {/* TIP POPUP */}
       {showTip && !open && (
         <div className="ai-tip-popup">
           <span>{t("chatWithAI") || "Chat with AI"}</span>
+
           <button onClick={() => setShowTip(false)}>
             <FontAwesomeIcon icon={faTimes} />
           </button>
         </div>
       )}
 
+      {/* FLOATING BUTTON */}
       <button className="ai-bubble" onClick={() => setOpen((v) => !v)}>
         <FontAwesomeIcon icon={open ? faTimes : faRobot} />
-        {!open && <span className="ai-bubble-label">AI</span>}
+
+        <span className="ai-bubble-label">Assistant</span>
       </button>
 
+      {/* MAIN PANEL */}
       {open && (
         <div className="ai-panel">
-          {/* Header */}
+          {/* HEADER */}
           <div className="ai-panel-header">
             <div className="ai-panel-title">
               <FontAwesomeIcon icon={faRobot} style={{ marginRight: 8 }} />
-              {t("quickDukaAI") || "QuickDuka AI"}
+
+              {t("quickDukaAssistant") || "QuickDuka Assistant"}
             </div>
+
             <button className="ai-panel-close" onClick={() => setOpen(false)}>
               <FontAwesomeIcon icon={faTimes} />
             </button>
           </div>
 
+          {/* BODY */}
           <div className="ai-body">
-            {/* Sidebar */}
+            {/* SIDEBAR */}
             <div className="ai-sidebar">
               <div className="ai-sidebar-title">
-                {t("previousChats") || "Chats"}
+                {t("previousChats") || "Previous Chats"}
               </div>
 
               <button className="ai-sidebar-btn" onClick={startNewChat}>
                 <FontAwesomeIcon icon={faPlus} />
-                {t("newChat") || "New Chat"}
+
+                <span>{t("newChat") || "New Chat"}</span>
               </button>
 
               <div className="ai-chat-list">
@@ -546,23 +613,23 @@ ${JSON.stringify(context, null, 2)}`;
                   conversations.map((conv) => (
                     <div
                       key={conv.id}
-                      className={
-                        "ai-chat-item" +
-                        (activeChatId === conv.id ? " active" : "")
-                      }
+                      className={`ai-chat-item ${
+                        activeChatId === conv.id ? "active" : ""
+                      }`}
                       onClick={() => selectChat(conv.id)}
                     >
                       <FontAwesomeIcon
                         icon={faMessage}
                         className="ai-chat-item-icon"
                       />
-                      <span className="ai-chat-item-title">
+
+                      <div className="ai-chat-item-title">
                         {chatTitle(conv.messages)}
-                      </span>
+                      </div>
+
                       <button
                         className="ai-chat-delete-btn"
                         onClick={(e) => deleteChat(e, conv.id)}
-                        title="Delete chat"
                       >
                         <FontAwesomeIcon icon={faTrash} />
                       </button>
@@ -572,78 +639,92 @@ ${JSON.stringify(context, null, 2)}`;
               </div>
             </div>
 
-            {/* Messages */}
-            <div className="ai-messages">
-              {messages.length === 0 && (
-                <div className="ai-welcome">
-                  <div className="ai-welcome-title">
-                    {t("aiGreeting") || "Hello! 👋"}
+            {/* CHAT AREA */}
+            <div className="ai-chat-area">
+              {/* MESSAGES */}
+              <div className="ai-messages">
+                {messages.length === 0 ? (
+                  <div className="ai-welcome">
+                    <div className="ai-welcome-text">
+                      <strong>Hello! 👋</strong>
+                      <br />
+                      Ask me anything about your business.
+                    </div>
+
+                    <div className="ai-suggestions">
+                      {suggestions.map((s, i) => (
+                        <button
+                          key={i}
+                          className="ai-suggestion-btn"
+                          onClick={() => sendMessage(s.text)}
+                        >
+                          <FontAwesomeIcon icon={s.icon} />
+
+                          <span>{s.text}</span>
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                  <div className="ai-welcome-sub">
-                    {t("aiAskAnything") ||
-                      "Ask me anything about your business."}
-                  </div>
-                  <div className="ai-suggestions">
-                    {suggestions.map((s) => (
-                      <button
-                        key={s.text}
-                        className="ai-suggestion-chip"
-                        onClick={() => sendMessage(s.text)}
+                ) : (
+                  <>
+                    {messages.map((msg, i) => (
+                      <div
+                        key={i}
+                        className={`ai-message ai-message-${msg.role}`}
                       >
-                        <FontAwesomeIcon
-                          icon={s.icon}
-                          style={{ marginRight: 6, fontSize: 11 }}
-                        />
-                        {s.text}
-                      </button>
+                        <div className="ai-message-bubble">
+                          <MessageText text={msg.text} />
+                        </div>
+                      </div>
                     ))}
-                  </div>
-                </div>
-              )}
 
-              {messages.map((msg, i) => (
-                <div key={i} className={`ai-message ai-message-${msg.role}`}>
-                  <div className="ai-message-bubble">
-                    <MessageText text={msg.text} />
-                  </div>
-                </div>
-              ))}
+                    {loading && (
+                      <div className="ai-message ai-message-assistant">
+                        <div className="ai-message-bubble ai-typing">
+                          <FontAwesomeIcon
+                            icon={faSpinner}
+                            spin
+                            style={{ marginRight: 8 }}
+                          />
 
-              {loading && (
-                <div className="ai-message ai-message-assistant">
-                  <div className="ai-message-bubble ai-typing">
-                    <FontAwesomeIcon
-                      icon={faSpinner}
-                      spin
-                      style={{ marginRight: 6 }}
-                    />
-                    {t("thinking") || "Thinking..."}
-                  </div>
-                </div>
-              )}
+                          {t("thinking") || "Thinking..."}
+                        </div>
+                      </div>
+                    )}
 
-              <div ref={bottomRef} />
+                    <div ref={bottomRef} />
+                  </>
+                )}
+              </div>
+
+              {/* INPUT */}
+              <div className="ai-input-row">
+                <input
+                  ref={inputRef}
+                  type="text"
+                  className="ai-input"
+                  placeholder={
+                    t("aiPlaceholder") || "Ask about your business..."
+                  }
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  disabled={loading}
+                />
+
+                <button
+                  className="ai-send-btn"
+                  onClick={() => sendMessage()}
+                  disabled={!input.trim() || loading}
+                >
+                  {loading ? (
+                    <FontAwesomeIcon icon={faSpinner} spin />
+                  ) : (
+                    <FontAwesomeIcon icon={faPaperPlane} />
+                  )}
+                </button>
+              </div>
             </div>
-          </div>
-
-          {/* Input */}
-          <div className="ai-input-row">
-            <input
-              ref={inputRef}
-              className="ai-input"
-              placeholder={t("aiPlaceholder") || "Ask about your business…"}
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={handleKeyDown}
-              disabled={loading}
-            />
-            <button
-              className="ai-send-btn"
-              onClick={() => sendMessage()}
-              disabled={!input.trim() || loading}
-            >
-              <FontAwesomeIcon icon={faPaperPlane} />
-            </button>
           </div>
         </div>
       )}
