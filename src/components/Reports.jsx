@@ -539,7 +539,7 @@ return (
           gap: 6,
         }}
       >
-        ⬇️ Download CSV
+        ⬇️ Download File (CSV)
       </button>
     </div>
 

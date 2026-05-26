@@ -573,7 +573,7 @@ ${JSON.stringify(context, null, 2)}
       <button className="ai-bubble" onClick={() => setOpen((v) => !v)}>
         <FontAwesomeIcon icon={open ? faTimes : faRobot} />
 
-        <span className="ai-bubble-label">Assistant</span>
+        <span className="ai-bubble-label">AI</span>
       </button>
 
       {/* MAIN PANEL */}
@@ -584,7 +584,7 @@ ${JSON.stringify(context, null, 2)}
             <div className="ai-panel-title">
               <FontAwesomeIcon icon={faRobot} style={{ marginRight: 8 }} />
 
-              {t("quickDukaAssistant") || "QuickDuka Assistant"}
+              {t("QuickDuka Assistant") || "QuickDuka Assistant"}
             </div>
 
             <button className="ai-panel-close" onClick={() => setOpen(false)}>
