@@ -128,7 +128,7 @@ export default function SubscriptionWall({ profile }) {
       if (res.ok && data.success) {
         setStkStatus("sent");
         setStkMsg(
-          "✅ M-Pesa prompt sent! Check your phone and enter your PIN.",
+          "M-Pesa prompt sent! Check your phone and enter your PIN.",
         );
       } else {
         setStkStatus("error");
