@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 import { useState, useEffect } from "react";
 import { auth } from "../firebase";
 import { signOut } from "firebase/auth";
@@ -200,6 +201,7 @@ export default function SubscriptionWall({ profile }) {
         year: "numeric",
       });
 
+      // eslint-disable-next-line no-unused-vars
       const message = encodeURIComponent(
         `✅ *QuickDuka Payment Confirmed!*\n\n` +
           `Hello ${profile?.ownerName || ""},\n\n` +
