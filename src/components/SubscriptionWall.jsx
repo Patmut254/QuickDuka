@@ -118,10 +118,11 @@ export default function SubscriptionWall({ profile }) {
           user_email: profile?.email,
           user_uid: profile?.id,
           plan: selectedPlan.id,
-          account_ref: (profile?.phone || profile?.email || "QuickDuka").slice(
-            0,
-            12,
-          ),
+          account_ref:
+            (profile?.phone || profile?.email || "QuickDuka")
+              .replace(/\D/g, "") // strip +, spaces, dashes
+              .slice(-8) || // last 8 digits — safe, unique, alphanumeric
+            "QuickDuka",
           description: `QuickDuka ${selectedPlan.name} Plan`,
         }),
       });
