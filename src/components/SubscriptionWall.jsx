@@ -34,7 +34,7 @@ export default function SubscriptionWall({ profile }) {
   const [checkStatus, setCheckStatus] = useState("idle");
   const [checkMsg, setCheckMsg] = useState("");
 
-  // FIX 1: Wake Render server on mount — prevents cold-start timeout on Pay Now
+  // Wake Render server on mount — prevents cold-start timeout on Pay Now
   const [serverReady, setServerReady] = useState(false);
   const [serverWaking, setServerWaking] = useState(false);
 
@@ -43,7 +43,7 @@ export default function SubscriptionWall({ profile }) {
     setServerWaking(true);
     fetch(`${MPESA_BACKEND_URL}/`, { method: "GET" })
       .then(() => setServerReady(true))
-      .catch(() => setServerReady(false)) // server offline — will show clear error
+      .catch(() => setServerReady(false))
       .finally(() => setServerWaking(false));
   }, []);
 
@@ -86,8 +86,6 @@ export default function SubscriptionWall({ profile }) {
       setStkMsg("Payment system not yet configured. Please contact support.");
       return;
     }
-
-    // FIX 2: Show clear message if server is still waking up
     if (serverWaking) {
       setStkStatus("error");
       setStkMsg(
@@ -104,7 +102,6 @@ export default function SubscriptionWall({ profile }) {
     setStkStatus("sending");
     setStkMsg("");
     try {
-      // FIX 3: Add 30-second timeout so it doesn't hang forever
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 30000);
 
@@ -120,9 +117,8 @@ export default function SubscriptionWall({ profile }) {
           plan: selectedPlan.id,
           account_ref:
             (profile?.phone || profile?.email || "QuickDuka")
-              .replace(/\D/g, "") // strip +, spaces, dashes
-              .slice(-8) || // last 8 digits — safe, unique, alphanumeric
-            "QuickDuka",
+              .replace(/\D/g, "")
+              .slice(-8) || "QuickDuka",
           description: `QuickDuka ${selectedPlan.name} Plan`,
         }),
       });
@@ -156,21 +152,39 @@ export default function SubscriptionWall({ profile }) {
   };
 
   const handleCheckPayment = async () => {
+    // Guard: profile.id must exist
+    const uid = profile?.id;
+    if (!uid) {
+      setCheckStatus("error");
+      setCheckMsg(
+        "Could not identify your account. Please sign out and back in.",
+      );
+      setTimeout(() => {
+        setCheckStatus("idle");
+        setCheckMsg("");
+      }, 3500);
+      return;
+    }
+
     setCheckStatus("checking");
     setCheckMsg("");
     try {
+      // FIX: timeout on check-payment, same as stk-push
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 20000);
+
       const res = await fetch(
-        `${MPESA_BACKEND_URL}/api/mpesa/check-payment/?uid=${profile?.id}`,
+        `${MPESA_BACKEND_URL}/api/mpesa/check-payment/?uid=${uid}`,
+        { signal: controller.signal },
       );
+      clearTimeout(timeoutId);
+
       const data = await res.json();
 
       if (res.ok && data.activated) {
         setCheckStatus("ok");
         setCheckMsg("🎉 Payment confirmed! Opening your account...");
-
-        // FEATURE: Send WhatsApp notification to customer after successful payment
         await sendPaymentNotification(profile, selectedPlan);
-
         setTimeout(() => window.location.reload(), 1800);
       } else {
         setCheckStatus("pending");
@@ -180,9 +194,13 @@ export default function SubscriptionWall({ profile }) {
           setCheckMsg("");
         }, 3500);
       }
-    } catch {
+    } catch (err) {
+      const msg =
+        err.name === "AbortError"
+          ? "Verification timed out — please try again."
+          : "Could not verify. Please try again.";
       setCheckStatus("error");
-      setCheckMsg("Could not verify. Please try again.");
+      setCheckMsg(msg);
       setTimeout(() => {
         setCheckStatus("idle");
         setCheckMsg("");
@@ -190,10 +208,8 @@ export default function SubscriptionWall({ profile }) {
     }
   };
 
-  // Send WhatsApp notification to customer after payment confirmed
   const sendPaymentNotification = async (profile, plan) => {
     try {
-      // Calculate expiry date (30 days from now)
       const expiry = new Date();
       expiry.setDate(expiry.getDate() + 30);
       const expiryStr = expiry.toLocaleDateString("en-KE", {
@@ -202,18 +218,6 @@ export default function SubscriptionWall({ profile }) {
         year: "numeric",
       });
 
-      // eslint-disable-next-line no-unused-vars
-      const message = encodeURIComponent(
-        `✅ *QuickDuka Payment Confirmed!*\n\n` +
-          `Hello ${profile?.ownerName || ""},\n\n` +
-          `Your *${plan.name} Plan* subscription for *${profile?.businessName || "your business"}* is now active.\n\n` +
-          `📅 Valid until: *${expiryStr}*\n` +
-          `💰 Amount paid: *KES ${plan.price.toLocaleString()}*\n\n` +
-          `You now have full access to QuickDuka. Thank you for subscribing! 🙏\n\n` +
-          `_For support, reply to this message._`,
-      );
-
-      // Try backend notification endpoint first
       if (MPESA_BACKEND_URL) {
         await fetch(`${MPESA_BACKEND_URL}/api/mpesa/notify/`, {
           method: "POST",
@@ -229,16 +233,8 @@ export default function SubscriptionWall({ profile }) {
           }),
         });
       }
-
-      // Fallback: open WhatsApp with pre-filled message to customer
-      // (Only if backend notification fails or isn't set up)
-      // Uncomment to enable:
-      // const customerPhone = normalizePhone(profile?.phone || "");
-      // if (customerPhone.length >= 12) {
-      //   window.open(`https://wa.me/${customerPhone}?text=${message}`, "_blank");
-      // }
     } catch {
-      // Notification failure should never block account activation
+      // Notification failure must never block account activation
       console.warn("Payment notification skipped — will retry next session.");
     }
   };
@@ -533,7 +529,12 @@ export default function SubscriptionWall({ profile }) {
             <button
               className="sub-refresh-btn"
               onClick={handleCheckPayment}
-              disabled={checkStatus === "checking" || checkStatus === "ok"}
+              // FIX: also disable during "error" to prevent spam during the 3s reset window
+              disabled={
+                checkStatus === "checking" ||
+                checkStatus === "ok" ||
+                checkStatus === "error"
+              }
             >
               <FontAwesomeIcon icon={faRotate} style={{ marginRight: 7 }} />
               {checkStatus === "checking"
