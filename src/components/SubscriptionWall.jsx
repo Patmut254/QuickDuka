@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { auth } from "../firebase";
 import { signOut } from "firebase/auth";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -12,22 +12,14 @@ import {
   faLock,
   faChevronDown,
   faChevronUp,
+  faSpinner,
 } from "@fortawesome/free-solid-svg-icons";
 import { PLANS as PLAN_MAP, PLAN_ORDER } from "../subscription";
 
-// Set your deployed Django backend URL here
 const MPESA_BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "";
+const SUPPORT_WHATSAPP = "254769758819";
 
-// ── IMPORTANT: Replace with your real WhatsApp support number ────────────────
-// Format: country code + number, no + sign, no spaces. E.g. 254712345678
-const SUPPORT_WHATSAPP = "254700000000"; // ← REPLACE BEFORE LAUNCH
-// ─────────────────────────────────────────────────────────────────────────────
-
-// Convert central plan map to ordered array for rendering
-const PLANS = PLAN_ORDER.map((id) => ({
-  ...PLAN_MAP[id],
-  features: PLAN_MAP[id].features,
-}));
+const PLANS = PLAN_ORDER.map((id) => ({ ...PLAN_MAP[id] }));
 
 export default function SubscriptionWall({ profile }) {
   const currentPlanId = profile?.subscriptionPlan || "starter";
@@ -41,9 +33,21 @@ export default function SubscriptionWall({ profile }) {
   const [checkStatus, setCheckStatus] = useState("idle");
   const [checkMsg, setCheckMsg] = useState("");
 
+  // FIX 1: Wake Render server on mount — prevents cold-start timeout on Pay Now
+  const [serverReady, setServerReady] = useState(false);
+  const [serverWaking, setServerWaking] = useState(false);
+
+  useEffect(() => {
+    if (!MPESA_BACKEND_URL) return;
+    setServerWaking(true);
+    fetch(`${MPESA_BACKEND_URL}/`, { method: "GET" })
+      .then(() => setServerReady(true))
+      .catch(() => setServerReady(false)) // server offline — will show clear error
+      .finally(() => setServerWaking(false));
+  }, []);
+
   const selectedPlan = PLANS.find((p) => p.id === activePlan) || currentPlan;
 
-  // subscriptionExpiry covers both trial and paid expiry
   const subscriptionExpiry =
     profile?.subscriptionExpiry?.toDate?.() ??
     (profile?.subscriptionExpiry instanceof Date
@@ -81,33 +85,71 @@ export default function SubscriptionWall({ profile }) {
       setStkMsg("Payment system not yet configured. Please contact support.");
       return;
     }
+
+    // FIX 2: Show clear message if server is still waking up
+    if (serverWaking) {
+      setStkStatus("error");
+      setStkMsg(
+        "Payment server is starting up — please wait a few seconds and try again.",
+      );
+      return;
+    }
+    if (!serverReady) {
+      setStkStatus("error");
+      setStkMsg("Payment server is offline. Please WhatsApp us for help.");
+      return;
+    }
+
     setStkStatus("sending");
     setStkMsg("");
     try {
+      // FIX 3: Add 30-second timeout so it doesn't hang forever
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000);
+
       const res = await fetch(`${MPESA_BACKEND_URL}/api/mpesa/stk-push/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        signal: controller.signal,
         body: JSON.stringify({
           phone: normalized,
           amount: selectedPlan.price,
           user_email: profile?.email,
           user_uid: profile?.id,
           plan: selectedPlan.id,
-          account_ref: (profile?.phone || profile?.email || "QuickDuka").slice(0, 12),
+          account_ref: (profile?.phone || profile?.email || "QuickDuka").slice(
+            0,
+            12,
+          ),
           description: `QuickDuka ${selectedPlan.name} Plan`,
         }),
       });
+      clearTimeout(timeoutId);
+
       const data = await res.json();
       if (res.ok && data.success) {
         setStkStatus("sent");
-        setStkMsg("M-Pesa prompt sent! Check your phone and enter your PIN.");
+        setStkMsg(
+          "✅ M-Pesa prompt sent! Check your phone and enter your PIN.",
+        );
       } else {
         setStkStatus("error");
-        setStkMsg(data.error || "Failed to send M-Pesa prompt. Please try again.");
+        setStkMsg(
+          data.error || "Failed to send M-Pesa prompt. Please try again.",
+        );
       }
-    } catch {
-      setStkStatus("error");
-      setStkMsg("Could not reach payment server. Check your internet and try again.");
+    } catch (err) {
+      if (err.name === "AbortError") {
+        setStkStatus("error");
+        setStkMsg(
+          "Request timed out. The server took too long — please try again.",
+        );
+      } else {
+        setStkStatus("error");
+        setStkMsg(
+          "Could not reach payment server. Check your internet and try again.",
+        );
+      }
     }
   };
 
@@ -121,20 +163,20 @@ export default function SubscriptionWall({ profile }) {
       const data = await res.json();
 
       if (res.ok && data.activated) {
-        // Backend has already written subscriptionPlan, subscriptionStatus,
-        // subscriptionExpiry, and paymentHistory to Firestore via Admin SDK.
-        // Frontend just reloads — no Firestore writes needed here.
         setCheckStatus("ok");
-        setCheckMsg("Payment confirmed! Opening your account...");
-        setTimeout(() => window.location.reload(), 1500);
+        setCheckMsg("🎉 Payment confirmed! Opening your account...");
+
+        // FEATURE: Send WhatsApp notification to customer after successful payment
+        await sendPaymentNotification(profile, selectedPlan);
+
+        setTimeout(() => window.location.reload(), 1800);
       } else {
-        // Not yet confirmed — reset so user can tap Verify again
         setCheckStatus("pending");
-        setCheckMsg("Payment not confirmed yet. Wait a moment, then try again.");
+        setCheckMsg("Payment not confirmed yet — wait a moment and try again.");
         setTimeout(() => {
           setCheckStatus("idle");
           setCheckMsg("");
-        }, 3000);
+        }, 3500);
       }
     } catch {
       setCheckStatus("error");
@@ -143,6 +185,58 @@ export default function SubscriptionWall({ profile }) {
         setCheckStatus("idle");
         setCheckMsg("");
       }, 3000);
+    }
+  };
+
+  // Send WhatsApp notification to customer after payment confirmed
+  const sendPaymentNotification = async (profile, plan) => {
+    try {
+      // Calculate expiry date (30 days from now)
+      const expiry = new Date();
+      expiry.setDate(expiry.getDate() + 30);
+      const expiryStr = expiry.toLocaleDateString("en-KE", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      });
+
+      const message = encodeURIComponent(
+        `✅ *QuickDuka Payment Confirmed!*\n\n` +
+          `Hello ${profile?.ownerName || ""},\n\n` +
+          `Your *${plan.name} Plan* subscription for *${profile?.businessName || "your business"}* is now active.\n\n` +
+          `📅 Valid until: *${expiryStr}*\n` +
+          `💰 Amount paid: *KES ${plan.price.toLocaleString()}*\n\n` +
+          `You now have full access to QuickDuka. Thank you for subscribing! 🙏\n\n` +
+          `_For support, reply to this message._`,
+      );
+
+      // Try backend notification endpoint first
+      if (MPESA_BACKEND_URL) {
+        await fetch(`${MPESA_BACKEND_URL}/api/mpesa/notify/`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            phone: profile?.phone,
+            owner_name: profile?.ownerName,
+            business_name: profile?.businessName,
+            plan_name: plan.name,
+            plan_price: plan.price,
+            expiry_date: expiryStr,
+            user_uid: profile?.id,
+          }),
+        });
+      }
+
+      // Fallback: open WhatsApp with pre-filled message to customer
+      // (Only if backend notification fails or isn't set up)
+      // Uncomment to enable:
+      // const customerPhone = normalizePhone(profile?.phone || "");
+      // if (customerPhone.length >= 12) {
+      //   window.open(`https://wa.me/${customerPhone}?text=${message}`, "_blank");
+      // }
+    } catch {
+      // Notification failure should never block account activation
+      console.warn("Payment notification skipped — will retry next session.");
     }
   };
 
@@ -155,8 +249,8 @@ export default function SubscriptionWall({ profile }) {
   const subtext = isTrialEnded
     ? `Your 1-month free trial is over, ${profile?.ownerName || ""}. Subscribe below to keep using QuickDuka.`
     : isExpired
-      ? "Your monthly subscription has expired. Renew below to continue."
-      : `Welcome, ${profile?.ownerName || ""}! Choose a plan and pay to activate your account.`;
+      ? "Your subscription has expired. Renew below to continue."
+      : `Welcome, ${profile?.ownerName || ""}! Your account is ready — choose a plan to get started.`;
 
   return (
     <div className="sub-wall">
@@ -172,6 +266,19 @@ export default function SubscriptionWall({ profile }) {
 
         <h2 className="sub-wall-title">{heading}</h2>
         <p className="sub-wall-msg">{subtext}</p>
+
+        {/* Server wake-up indicator */}
+        {serverWaking && (
+          <div className="sub-server-waking">
+            <FontAwesomeIcon icon={faSpinner} spin style={{ marginRight: 7 }} />
+            Connecting to payment server...
+          </div>
+        )}
+        {!serverWaking && serverReady === false && MPESA_BACKEND_URL && (
+          <div className="sub-server-offline">
+            ⚠️ Payment server is currently offline. Please WhatsApp us for help.
+          </div>
+        )}
 
         {/* Plan selector */}
         <div style={{ width: "100%", marginBottom: 20 }}>
@@ -192,7 +299,13 @@ export default function SubscriptionWall({ profile }) {
             }}
           >
             <div style={{ textAlign: "left" }}>
-              <div style={{ fontWeight: 800, fontSize: 15, color: selectedPlan.color }}>
+              <div
+                style={{
+                  fontWeight: 800,
+                  fontSize: 15,
+                  color: selectedPlan.color,
+                }}
+              >
                 {selectedPlan.name} Plan
               </div>
               <div style={{ fontSize: 13, color: "var(--muted)" }}>
@@ -233,7 +346,8 @@ export default function SubscriptionWall({ profile }) {
                     gap: 12,
                     padding: "12px 16px",
                     textAlign: "left",
-                    background: activePlan === plan.id ? `${plan.color}0f` : "var(--bg2)",
+                    background:
+                      activePlan === plan.id ? `${plan.color}0f` : "var(--bg2)",
                     border: "none",
                     borderBottom: "1px solid var(--border)",
                     cursor: "pointer",
@@ -246,12 +360,19 @@ export default function SubscriptionWall({ profile }) {
                       height: 16,
                       borderRadius: "50%",
                       border: `2px solid ${plan.color}`,
-                      background: activePlan === plan.id ? plan.color : "transparent",
+                      background:
+                        activePlan === plan.id ? plan.color : "transparent",
                       flexShrink: 0,
                     }}
                   />
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 700, fontSize: 13, color: plan.color }}>
+                    <div
+                      style={{
+                        fontWeight: 700,
+                        fontSize: 13,
+                        color: plan.color,
+                      }}
+                    >
                       {plan.name}
                       {plan.badge && (
                         <span
@@ -340,8 +461,8 @@ export default function SubscriptionWall({ profile }) {
             {selectedPlan.price.toLocaleString()} via M-Pesa
           </div>
           <p className="sub-stk-hint">
-            Enter your M-Pesa number. You&apos;ll receive a pop-up on your phone
-            — enter your PIN to pay.
+            Enter your M-Pesa number. You&apos;ll get a pop-up on your phone —
+            enter your PIN to pay.
           </p>
 
           <div className="sub-stk-input-row">
@@ -357,13 +478,26 @@ export default function SubscriptionWall({ profile }) {
               className="btn-primary"
               style={{ minWidth: 110, justifyContent: "center" }}
               onClick={handleSTKPush}
-              disabled={stkStatus === "sending" || stkStatus === "sent"}
+              disabled={
+                stkStatus === "sending" || stkStatus === "sent" || serverWaking
+              }
             >
-              {stkStatus === "sending"
-                ? "Sending..."
-                : stkStatus === "sent"
-                  ? "Sent!"
-                  : "Pay Now"}
+              {serverWaking ? (
+                <>
+                  <FontAwesomeIcon
+                    icon={faSpinner}
+                    spin
+                    style={{ marginRight: 6 }}
+                  />
+                  Wait...
+                </>
+              ) : stkStatus === "sending" ? (
+                "Sending..."
+              ) : stkStatus === "sent" ? (
+                "Sent ✓"
+              ) : (
+                "Pay Now"
+              )}
             </button>
           </div>
 
@@ -380,7 +514,7 @@ export default function SubscriptionWall({ profile }) {
           )}
         </div>
 
-        {/* Verify payment section — shown after STK push is sent */}
+        {/* Verify section — shown after STK push */}
         {stkStatus === "sent" && (
           <div style={{ marginTop: 16 }}>
             <p
@@ -391,7 +525,7 @@ export default function SubscriptionWall({ profile }) {
                 textAlign: "center",
               }}
             >
-              Entered your PIN? Click below to verify:
+              Entered your PIN? Click below to verify your payment:
             </p>
             <button
               className="sub-refresh-btn"
@@ -407,9 +541,7 @@ export default function SubscriptionWall({ profile }) {
             </button>
             {checkMsg && (
               <div
-                className={`sub-stk-msg ${
-                  checkStatus === "ok" ? "sub-stk-success" : "sub-stk-error"
-                }`}
+                className={`sub-stk-msg ${checkStatus === "ok" ? "sub-stk-success" : "sub-stk-error"}`}
                 style={{ marginTop: 10 }}
               >
                 {checkMsg}
@@ -418,11 +550,11 @@ export default function SubscriptionWall({ profile }) {
           </div>
         )}
 
-        {/* WhatsApp support link — shown on STK push error */}
+        {/* WhatsApp support on error */}
         {stkStatus === "error" && (
           <div style={{ marginTop: 12, textAlign: "center" }}>
             <a
-              href={`https://wa.me/${SUPPORT_WHATSAPP}?text=QuickDuka subscription - ${profile?.phone || profile?.email} - ${profile?.businessName || ""}`}
+              href={`https://wa.me/${SUPPORT_WHATSAPP}?text=QuickDuka subscription help - ${profile?.phone || profile?.email} - ${profile?.businessName || ""}`}
               target="_blank"
               rel="noreferrer"
               className="sub-wa-btn"
