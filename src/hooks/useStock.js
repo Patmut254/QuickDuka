@@ -9,8 +9,26 @@ import {
   where,
   orderBy,
   onSnapshot,
+  doc,
+  updateDoc,
+  increment,
 } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
+
+// adjustStockQuantity — bumps a stock item's quantity up or down.
+// Used by Sales (decrement on sale) and Purchases (increment on purchase)
+// so the stock page behaves like a running bookkeeping ledger of what's
+// left, instead of a static price list.
+export async function adjustStockQuantity(stockId, delta) {
+  if (!stockId || !delta) return;
+  try {
+    await updateDoc(doc(db, "stock", stockId), {
+      quantity: increment(delta),
+    });
+  } catch (err) {
+    console.error("Stock quantity update failed:", err.message);
+  }
+}
 
 export function useStock() {
   const [stock, setStock] = useState([]);

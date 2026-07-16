@@ -173,6 +173,19 @@ export default function Reports({ ownerUid }) {
     return Object.entries(map).map(([name, value]) => ({ name, value }));
   }, [expenses, inRange]);
 
+  // ── Sales breakdown by payment method (cash / M-Pesa / Airtel / card) ──
+  const paymentByMethod = useMemo(() => {
+    const map = {};
+    sales.filter(inRange).forEach((s) => {
+      const method = s.paymentMethod || "cash";
+      map[method] = (map[method] || 0) + Number(s.amount || 0);
+    });
+    return Object.entries(map).map(([method, value]) => ({
+      name: t.paymentMethods?.[method] || method,
+      value,
+    }));
+  }, [sales, inRange, t]);
+
   // ── Chart data: daily → last 14 days, monthly → 6 months, yearly → 12 months ──
   const barData = useMemo(() => {
     const now = new Date();
@@ -359,7 +372,7 @@ const topItems = useMemo(() => {
 // ── CSV Download ──────────────────────────────────────────────────────
 const downloadCSV = () => {
   const rows = [
-    ["Type", "Date", "Description / Item", "Category", "Amount (KES)"],
+    ["Type", "Date", "Description / Item", "Category", "Quantity", "Payment Method", "Amount (KES)"],
     ...sales
       .filter(inRange)
       .map((s) => [
@@ -367,6 +380,8 @@ const downloadCSV = () => {
         s.date || "",
         s.description || s.item || "",
         "",
+        s.quantity ?? "",
+        s.paymentMethod || "cash",
         s.amount || 0,
       ]),
     ...purchases
@@ -376,6 +391,8 @@ const downloadCSV = () => {
         p.date || "",
         p.item || p.description || "",
         p.category || "",
+        p.quantity ?? "",
+        "",
         p.amount || 0,
       ]),
     ...expenses
@@ -385,6 +402,8 @@ const downloadCSV = () => {
         e.date || "",
         e.description || "",
         e.category || "",
+        "",
+        "",
         e.amount || 0,
       ]),
     ...losses
@@ -394,16 +413,18 @@ const downloadCSV = () => {
         l.date || "",
         l.item || l.description || "",
         l.category || "",
+        "",
+        "",
         l.amount || 0,
       ]),
     [],
     ["SUMMARY"],
-    ["Total Sales", "", "", "", ms],
-    ["Total Purchases", "", "", "", mp],
-    ["Total Expenses", "", "", "", me],
-    ["Total Losses", "", "", "", ml],
-    ["Net Profit", "", "", "", mProfit],
-    ["Profit Margin", "", "", "", `${margin}%`],
+    ["Total Sales", "", "", "", "", "", ms],
+    ["Total Purchases", "", "", "", "", "", mp],
+    ["Total Expenses", "", "", "", "", "", me],
+    ["Total Losses", "", "", "", "", "", ml],
+    ["Net Profit", "", "", "", "", "", mProfit],
+    ["Profit Margin", "", "", "", "", "", `${margin}%`],
   ];
 
   const escape = (v) => {
@@ -459,6 +480,13 @@ const typeLabel = {
 
 return (
   <div className="reports-page">
+    {/* PC/desktop-only notice — shown instead of the report on small screens */}
+    <div className="reports-desktop-only">
+      🖥️ {t.reportsDesktopOnly ||
+        "Reports are available on desktop / PC view only."}
+    </div>
+
+    <div className="reports-body">
     {/* ── Controls bar ── */}
     <div className="reports-controls" style={{ flexWrap: "wrap", gap: 10 }}>
       {/* Period toggle */}
@@ -759,6 +787,44 @@ return (
         )}
       </div>
 
+      {/* Payment method breakdown */}
+      <div className="chart-card">
+        <h3>
+          {t.paymentBreakdown || "Payments by Method"} — {periodLabel}
+        </h3>
+        {paymentByMethod.length === 0 ? (
+          <div className="empty-state">No sales recorded for this period.</div>
+        ) : (
+          <ResponsiveContainer width="100%" height={260}>
+            <PieChart margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
+              <Pie
+                data={paymentByMethod}
+                dataKey="value"
+                nameKey="name"
+                cx="50%"
+                cy="45%"
+                outerRadius={75}
+                label={false}
+                labelLine={false}
+              >
+                {paymentByMethod.map((_, i) => (
+                  <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip
+                contentStyle={{
+                  background: "#1a1a2e",
+                  border: "1px solid #333",
+                  color: "#fff",
+                }}
+                formatter={(v) => `KES ${Number(v).toLocaleString()}`}
+              />
+              <PieLegend wrapperStyle={{ fontSize: 11, paddingTop: 8 }} />
+            </PieChart>
+          </ResponsiveContainer>
+        )}
+      </div>
+
       {/* Top selling items */}
       <div className="chart-card">
         <h3>Top Selling Items — {periodLabel}</h3>
@@ -855,6 +921,8 @@ return (
                 <th style={{ padding: "6px 8px" }}>Type</th>
                 <th style={{ padding: "6px 8px" }}>Date</th>
                 <th style={{ padding: "6px 8px" }}>Description</th>
+                <th style={{ padding: "6px 8px", textAlign: "right" }}>Qty</th>
+                <th style={{ padding: "6px 8px" }}>{t.paymentMethod || "Method"}</th>
                 <th style={{ padding: "6px 8px", textAlign: "right" }}>
                   Amount (KES)
                 </th>
@@ -909,6 +977,30 @@ return (
                     style={{
                       padding: "7px 8px",
                       textAlign: "right",
+                      color: "var(--muted, #9ca3af)",
+                    }}
+                  >
+                    {item.quantity != null && item.quantity !== ""
+                      ? Number(item.quantity).toLocaleString()
+                      : "—"}
+                  </td>
+                  <td
+                    style={{
+                      padding: "7px 8px",
+                      color: "var(--muted, #9ca3af)",
+                      textTransform: "capitalize",
+                    }}
+                  >
+                    {item._type === "sale"
+                      ? t.paymentMethods?.[item.paymentMethod] ||
+                        item.paymentMethod ||
+                        "—"
+                      : "—"}
+                  </td>
+                  <td
+                    style={{
+                      padding: "7px 8px",
+                      textAlign: "right",
                       fontWeight: 600,
                       color: item._type === "sale" ? "#22c55e" : "#f97316",
                     }}
@@ -924,5 +1016,6 @@ return (
       )}
     </div>
   </div>
+</div>
 );
 }

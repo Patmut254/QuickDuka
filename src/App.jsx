@@ -290,7 +290,9 @@ function AppShell({ user, profile, theme, toggleTheme }) {
   const infoTabs = tabs.filter((t) =>
     ["contact", "faq", "privacy"].includes(t.id),
   );
-  const mobileTabs = tabs;
+  // Reports is a PC/desktop-only page per client request — keep it out of
+  // the mobile bottom nav so it can't be reached on a phone.
+  const mobileTabs = tabs.filter((t) => t.id !== "reports");
   const currentTab = tabs.find((t) => t.id === activeTab);
 
   const expiryDate = profile?.subscriptionExpiry?.toDate?.();

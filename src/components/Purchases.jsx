@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useCollection } from "../hooks/useCollection";
-import { useStock } from "../hooks/useStock";
+import { adjustStockQuantity } from "../hooks/useStock";
 import { useLang } from "../LangContext";
 import EntryTable from "./EntryTable";
 import { Toast, useToast } from "./Toast";
@@ -9,7 +9,13 @@ export default function Purchases({ ownerUid }) {
   const { t } = useLang();
   const { items, loading, addItem, deleteItem, updateItem } =
     useCollection("purchases", ownerUid ? { ownerUid } : undefined);
-  const stock = useStock();
+  // Use the writable stock collection directly (not the read-only
+  // useStock hook) so a purchase can auto-create or top up a stock item —
+  // purchasing goods should feed straight into the stock ledger.
+  const {
+    items: stock,
+    addItem: addStockItem,
+  } = useCollection("stock", ownerUid ? { ownerUid } : undefined);
   const { toast, showToast } = useToast();
 
   const emptyForm = {
@@ -17,6 +23,7 @@ export default function Purchases({ ownerUid }) {
     item: "",
     supplier: "",
     phone: "",
+    quantity: "",
     amount: "",
     category: "",
     notes: "",
@@ -39,7 +46,32 @@ export default function Purchases({ ownerUid }) {
     if (status !== "idle") return;
     setStatus("saving");
     try {
-      await addItem({ ...form, amount: parseFloat(form.amount) });
+      const qty = form.quantity !== "" ? parseFloat(form.quantity) : null;
+      await addItem({ ...form, amount: parseFloat(form.amount), quantity: qty });
+
+      // Bookkeeping: a purchase brings goods into stock. If a matching
+      // catalog item exists, top up its quantity; otherwise create one so
+      // nothing purchased falls through the cracks.
+      if (qty && form.item.trim()) {
+        const match = stock.find(
+          (s) => s.name.trim().toLowerCase() === form.item.trim().toLowerCase(),
+        );
+        if (match) {
+          await adjustStockQuantity(match.id, qty);
+        } else {
+          await addStockItem({
+            name: form.item.trim(),
+            priceMode: "fixed",
+            price: form.amount ? parseFloat(form.amount) / qty : null,
+            minPrice: null,
+            maxPrice: null,
+            unit: "",
+            quantity: qty,
+            notes: "Auto-added from a purchase",
+          });
+        }
+      }
+
       setStatus("saved");
       showToast(t.saved);
       setTimeout(() => {
@@ -77,6 +109,12 @@ export default function Purchases({ ownerUid }) {
         ),
     },
     { key: "category", label: t.category, type: "select", options: CATS },
+    {
+      key: "quantity",
+      label: t.quantity,
+      inputType: "number",
+      format: (v) => (v != null && v !== "" ? Number(v).toLocaleString() : "-"),
+    },
     {
       key: "amount",
       label: t.amount,
@@ -173,6 +211,17 @@ export default function Purchases({ ownerUid }) {
                   <option key={c}>{c}</option>
                 ))}
               </select>
+            </div>
+            <div className="field-group">
+              <label>{t.quantity}</label>
+              <input
+                type="number"
+                min="0"
+                step="1"
+                placeholder={t.quantityPh}
+                value={form.quantity}
+                onChange={(e) => setForm({ ...form, quantity: e.target.value })}
+              />
             </div>
             <div className="field-group">
               <label>{t.amount} *</label>

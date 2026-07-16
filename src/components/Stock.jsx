@@ -12,7 +12,16 @@ export default function Stock({ sub, ownerUid }) {
     useCollection("stock", ownerUid ? { ownerUid } : undefined);
   const { toast, showToast } = useToast();
 
-  const emptyForm = { name: "", price: "", unit: "", notes: "" };
+  const emptyForm = {
+    name: "",
+    priceMode: "fixed", // "fixed" | "range"
+    price: "",
+    minPrice: "",
+    maxPrice: "",
+    unit: "",
+    quantity: "",
+    notes: "",
+  };
   const [form, setForm] = useState(emptyForm);
   const [showForm, setShowForm] = useState(false);
   const [status, setStatus] = useState("idle");
@@ -30,10 +39,15 @@ export default function Stock({ sub, ownerUid }) {
     if (status !== "idle") return;
     setStatus("saving");
     try {
+      const isRange = form.priceMode === "range";
       await addItem({
         name: form.name.trim(),
-        price: form.price !== "" ? parseFloat(form.price) : null,
+        priceMode: form.priceMode,
+        price: !isRange && form.price !== "" ? parseFloat(form.price) : null,
+        minPrice: isRange && form.minPrice !== "" ? parseFloat(form.minPrice) : null,
+        maxPrice: isRange && form.maxPrice !== "" ? parseFloat(form.maxPrice) : null,
         unit: form.unit.trim(),
+        quantity: form.quantity !== "" ? parseFloat(form.quantity) : null,
         notes: form.notes.trim(),
       });
       setStatus("saved");
@@ -52,12 +66,27 @@ export default function Stock({ sub, ownerUid }) {
   const handleEdit = async (e) => {
     e.preventDefault();
     try {
+      const isRange = editForm.priceMode === "range";
       await updateItem(
         editTarget.id,
         {
           name: editForm.name.trim(),
-          price: editForm.price !== "" ? parseFloat(editForm.price) : null,
+          priceMode: editForm.priceMode || "fixed",
+          price:
+            !isRange && editForm.price !== "" ? parseFloat(editForm.price) : null,
+          minPrice:
+            isRange && editForm.minPrice !== ""
+              ? parseFloat(editForm.minPrice)
+              : null,
+          maxPrice:
+            isRange && editForm.maxPrice !== ""
+              ? parseFloat(editForm.maxPrice)
+              : null,
           unit: editForm.unit?.trim() || "",
+          quantity:
+            editForm.quantity !== "" && editForm.quantity != null
+              ? parseFloat(editForm.quantity)
+              : null,
           notes: editForm.notes?.trim() || "",
         },
         editTarget,
@@ -139,19 +168,64 @@ export default function Stock({ sub, ownerUid }) {
               />
             </div>
             <div className="field-group">
-              <label htmlFor="stock-price">{t.price}</label>
-              <input
-                id="stock-price"
-                name="stock-price"
-                type="number"
-                autoComplete="off"
-                min="0"
-                step="0.01"
-                placeholder={t.pricePh}
-                value={form.price}
-                onChange={set("price")}
-              />
+              <label htmlFor="stock-price-mode">{t.priceMode}</label>
+              <select
+                id="stock-price-mode"
+                name="stock-price-mode"
+                value={form.priceMode}
+                onChange={set("priceMode")}
+              >
+                <option value="fixed">{t.fixedPrice}</option>
+                <option value="range">{t.priceRange}</option>
+              </select>
             </div>
+            {form.priceMode === "range" ? (
+              <>
+                <div className="field-group">
+                  <label htmlFor="stock-min-price">{t.minPrice}</label>
+                  <input
+                    id="stock-min-price"
+                    name="stock-min-price"
+                    type="number"
+                    autoComplete="off"
+                    min="0"
+                    step="0.01"
+                    placeholder="0.00"
+                    value={form.minPrice}
+                    onChange={set("minPrice")}
+                  />
+                </div>
+                <div className="field-group">
+                  <label htmlFor="stock-max-price">{t.maxPrice}</label>
+                  <input
+                    id="stock-max-price"
+                    name="stock-max-price"
+                    type="number"
+                    autoComplete="off"
+                    min="0"
+                    step="0.01"
+                    placeholder="0.00"
+                    value={form.maxPrice}
+                    onChange={set("maxPrice")}
+                  />
+                </div>
+              </>
+            ) : (
+              <div className="field-group">
+                <label htmlFor="stock-price">{t.price}</label>
+                <input
+                  id="stock-price"
+                  name="stock-price"
+                  type="number"
+                  autoComplete="off"
+                  min="0"
+                  step="0.01"
+                  placeholder={t.pricePh}
+                  value={form.price}
+                  onChange={set("price")}
+                />
+              </div>
+            )}
             <div className="field-group">
               <label htmlFor="stock-unit">{t.unit}</label>
               <input
@@ -161,6 +235,20 @@ export default function Stock({ sub, ownerUid }) {
                 placeholder={t.unitPh}
                 value={form.unit}
                 onChange={set("unit")}
+              />
+            </div>
+            <div className="field-group">
+              <label htmlFor="stock-quantity">{t.quantity}</label>
+              <input
+                id="stock-quantity"
+                name="stock-quantity"
+                type="number"
+                autoComplete="off"
+                min="0"
+                step="1"
+                placeholder={t.quantityPh}
+                value={form.quantity}
+                onChange={set("quantity")}
               />
             </div>
             <div className="field-group full-width">
@@ -218,50 +306,101 @@ export default function Stock({ sub, ownerUid }) {
         </div>
       ) : (
         <div className="stock-grid">
-          {filtered.map((item) => (
-            <div key={item.id} className="stock-card">
-              <div className="stock-card-top">
-                <div className="stock-item-name">{item.name}</div>
-                <div className="stock-item-price">
-                  {item.price != null ? (
-                    <span className="price-tag">
-                      KES {Number(item.price).toLocaleString()}
-                      {item.unit ? ` / ${item.unit}` : ""}
+          {filtered.map((item) => {
+            const isRange = item.priceMode === "range";
+            const unitValue = isRange
+              ? item.minPrice != null && item.maxPrice != null
+                ? (Number(item.minPrice) + Number(item.maxPrice)) / 2
+                : null
+              : item.price;
+            const hasQty = item.quantity != null;
+            const stockValue =
+              hasQty && unitValue != null ? Number(item.quantity) * unitValue : null;
+            return (
+              <div key={item.id} className="stock-card">
+                <div className="stock-card-top">
+                  <div className="stock-item-name">{item.name}</div>
+                  <div className="stock-item-price">
+                    {isRange ? (
+                      item.minPrice != null && item.maxPrice != null ? (
+                        <span className="price-tag">
+                          KES {Number(item.minPrice).toLocaleString()}–
+                          {Number(item.maxPrice).toLocaleString()}
+                          {item.unit ? ` / ${item.unit}` : ""}
+                        </span>
+                      ) : (
+                        <span className="price-variable">
+                          Bei inabadilika / Price varies
+                        </span>
+                      )
+                    ) : item.price != null ? (
+                      <span className="price-tag">
+                        KES {Number(item.price).toLocaleString()}
+                        {item.unit ? ` / ${item.unit}` : ""}
+                      </span>
+                    ) : (
+                      <span className="price-variable">
+                        Bei inabadilika / Price varies
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {hasQty && (
+                  <div
+                    className="stock-item-notes"
+                    style={{ display: "flex", gap: 14, flexWrap: "wrap" }}
+                  >
+                    <span>
+                      {t.qtyInStock}:{" "}
+                      <strong
+                        style={{
+                          color: Number(item.quantity) <= 0 ? "#ef4444" : "inherit",
+                        }}
+                      >
+                        {Number(item.quantity).toLocaleString()}
+                      </strong>
                     </span>
-                  ) : (
-                    <span className="price-variable">
-                      Bei inabadilika / Price varies
-                    </span>
-                  )}
+                    {stockValue != null && (
+                      <span>
+                        {t.stockValue}: <strong>KES {stockValue.toLocaleString()}</strong>
+                      </span>
+                    )}
+                  </div>
+                )}
+
+                {item.notes && (
+                  <div className="stock-item-notes">{item.notes}</div>
+                )}
+                <div className="stock-actions">
+                  <button
+                    className="edit-btn-sm"
+                    onClick={() => {
+                      setEditTarget(item);
+                      setEditForm({
+                        name: item.name,
+                        priceMode: item.priceMode || "fixed",
+                        price: item.price ?? "",
+                        minPrice: item.minPrice ?? "",
+                        maxPrice: item.maxPrice ?? "",
+                        unit: item.unit || "",
+                        quantity: item.quantity ?? "",
+                        notes: item.notes || "",
+                      });
+                    }}
+                  >
+                    ✏️ Hariri / Edit
+                  </button>
+                  <button
+                    className="delete-btn"
+                    onClick={() => setDeleteTarget(item)}
+                  >
+                    🗑
+                  </button>
                 </div>
               </div>
-              {item.notes && (
-                <div className="stock-item-notes">{item.notes}</div>
-              )}
-              <div className="stock-actions">
-                <button
-                  className="edit-btn-sm"
-                  onClick={() => {
-                    setEditTarget(item);
-                    setEditForm({
-                      name: item.name,
-                      price: item.price ?? "",
-                      unit: item.unit || "",
-                      notes: item.notes || "",
-                    });
-                  }}
-                >
-                  ✏️ Hariri / Edit
-                </button>
-                <button
-                  className="delete-btn"
-                  onClick={() => setDeleteTarget(item)}
-                >
-                  🗑
-                </button>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
@@ -291,19 +430,62 @@ export default function Stock({ sub, ownerUid }) {
                 />
               </div>
               <div className="field-group">
-                <label htmlFor="edit-stock-price">{t.price}</label>
-                <input
-                  id="edit-stock-price"
-                  name="edit-stock-price"
-                  type="number"
-                  autoComplete="off"
-                  min="0"
-                  step="0.01"
-                  placeholder={t.pricePh}
-                  value={editForm.price}
-                  onChange={setEdit("price")}
-                />
+                <label htmlFor="edit-stock-price-mode">{t.priceMode}</label>
+                <select
+                  id="edit-stock-price-mode"
+                  name="edit-stock-price-mode"
+                  value={editForm.priceMode || "fixed"}
+                  onChange={setEdit("priceMode")}
+                >
+                  <option value="fixed">{t.fixedPrice}</option>
+                  <option value="range">{t.priceRange}</option>
+                </select>
               </div>
+              {editForm.priceMode === "range" ? (
+                <>
+                  <div className="field-group">
+                    <label htmlFor="edit-stock-min-price">{t.minPrice}</label>
+                    <input
+                      id="edit-stock-min-price"
+                      name="edit-stock-min-price"
+                      type="number"
+                      autoComplete="off"
+                      min="0"
+                      step="0.01"
+                      value={editForm.minPrice}
+                      onChange={setEdit("minPrice")}
+                    />
+                  </div>
+                  <div className="field-group">
+                    <label htmlFor="edit-stock-max-price">{t.maxPrice}</label>
+                    <input
+                      id="edit-stock-max-price"
+                      name="edit-stock-max-price"
+                      type="number"
+                      autoComplete="off"
+                      min="0"
+                      step="0.01"
+                      value={editForm.maxPrice}
+                      onChange={setEdit("maxPrice")}
+                    />
+                  </div>
+                </>
+              ) : (
+                <div className="field-group">
+                  <label htmlFor="edit-stock-price">{t.price}</label>
+                  <input
+                    id="edit-stock-price"
+                    name="edit-stock-price"
+                    type="number"
+                    autoComplete="off"
+                    min="0"
+                    step="0.01"
+                    placeholder={t.pricePh}
+                    value={editForm.price}
+                    onChange={setEdit("price")}
+                  />
+                </div>
+              )}
               <div className="field-group">
                 <label htmlFor="edit-stock-unit">{t.unit}</label>
                 <input
@@ -313,6 +495,20 @@ export default function Stock({ sub, ownerUid }) {
                   placeholder={t.unitPh}
                   value={editForm.unit}
                   onChange={setEdit("unit")}
+                />
+              </div>
+              <div className="field-group">
+                <label htmlFor="edit-stock-quantity">{t.quantity}</label>
+                <input
+                  id="edit-stock-quantity"
+                  name="edit-stock-quantity"
+                  type="number"
+                  autoComplete="off"
+                  min="0"
+                  step="1"
+                  placeholder={t.quantityPh}
+                  value={editForm.quantity}
+                  onChange={setEdit("quantity")}
                 />
               </div>
               <div className="field-group">

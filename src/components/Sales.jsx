@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { useCollection } from "../hooks/useCollection";
-import { useStock } from "../hooks/useStock";
+import { useStock, adjustStockQuantity } from "../hooks/useStock";
 import { useLang } from "../LangContext";
 import EntryTable from "./EntryTable";
 import { Toast, useToast } from "./Toast";
+
+const PAYMENT_METHODS = ["cash", "mpesa", "airtel", "card"];
 
 export default function Sales({ ownerUid }) {
   const { t } = useLang();
@@ -19,33 +21,71 @@ export default function Sales({ ownerUid }) {
     description: "",
     customer: "",
     phone: "",
+    quantity: "1",
     amount: "",
+    paymentMethod: "cash",
     notes: "",
   };
   const [form, setForm] = useState(emptyForm);
   const [status, setStatus] = useState("idle");
   const [showForm, setShowForm] = useState(false);
+  // Tracks the matched stock item (if any) so we know its id (to decrement
+  // quantity on save) and its price mode (to bound the discount slider).
+  const [selectedStock, setSelectedStock] = useState(null);
 
   const handleStockSelect = (e) => {
     const found = stock.find((c) => c.name === e.target.value);
+    setSelectedStock(found || null);
+    let amount = form.amount;
+    if (found) {
+      if (found.priceMode === "range" && found.maxPrice != null) {
+        amount = String(found.maxPrice); // default to full price; discount by dragging down
+      } else if (found.price != null) {
+        amount = String(found.price);
+      }
+    }
     setForm((f) => ({
       ...f,
       description: found ? found.name : e.target.value,
-      amount: found?.price != null ? String(found.price) : f.amount,
+      amount,
     }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (status !== "idle") return;
+
+    const qty = parseFloat(form.quantity) || 1;
+
+    // If this sale is against a tracked stock item, make sure there's
+    // enough left before recording the sale.
+    if (selectedStock && selectedStock.quantity != null && qty > Number(selectedStock.quantity)) {
+      showToast(
+        `Only ${Number(selectedStock.quantity).toLocaleString()} ${selectedStock.name} left in stock.`,
+        "error",
+      );
+      return;
+    }
+
     setStatus("saving");
     try {
-      await addItem({ ...form, amount: parseFloat(form.amount) });
+      await addItem({
+        ...form,
+        amount: parseFloat(form.amount),
+        quantity: qty,
+      });
+
+      // Bookkeeping: reduce stock quantity by the amount sold.
+      if (selectedStock && selectedStock.quantity != null) {
+        await adjustStockQuantity(selectedStock.id, -qty);
+      }
+
       setStatus("saved");
       showToast(t.saved);
       setTimeout(() => {
         setStatus("idle");
         setForm(emptyForm);
+        setSelectedStock(null);
         setShowForm(false);
       }, 1500);
     } catch {
@@ -77,10 +117,37 @@ export default function Sales({ ownerUid }) {
         ),
     },
     {
+      key: "quantity",
+      label: t.quantity,
+      inputType: "number",
+      format: (v) => (v != null && v !== "" ? Number(v).toLocaleString() : "-"),
+    },
+    {
       key: "amount",
       label: t.amount,
       inputType: "number",
       format: (v) => `KES ${Number(v).toLocaleString()}`,
+    },
+    {
+      key: "paymentMethod",
+      label: t.paymentMethod,
+      type: "select",
+      options: PAYMENT_METHODS,
+      format: (v) => (
+        <span
+          style={{
+            fontSize: 11,
+            fontWeight: 600,
+            padding: "2px 8px",
+            borderRadius: 20,
+            background: "var(--accent)15",
+            color: "var(--accent)",
+            textTransform: "capitalize",
+          }}
+        >
+          {t.paymentMethods?.[v] || v || t.paymentMethods?.cash || "Cash"}
+        </span>
+      ),
     },
     { key: "notes", label: t.notes },
     // staffName is display-only — mark readOnly so EntryTable skips it in edit mode
@@ -109,6 +176,10 @@ export default function Sales({ ownerUid }) {
           onClick={() => {
             setShowForm(!showForm);
             setStatus("idle");
+            if (showForm) {
+              setForm(emptyForm);
+              setSelectedStock(null);
+            }
           }}
         >
           {showForm ? `✕ ${t.cancel}` : `+ ${t.newSale}`}
@@ -190,19 +261,82 @@ export default function Sales({ ownerUid }) {
               />
             </div>
             <div className="field-group">
-              <label htmlFor="sale-amount">{t.amount} *</label>
+              <label htmlFor="sale-quantity">{t.quantity}</label>
               <input
-                id="sale-amount"
-                name="sale-amount"
+                id="sale-quantity"
+                name="sale-quantity"
                 type="number"
                 autoComplete="off"
-                min="0"
-                step="0.01"
-                placeholder="0.00"
-                value={form.amount}
-                onChange={(e) => setForm({ ...form, amount: e.target.value })}
-                required
+                min="1"
+                step="1"
+                value={form.quantity}
+                onChange={(e) => setForm({ ...form, quantity: e.target.value })}
               />
+              {selectedStock?.quantity != null && (
+                <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 4 }}>
+                  {t.qtyInStock}: {Number(selectedStock.quantity).toLocaleString()}
+                </div>
+              )}
+            </div>
+            <div className="field-group">
+              <label htmlFor="sale-amount">
+                {t.amount} *
+                {selectedStock?.priceMode === "range" && (
+                  <span style={{ fontWeight: 400, color: "var(--muted)" }}>
+                    {" "}
+                    ({t.priceRange}: KES {Number(selectedStock.minPrice).toLocaleString()}–
+                    {Number(selectedStock.maxPrice).toLocaleString()})
+                  </span>
+                )}
+              </label>
+              {selectedStock?.priceMode === "range" &&
+              selectedStock.minPrice != null &&
+              selectedStock.maxPrice != null ? (
+                <div>
+                  <input
+                    id="sale-amount"
+                    name="sale-amount"
+                    type="range"
+                    min={selectedStock.minPrice}
+                    max={selectedStock.maxPrice}
+                    step="0.01"
+                    value={form.amount || selectedStock.maxPrice}
+                    onChange={(e) => setForm({ ...form, amount: e.target.value })}
+                    style={{ width: "100%" }}
+                  />
+                  <div style={{ fontWeight: 600, marginTop: 4 }}>
+                    KES {Number(form.amount || selectedStock.maxPrice).toLocaleString()}
+                  </div>
+                </div>
+              ) : (
+                <input
+                  id="sale-amount"
+                  name="sale-amount"
+                  type="number"
+                  autoComplete="off"
+                  min="0"
+                  step="0.01"
+                  placeholder="0.00"
+                  value={form.amount}
+                  onChange={(e) => setForm({ ...form, amount: e.target.value })}
+                  required
+                />
+              )}
+            </div>
+            <div className="field-group">
+              <label htmlFor="sale-payment-method">{t.paymentMethod}</label>
+              <select
+                id="sale-payment-method"
+                name="sale-payment-method"
+                value={form.paymentMethod}
+                onChange={(e) => setForm({ ...form, paymentMethod: e.target.value })}
+              >
+                {PAYMENT_METHODS.map((m) => (
+                  <option key={m} value={m}>
+                    {t.paymentMethods?.[m] || m}
+                  </option>
+                ))}
+              </select>
             </div>
             <div className="field-group full-width">
               <label htmlFor="sale-notes">{t.notes}</label>

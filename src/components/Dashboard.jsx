@@ -159,7 +159,10 @@ export default function Dashboard({ setActiveTab, sub, ownerUid }) {
       <div className="summary-cards">
         {cards.map((c) => (
           <div
-            className="summary-card"
+            className={
+              "summary-card" +
+              (c.label === t.netProfitLabel ? " hide-mobile" : "")
+            }
             key={c.label}
             style={{ borderTop: `4px solid ${c.color}` }}
           >
