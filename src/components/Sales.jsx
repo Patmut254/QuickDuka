@@ -57,14 +57,31 @@ export default function Sales({ ownerUid }) {
 
     const qty = parseFloat(form.quantity) || 1;
 
+    // Resolve the stock match even if it wasn't picked from the dropdown
+    // (e.g. typed straight into the description field), so a zero-stock
+    // item can't be sold just by bypassing the picker.
+    const matchedStock =
+      selectedStock ||
+      stock.find(
+        (c) => c.name.trim().toLowerCase() === form.description.trim().toLowerCase(),
+      ) ||
+      null;
+
     // If this sale is against a tracked stock item, make sure there's
-    // enough left before recording the sale.
-    if (selectedStock && selectedStock.quantity != null && qty > Number(selectedStock.quantity)) {
-      showToast(
-        `Only ${Number(selectedStock.quantity).toLocaleString()} ${selectedStock.name} left in stock.`,
-        "error",
-      );
-      return;
+    // enough left — and block entirely if it's out of stock.
+    if (matchedStock && matchedStock.quantity != null) {
+      const available = Number(matchedStock.quantity);
+      if (available <= 0) {
+        showToast(`${matchedStock.name} is out of stock.`, "error");
+        return;
+      }
+      if (qty > available) {
+        showToast(
+          `Only ${available.toLocaleString()} ${matchedStock.name} left in stock.`,
+          "error",
+        );
+        return;
+      }
     }
 
     setStatus("saving");
@@ -76,8 +93,8 @@ export default function Sales({ ownerUid }) {
       });
 
       // Bookkeeping: reduce stock quantity by the amount sold.
-      if (selectedStock && selectedStock.quantity != null) {
-        await recordStockSale(selectedStock.id, qty);
+      if (matchedStock && matchedStock.quantity != null) {
+        await recordStockSale(matchedStock.id, qty);
       }
 
       setStatus("saved");
@@ -212,14 +229,18 @@ export default function Sales({ ownerUid }) {
                   value={form.description}
                 >
                   <option value="">{t.selectItem}</option>
-                  {stock.map((c) => (
-                    <option key={c.id} value={c.name}>
-                      {c.name}
-                      {c.price != null
-                        ? ` — KES ${Number(c.price).toLocaleString()}${c.unit ? `/${c.unit}` : ""}`
-                        : ""}
-                    </option>
-                  ))}
+                  {stock.map((c) => {
+                    const outOfStock = c.quantity != null && Number(c.quantity) <= 0;
+                    return (
+                      <option key={c.id} value={c.name} disabled={outOfStock}>
+                        {c.name}
+                        {c.price != null
+                          ? ` — KES ${Number(c.price).toLocaleString()}${c.unit ? `/${c.unit}` : ""}`
+                          : ""}
+                        {outOfStock ? ` (${t.outOfStock || "Out of stock"})` : ""}
+                      </option>
+                    );
+                  })}
                 </select>
               </div>
             )}

@@ -1,4 +1,4 @@
-// /* eslint-disable react-hooks/rules-of-hooks */
+/* eslint-disable react-hooks/rules-of-hooks */
 import { useState } from "react";
 import { useCollection } from "../hooks/useCollection";
 import { recordStockPurchase } from "../hooks/useStock";
@@ -431,6 +431,18 @@ export default function Stock({ sub, ownerUid }) {
                       }}
                     >
                       {remaining.toLocaleString()}
+                      {remaining <= 0 && (
+                        <div
+                          style={{
+                            fontSize: 10,
+                            fontWeight: 700,
+                            color: "#ef4444",
+                            textTransform: "uppercase",
+                          }}
+                        >
+                          {t.outOfStock}
+                        </div>
+                      )}
                     </td>
                     <td style={{ textAlign: "right" }}>
                       {stockVal != null

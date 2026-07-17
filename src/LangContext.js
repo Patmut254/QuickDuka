@@ -215,6 +215,7 @@ export const T = {
     restock: "Restock",
     restockQty: "Quantity to add",
     restockCost: "Cost Paid (KES) — optional, defaults to purchase price",
+    outOfStock: "Out of stock",
     paymentMethod: "Payment Method",
     paymentMethods: {
       cash: "Cash",
@@ -793,6 +794,7 @@ export const T = {
     restock: "Ongeza Bidhaa Dukani",
     restockQty: "Idadi ya kuongeza",
     restockCost: "Gharama Iliyolipwa (KES) — hiari, itatumia bei ya ununuzi",
+    outOfStock: "Haipo dukani",
     paymentMethod: "Njia ya Malipo",
     paymentMethods: {
       cash: "Fedha Taslimu",
