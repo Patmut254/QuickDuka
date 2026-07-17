@@ -1,4 +1,4 @@
-/* eslint-disable react-hooks/rules-of-hooks */
+// /* eslint-disable react-hooks/rules-of-hooks */
 import { useState } from "react";
 import { useCollection } from "../hooks/useCollection";
 import { recordStockPurchase } from "../hooks/useStock";
