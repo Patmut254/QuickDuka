@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useCollection } from "../hooks/useCollection";
-import { adjustStockQuantity } from "../hooks/useStock";
+import { recordStockPurchase } from "../hooks/useStock";
 import { useLang } from "../LangContext";
 import EntryTable from "./EntryTable";
 import { Toast, useToast } from "./Toast";
@@ -37,7 +37,7 @@ export default function Purchases({ ownerUid }) {
     setForm((f) => ({
       ...f,
       item: found ? found.name : e.target.value,
-      amount: found?.price != null ? String(found.price) : f.amount,
+      amount: found?.buyPrice != null ? String(found.buyPrice) : f.amount,
     }));
   };
 
@@ -47,6 +47,7 @@ export default function Purchases({ ownerUid }) {
     setStatus("saving");
     try {
       const qty = form.quantity !== "" ? parseFloat(form.quantity) : null;
+      const spend = form.amount ? parseFloat(form.amount) : 0;
       await addItem({ ...form, amount: parseFloat(form.amount), quantity: qty });
 
       // Bookkeeping: a purchase brings goods into stock. If a matching
@@ -57,16 +58,20 @@ export default function Purchases({ ownerUid }) {
           (s) => s.name.trim().toLowerCase() === form.item.trim().toLowerCase(),
         );
         if (match) {
-          await adjustStockQuantity(match.id, qty);
+          await recordStockPurchase(match.id, qty, spend);
         } else {
           await addStockItem({
             name: form.item.trim(),
+            buyPrice: qty ? spend / qty : 0,
             priceMode: "fixed",
-            price: form.amount ? parseFloat(form.amount) / qty : null,
+            price: null,
             minPrice: null,
             maxPrice: null,
             unit: "",
             quantity: qty,
+            totalPurchased: qty,
+            totalSold: 0,
+            totalPurchaseValue: spend,
             notes: "Auto-added from a purchase",
           });
         }

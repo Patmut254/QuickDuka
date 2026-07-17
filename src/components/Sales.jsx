@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useCollection } from "../hooks/useCollection";
-import { useStock, adjustStockQuantity } from "../hooks/useStock";
+import { useStock, recordStockSale } from "../hooks/useStock";
 import { useLang } from "../LangContext";
 import EntryTable from "./EntryTable";
 import { Toast, useToast } from "./Toast";
@@ -77,7 +77,7 @@ export default function Sales({ ownerUid }) {
 
       // Bookkeeping: reduce stock quantity by the amount sold.
       if (selectedStock && selectedStock.quantity != null) {
-        await adjustStockQuantity(selectedStock.id, -qty);
+        await recordStockSale(selectedStock.id, qty);
       }
 
       setStatus("saved");

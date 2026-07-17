@@ -15,18 +15,34 @@ import {
 } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 
-// adjustStockQuantity — bumps a stock item's quantity up or down.
-// Used by Sales (decrement on sale) and Purchases (increment on purchase)
-// so the stock page behaves like a running bookkeeping ledger of what's
-// left, instead of a static price list.
-export async function adjustStockQuantity(stockId, delta) {
-  if (!stockId || !delta) return;
+// recordStockPurchase — goods coming IN (a purchase, or a manual restock).
+// Bumps the remaining quantity up, plus running totals for "purchased" and
+// "amount spent" so the stock page can show a full ledger, not just a
+// current snapshot.
+export async function recordStockPurchase(stockId, qty, value = 0) {
+  if (!stockId || !qty) return;
   try {
     await updateDoc(doc(db, "stock", stockId), {
-      quantity: increment(delta),
+      quantity: increment(qty),
+      totalPurchased: increment(qty),
+      totalPurchaseValue: increment(value || 0),
     });
   } catch (err) {
-    console.error("Stock quantity update failed:", err.message);
+    console.error("Stock purchase update failed:", err.message);
+  }
+}
+
+// recordStockSale — goods going OUT (a sale). Bumps the remaining quantity
+// down and the running "sold" total up.
+export async function recordStockSale(stockId, qty) {
+  if (!stockId || !qty) return;
+  try {
+    await updateDoc(doc(db, "stock", stockId), {
+      quantity: increment(-qty),
+      totalSold: increment(qty),
+    });
+  } catch (err) {
+    console.error("Stock sale update failed:", err.message);
   }
 }
 

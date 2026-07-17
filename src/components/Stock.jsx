@@ -1,6 +1,7 @@
-// /* eslint-disable react-hooks/rules-of-hooks */
+/* eslint-disable react-hooks/rules-of-hooks */
 import { useState } from "react";
 import { useCollection } from "../hooks/useCollection";
+import { recordStockPurchase } from "../hooks/useStock";
 import { useLang } from "../LangContext";
 import { Toast, useToast } from "./Toast";
 import AlertDialog from "./AlertDialog";
@@ -12,8 +13,12 @@ export default function Stock({ sub, ownerUid }) {
     useCollection("stock", ownerUid ? { ownerUid } : undefined);
   const { toast, showToast } = useToast();
 
+  // buyPrice: what you paid per item (always fixed — you know your cost).
+  // priceMode/price/minPrice/maxPrice: what you SELL it for — fixed, or a
+  // range so you can offer a discount while selling.
   const emptyForm = {
     name: "",
+    buyPrice: "",
     priceMode: "fixed", // "fixed" | "range"
     price: "",
     minPrice: "",
@@ -28,6 +33,9 @@ export default function Stock({ sub, ownerUid }) {
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [editTarget, setEditTarget] = useState(null);
   const [editForm, setEditForm] = useState({});
+  const [restockTarget, setRestockTarget] = useState(null);
+  const [restockForm, setRestockForm] = useState({ quantity: "", cost: "" });
+  const [restockStatus, setRestockStatus] = useState("idle");
   const [search, setSearch] = useState("");
 
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
@@ -40,18 +48,27 @@ export default function Stock({ sub, ownerUid }) {
     setStatus("saving");
     try {
       const isRange = form.priceMode === "range";
+      const qty = form.quantity !== "" ? parseFloat(form.quantity) : 0;
+      const buyPrice = form.buyPrice !== "" ? parseFloat(form.buyPrice) : 0;
       await addItem({
         name: form.name.trim(),
+        buyPrice,
         priceMode: form.priceMode,
-        price: !isRange && form.price !== "" ? parseFloat(form.price) : null,
-        minPrice: isRange && form.minPrice !== "" ? parseFloat(form.minPrice) : null,
-        maxPrice: isRange && form.maxPrice !== "" ? parseFloat(form.maxPrice) : null,
+        price: !isRange ? parseFloat(form.price) : null,
+        minPrice: isRange ? parseFloat(form.minPrice) : null,
+        maxPrice: isRange ? parseFloat(form.maxPrice) : null,
         unit: form.unit.trim(),
-        quantity: form.quantity !== "" ? parseFloat(form.quantity) : null,
+        quantity: qty,
+        // Every item starts its life as a "purchase" of the opening
+        // quantity, so Purchased/Sold/Remaining/Total Bought all add up
+        // from day one instead of only counting from here on.
+        totalPurchased: qty,
+        totalSold: 0,
+        totalPurchaseValue: qty * buyPrice,
         notes: form.notes.trim(),
       });
       setStatus("saved");
-      showToast("Item added to stock!");
+      showToast(t.saved || "Saved!");
       setTimeout(() => {
         setStatus("idle");
         setForm(emptyForm);
@@ -59,7 +76,7 @@ export default function Stock({ sub, ownerUid }) {
       }, 1200);
     } catch {
       setStatus("idle");
-      showToast("Save failed. Try again.", "error");
+      showToast(t.failedSave || "Save failed. Try again.", "error");
     }
   };
 
@@ -71,36 +88,75 @@ export default function Stock({ sub, ownerUid }) {
         editTarget.id,
         {
           name: editForm.name.trim(),
+          buyPrice:
+            editForm.buyPrice !== "" ? parseFloat(editForm.buyPrice) : 0,
           priceMode: editForm.priceMode || "fixed",
-          price:
-            !isRange && editForm.price !== "" ? parseFloat(editForm.price) : null,
-          minPrice:
-            isRange && editForm.minPrice !== ""
-              ? parseFloat(editForm.minPrice)
-              : null,
-          maxPrice:
-            isRange && editForm.maxPrice !== ""
-              ? parseFloat(editForm.maxPrice)
-              : null,
+          price: !isRange ? parseFloat(editForm.price) : null,
+          minPrice: isRange ? parseFloat(editForm.minPrice) : null,
+          maxPrice: isRange ? parseFloat(editForm.maxPrice) : null,
           unit: editForm.unit?.trim() || "",
-          quantity:
-            editForm.quantity !== "" && editForm.quantity != null
-              ? parseFloat(editForm.quantity)
-              : null,
+          quantity: editForm.quantity !== "" ? parseFloat(editForm.quantity) : 0,
           notes: editForm.notes?.trim() || "",
         },
         editTarget,
       );
-      showToast("Item updated!");
+      showToast(t.saved || "Updated!");
       setEditTarget(null);
     } catch {
-      showToast("Update failed.", "error");
+      showToast(t.failedSave || "Update failed.", "error");
+    }
+  };
+
+  const handleRestock = async (e) => {
+    e.preventDefault();
+    if (restockStatus !== "idle") return;
+    const qty = parseFloat(restockForm.quantity);
+    if (!qty || qty <= 0) return;
+    setRestockStatus("saving");
+    try {
+      // Cost defaults to this item's known purchase price if left blank.
+      const costPerItem =
+        restockForm.cost !== ""
+          ? parseFloat(restockForm.cost)
+          : Number(restockTarget.buyPrice || 0);
+      await recordStockPurchase(restockTarget.id, qty, costPerItem * qty);
+      showToast(`${restockTarget.name} +${qty} ${t.qtyInStock || "in stock"}.`);
+      setRestockStatus("idle");
+      setRestockTarget(null);
+      setRestockForm({ quantity: "", cost: "" });
+    } catch {
+      setRestockStatus("idle");
+      showToast(t.failedSave || "Restock failed. Try again.", "error");
     }
   };
 
   const filtered = items.filter(
     (i) => !search || i.name?.toLowerCase().includes(search.toLowerCase()),
   );
+
+  const sellPriceLabel = (item) => {
+    if (item.priceMode === "range") {
+      return item.minPrice != null && item.maxPrice != null
+        ? `KES ${Number(item.minPrice).toLocaleString()}–${Number(
+            item.maxPrice,
+          ).toLocaleString()}${item.unit ? ` / ${item.unit}` : ""}`
+        : t.priceVaries;
+    }
+    return item.price != null
+      ? `KES ${Number(item.price).toLocaleString()}${item.unit ? ` / ${item.unit}` : ""}`
+      : t.priceVaries;
+  };
+
+  // Sale value used for "Stock Value" — what the remaining stock could
+  // sell for at today's price(s).
+  const sellUnitValue = (item) => {
+    if (item.priceMode === "range") {
+      return item.minPrice != null && item.maxPrice != null
+        ? (Number(item.minPrice) + Number(item.maxPrice)) / 2
+        : null;
+    }
+    return item.price;
+  };
 
   return (
     <div className="module-page">
@@ -168,6 +224,21 @@ export default function Stock({ sub, ownerUid }) {
               />
             </div>
             <div className="field-group">
+              <label htmlFor="stock-buy-price">{t.buyPrice} *</label>
+              <input
+                id="stock-buy-price"
+                name="stock-buy-price"
+                type="number"
+                autoComplete="off"
+                min="0"
+                step="0.01"
+                placeholder={t.buyPricePh}
+                value={form.buyPrice}
+                onChange={set("buyPrice")}
+                required
+              />
+            </div>
+            <div className="field-group">
               <label htmlFor="stock-price-mode">{t.priceMode}</label>
               <select
                 id="stock-price-mode"
@@ -182,7 +253,7 @@ export default function Stock({ sub, ownerUid }) {
             {form.priceMode === "range" ? (
               <>
                 <div className="field-group">
-                  <label htmlFor="stock-min-price">{t.minPrice}</label>
+                  <label htmlFor="stock-min-price">{t.minPrice} *</label>
                   <input
                     id="stock-min-price"
                     name="stock-min-price"
@@ -193,10 +264,11 @@ export default function Stock({ sub, ownerUid }) {
                     placeholder="0.00"
                     value={form.minPrice}
                     onChange={set("minPrice")}
+                    required
                   />
                 </div>
                 <div className="field-group">
-                  <label htmlFor="stock-max-price">{t.maxPrice}</label>
+                  <label htmlFor="stock-max-price">{t.maxPrice} *</label>
                   <input
                     id="stock-max-price"
                     name="stock-max-price"
@@ -207,12 +279,13 @@ export default function Stock({ sub, ownerUid }) {
                     placeholder="0.00"
                     value={form.maxPrice}
                     onChange={set("maxPrice")}
+                    required
                   />
                 </div>
               </>
             ) : (
               <div className="field-group">
-                <label htmlFor="stock-price">{t.price}</label>
+                <label htmlFor="stock-price">{t.price} *</label>
                 <input
                   id="stock-price"
                   name="stock-price"
@@ -223,11 +296,12 @@ export default function Stock({ sub, ownerUid }) {
                   placeholder={t.pricePh}
                   value={form.price}
                   onChange={set("price")}
+                  required
                 />
               </div>
             )}
             <div className="field-group">
-              <label htmlFor="stock-unit">{t.unit}</label>
+              <label htmlFor="stock-unit">{t.unit} *</label>
               <input
                 id="stock-unit"
                 name="stock-unit"
@@ -235,10 +309,11 @@ export default function Stock({ sub, ownerUid }) {
                 placeholder={t.unitPh}
                 value={form.unit}
                 onChange={set("unit")}
+                required
               />
             </div>
             <div className="field-group">
-              <label htmlFor="stock-quantity">{t.quantity}</label>
+              <label htmlFor="stock-quantity">{t.quantity} *</label>
               <input
                 id="stock-quantity"
                 name="stock-quantity"
@@ -249,6 +324,7 @@ export default function Stock({ sub, ownerUid }) {
                 placeholder={t.quantityPh}
                 value={form.quantity}
                 onChange={set("quantity")}
+                required
               />
             </div>
             <div className="field-group full-width">
@@ -297,7 +373,7 @@ export default function Stock({ sub, ownerUid }) {
         </div>
       )}
 
-      {/* List */}
+      {/* Table listing — bookkeeping view: in, out, and what's left */}
       {loading ? (
         <div className="table-loading">Inapakia... / Loading...</div>
       ) : filtered.length === 0 ? (
@@ -305,102 +381,184 @@ export default function Stock({ sub, ownerUid }) {
           {search ? t.noItemsSearch : t.noItems}
         </div>
       ) : (
-        <div className="stock-grid">
-          {filtered.map((item) => {
-            const isRange = item.priceMode === "range";
-            const unitValue = isRange
-              ? item.minPrice != null && item.maxPrice != null
-                ? (Number(item.minPrice) + Number(item.maxPrice)) / 2
-                : null
-              : item.price;
-            const hasQty = item.quantity != null;
-            const stockValue =
-              hasQty && unitValue != null ? Number(item.quantity) * unitValue : null;
-            return (
-              <div key={item.id} className="stock-card">
-                <div className="stock-card-top">
-                  <div className="stock-item-name">{item.name}</div>
-                  <div className="stock-item-price">
-                    {isRange ? (
-                      item.minPrice != null && item.maxPrice != null ? (
-                        <span className="price-tag">
-                          KES {Number(item.minPrice).toLocaleString()}–
-                          {Number(item.maxPrice).toLocaleString()}
-                          {item.unit ? ` / ${item.unit}` : ""}
-                        </span>
-                      ) : (
-                        <span className="price-variable">
-                          Bei inabadilika / Price varies
-                        </span>
-                      )
-                    ) : item.price != null ? (
-                      <span className="price-tag">
-                        KES {Number(item.price).toLocaleString()}
-                        {item.unit ? ` / ${item.unit}` : ""}
-                      </span>
-                    ) : (
-                      <span className="price-variable">
-                        Bei inabadilika / Price varies
-                      </span>
-                    )}
-                  </div>
-                </div>
+        <div className="table-scroll">
+          <table className="data-table stock-table">
+            <thead>
+              <tr>
+                <th>{t.itemName}</th>
+                <th>{t.buyPrice}</th>
+                <th>{t.price}</th>
+                <th style={{ textAlign: "right" }}>{t.purchased}</th>
+                <th style={{ textAlign: "right" }}>{t.sold}</th>
+                <th style={{ textAlign: "right" }}>{t.qtyInStock}</th>
+                <th style={{ textAlign: "right" }}>{t.stockValue}</th>
+                <th style={{ textAlign: "right" }}>{t.totalBought}</th>
+                <th>{t.actions}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((item) => {
+                const remaining = Number(item.quantity || 0);
+                const uv = sellUnitValue(item);
+                const stockVal = uv != null ? remaining * uv : null;
+                return (
+                  <tr key={item.id}>
+                    <td>
+                      <div style={{ fontWeight: 600 }}>{item.name}</div>
+                      {item.notes && (
+                        <div style={{ fontSize: 11, color: "var(--muted)" }}>
+                          {item.notes}
+                        </div>
+                      )}
+                    </td>
+                    <td>
+                      {item.buyPrice != null
+                        ? `KES ${Number(item.buyPrice).toLocaleString()}${item.unit ? ` / ${item.unit}` : ""}`
+                        : "—"}
+                    </td>
+                    <td>{sellPriceLabel(item)}</td>
+                    <td style={{ textAlign: "right" }}>
+                      {Number(item.totalPurchased || 0).toLocaleString()}
+                    </td>
+                    <td style={{ textAlign: "right" }}>
+                      {Number(item.totalSold || 0).toLocaleString()}
+                    </td>
+                    <td
+                      style={{
+                        textAlign: "right",
+                        fontWeight: 700,
+                        color: remaining <= 0 ? "#ef4444" : "inherit",
+                      }}
+                    >
+                      {remaining.toLocaleString()}
+                    </td>
+                    <td style={{ textAlign: "right" }}>
+                      {stockVal != null
+                        ? `KES ${stockVal.toLocaleString()}`
+                        : "—"}
+                    </td>
+                    <td style={{ textAlign: "right" }}>
+                      KES {Number(item.totalPurchaseValue || 0).toLocaleString()}
+                    </td>
+                    <td>
+                      <div className="action-btns">
+                        <button
+                          className="edit-btn"
+                          title={t.restock}
+                          onClick={() => {
+                            setRestockTarget(item);
+                            setRestockForm({ quantity: "", cost: "" });
+                          }}
+                        >
+                          ➕
+                        </button>
+                        <button
+                          className="edit-btn"
+                          title={t.edit}
+                          onClick={() => {
+                            setEditTarget(item);
+                            setEditForm({
+                              name: item.name,
+                              buyPrice: item.buyPrice ?? "",
+                              priceMode: item.priceMode || "fixed",
+                              price: item.price ?? "",
+                              minPrice: item.minPrice ?? "",
+                              maxPrice: item.maxPrice ?? "",
+                              unit: item.unit || "",
+                              quantity: item.quantity ?? "",
+                              notes: item.notes || "",
+                            });
+                          }}
+                        >
+                          ✏️
+                        </button>
+                        <button
+                          className="delete-btn"
+                          title={t.delete}
+                          onClick={() => setDeleteTarget(item)}
+                        >
+                          🗑
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
 
-                {hasQty && (
-                  <div
-                    className="stock-item-notes"
-                    style={{ display: "flex", gap: 14, flexWrap: "wrap" }}
-                  >
-                    <span>
-                      {t.qtyInStock}:{" "}
-                      <strong
-                        style={{
-                          color: Number(item.quantity) <= 0 ? "#ef4444" : "inherit",
-                        }}
-                      >
-                        {Number(item.quantity).toLocaleString()}
-                      </strong>
-                    </span>
-                    {stockValue != null && (
-                      <span>
-                        {t.stockValue}: <strong>KES {stockValue.toLocaleString()}</strong>
-                      </span>
-                    )}
-                  </div>
-                )}
-
-                {item.notes && (
-                  <div className="stock-item-notes">{item.notes}</div>
-                )}
-                <div className="stock-actions">
-                  <button
-                    className="edit-btn-sm"
-                    onClick={() => {
-                      setEditTarget(item);
-                      setEditForm({
-                        name: item.name,
-                        priceMode: item.priceMode || "fixed",
-                        price: item.price ?? "",
-                        minPrice: item.minPrice ?? "",
-                        maxPrice: item.maxPrice ?? "",
-                        unit: item.unit || "",
-                        quantity: item.quantity ?? "",
-                        notes: item.notes || "",
-                      });
-                    }}
-                  >
-                    ✏️ Hariri / Edit
-                  </button>
-                  <button
-                    className="delete-btn"
-                    onClick={() => setDeleteTarget(item)}
-                  >
-                    🗑
-                  </button>
-                </div>
+      {/* Restock Modal — quick way to top up quantity when items run out */}
+      {restockTarget && (
+        <div className="alert-overlay" onClick={() => setRestockTarget(null)}>
+          <div
+            className="alert-box"
+            style={{ maxWidth: 380 }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="alert-title">
+              📥 {t.restock} — {restockTarget.name}
+            </div>
+            <form
+              onSubmit={handleRestock}
+              className="login-form"
+              style={{ marginTop: 16 }}
+            >
+              <div className="field-group">
+                <label htmlFor="restock-qty">{t.restockQty} *</label>
+                <input
+                  id="restock-qty"
+                  name="restock-qty"
+                  type="number"
+                  autoComplete="off"
+                  min="1"
+                  step="1"
+                  value={restockForm.quantity}
+                  onChange={(e) =>
+                    setRestockForm((f) => ({ ...f, quantity: e.target.value }))
+                  }
+                  required
+                />
               </div>
-            );
-          })}
+              <div className="field-group">
+                <label htmlFor="restock-cost">{t.restockCost}</label>
+                <input
+                  id="restock-cost"
+                  name="restock-cost"
+                  type="number"
+                  autoComplete="off"
+                  min="0"
+                  step="0.01"
+                  placeholder={
+                    restockTarget.buyPrice != null
+                      ? `${Number(restockTarget.buyPrice).toLocaleString()}`
+                      : "0.00"
+                  }
+                  value={restockForm.cost}
+                  onChange={(e) =>
+                    setRestockForm((f) => ({ ...f, cost: e.target.value }))
+                  }
+                />
+              </div>
+              <div className="alert-actions">
+                <button
+                  type="button"
+                  className="btn-cancel-sm"
+                  onClick={() => setRestockTarget(null)}
+                >
+                  {t.cancel}
+                </button>
+                <button
+                  type="submit"
+                  className="btn-primary"
+                  disabled={restockStatus !== "idle"}
+                >
+                  {restockStatus === "saving" ? t.saving : t.restock}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
 
@@ -430,6 +588,20 @@ export default function Stock({ sub, ownerUid }) {
                 />
               </div>
               <div className="field-group">
+                <label htmlFor="edit-stock-buy-price">{t.buyPrice} *</label>
+                <input
+                  id="edit-stock-buy-price"
+                  name="edit-stock-buy-price"
+                  type="number"
+                  autoComplete="off"
+                  min="0"
+                  step="0.01"
+                  value={editForm.buyPrice}
+                  onChange={setEdit("buyPrice")}
+                  required
+                />
+              </div>
+              <div className="field-group">
                 <label htmlFor="edit-stock-price-mode">{t.priceMode}</label>
                 <select
                   id="edit-stock-price-mode"
@@ -444,7 +616,7 @@ export default function Stock({ sub, ownerUid }) {
               {editForm.priceMode === "range" ? (
                 <>
                   <div className="field-group">
-                    <label htmlFor="edit-stock-min-price">{t.minPrice}</label>
+                    <label htmlFor="edit-stock-min-price">{t.minPrice} *</label>
                     <input
                       id="edit-stock-min-price"
                       name="edit-stock-min-price"
@@ -454,10 +626,11 @@ export default function Stock({ sub, ownerUid }) {
                       step="0.01"
                       value={editForm.minPrice}
                       onChange={setEdit("minPrice")}
+                      required
                     />
                   </div>
                   <div className="field-group">
-                    <label htmlFor="edit-stock-max-price">{t.maxPrice}</label>
+                    <label htmlFor="edit-stock-max-price">{t.maxPrice} *</label>
                     <input
                       id="edit-stock-max-price"
                       name="edit-stock-max-price"
@@ -467,12 +640,13 @@ export default function Stock({ sub, ownerUid }) {
                       step="0.01"
                       value={editForm.maxPrice}
                       onChange={setEdit("maxPrice")}
+                      required
                     />
                   </div>
                 </>
               ) : (
                 <div className="field-group">
-                  <label htmlFor="edit-stock-price">{t.price}</label>
+                  <label htmlFor="edit-stock-price">{t.price} *</label>
                   <input
                     id="edit-stock-price"
                     name="edit-stock-price"
@@ -483,11 +657,12 @@ export default function Stock({ sub, ownerUid }) {
                     placeholder={t.pricePh}
                     value={editForm.price}
                     onChange={setEdit("price")}
+                    required
                   />
                 </div>
               )}
               <div className="field-group">
-                <label htmlFor="edit-stock-unit">{t.unit}</label>
+                <label htmlFor="edit-stock-unit">{t.unit} *</label>
                 <input
                   id="edit-stock-unit"
                   name="edit-stock-unit"
@@ -495,10 +670,11 @@ export default function Stock({ sub, ownerUid }) {
                   placeholder={t.unitPh}
                   value={editForm.unit}
                   onChange={setEdit("unit")}
+                  required
                 />
               </div>
               <div className="field-group">
-                <label htmlFor="edit-stock-quantity">{t.quantity}</label>
+                <label htmlFor="edit-stock-quantity">{t.quantity} *</label>
                 <input
                   id="edit-stock-quantity"
                   name="edit-stock-quantity"
@@ -509,6 +685,7 @@ export default function Stock({ sub, ownerUid }) {
                   placeholder={t.quantityPh}
                   value={editForm.quantity}
                   onChange={setEdit("quantity")}
+                  required
                 />
               </div>
               <div className="field-group">
