@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-/* eslint-disable react-hooks/preserve-manual-memoization */
+// /* eslint-disable react-hooks/preserve-manual-memoization */
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faMoneyBillTrendUp,
