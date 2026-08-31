@@ -13,7 +13,11 @@ import {
   getDocs,
   onSnapshot,
 } from "firebase/firestore";
-import { createUserProfile } from "../hooks/useUserProfile";
+import {
+  createUserProfile,
+  beginRegistration,
+  endRegistration,
+} from "../hooks/useUserProfile";
 import { kenyaCounties } from "../data/kenyaLocations";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -279,6 +283,11 @@ export default function Register({ onBack }) {
 
     setSaving(true);
 
+    // Tell useUserProfile a signup is in flight so it doesn't sign the new
+    // user out the instant createUserWithEmailAndPassword auto-signs them
+    // in but before the Firestore profile doc below has been written.
+    beginRegistration();
+
     try {
       const finalReferrer =
         referrer === "__custom__" ? referrerCustom.trim() : referrer;
@@ -324,6 +333,8 @@ export default function Register({ onBack }) {
         }[err.code] || "Registration failed. Please try again.";
 
       setBizError(msg);
+    } finally {
+      endRegistration();
     }
   };
 
