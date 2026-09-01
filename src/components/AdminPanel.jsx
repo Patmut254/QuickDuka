@@ -9,6 +9,7 @@ import {
   query,
   orderBy,
   doc,
+  getDoc,
   updateDoc,
   addDoc,
   deleteDoc,
@@ -22,7 +23,11 @@ import {
   signInWithEmailAndPassword,
   signOut as fbSignOut,
 } from "firebase/auth";
-import { ref as dbRef, set as dbSet } from "firebase/database";
+import {
+  ref as dbRef,
+  set as dbSet,
+  remove as dbRemove,
+} from "firebase/database";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faUsers,
@@ -64,9 +69,37 @@ import { PLANS, PLAN_ORDER, getPlan } from "../subscription";
 import { PlanBadge } from "./FeatureGate";
 
 const ADMIN_EMAIL = "anitapatrick025@gmail.com";
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "";
 
 export function isAdmin(user) {
   return user?.email === ADMIN_EMAIL;
+}
+
+/**
+ * Deletes a Firebase Auth user by UID via the Django backend.
+ * The client SDK can only ever delete the *currently signed-in* user's
+ * own account — it structurally cannot remove another user's Auth
+ * account. This is why, before this endpoint existed, deleted users
+ * kept their Auth account forever even after their Firestore/RTDB
+ * data was gone. Requires the caller to be signed in as the admin —
+ * the backend re-verifies that from the ID token, it doesn't just
+ * trust the frontend.
+ */
+async function deleteAuthUserViaBackend(uid) {
+  const idToken = await auth.currentUser?.getIdToken();
+  const res = await fetch(`${BACKEND_URL}/api/mpesa/admin/delete-user/`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${idToken}`,
+    },
+    body: JSON.stringify({ uid }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(data.error || `Backend delete failed (${res.status})`);
+  }
+  return data;
 }
 
 /**
@@ -1104,7 +1137,37 @@ function DeleteUserModal({ user, onClose, onDeleted }) {
       // This is the final lockout — no profile = no access.
       await deleteDoc(userRef);
 
-      onDeleted?.(`"${user.businessName || user.email}" has been removed.`);
+      // STEP 4: Remove the RTDB mirror. Every create/login path writes
+      // users/{uid} into RTDB, but nothing removed it on delete until now —
+      // that's exactly why orphaned RTDB records (with no matching Auth
+      // account) kept showing up. Best-effort: Firestore deletion above is
+      // already the real lockout, so we still proceed even if this fails.
+      try {
+        await dbRemove(dbRef(rtdb, `users/${user.id}`));
+      } catch (rtdbErr) {
+        console.warn("RTDB node removal failed:", rtdbErr.message);
+      }
+
+      // STEP 5: Delete the Firebase Auth account itself, via the backend.
+      // This is the only step the client SDK structurally cannot do for
+      // another user's account — without it, Auth accumulates deleted
+      // users forever. If this fails, the user is already fully locked
+      // out (no profile, blocked email) — just surface it so it can be
+      // retried instead of silently leaving an orphaned Auth account.
+      try {
+        await deleteAuthUserViaBackend(user.id);
+      } catch (authErr) {
+        console.error("Auth account deletion failed:", authErr);
+        onDeleted?.(
+          `"${user.businessName || user.email}" data removed, but the Auth account couldn't be deleted (${authErr.message}). It's locked out either way — retry later to fully clean it up.`,
+        );
+        onClose();
+        return;
+      }
+
+      onDeleted?.(
+        `"${user.businessName || user.email}" has been removed everywhere.`,
+      );
       onClose();
     } catch (err) {
       console.error("Delete error:", err);
@@ -1131,11 +1194,11 @@ function DeleteUserModal({ user, onClose, onDeleted }) {
           <div className="admin-delete-warning">
             <FontAwesomeIcon icon={faTriangleExclamation} />
             <div>
-              <strong>This will permanently remove the user's data.</strong>
+              <strong>This will permanently remove the user everywhere.</strong>
               <p>
-                Their Firestore profile and access will be deleted. The Firebase
-                Auth account will remain but they will be unable to log in (no
-                profile = no access).
+                Their Firestore profile, Realtime Database mirror, and Firebase
+                Auth account will all be deleted, and their email will be
+                blocked from re-registering.
               </p>
             </div>
           </div>
