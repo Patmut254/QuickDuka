@@ -2,7 +2,7 @@
 /* eslint-disable no-unused-vars */
 /* eslint-disable react-refresh/only-export-components */
 import { useState, useEffect } from "react";
-import { db, auth } from "../firebase";
+import { db, auth, rtdb } from "../firebase";
 import {
   collection,
   onSnapshot,
@@ -22,6 +22,7 @@ import {
   signInWithEmailAndPassword,
   signOut as fbSignOut,
 } from "firebase/auth";
+import { ref as dbRef, set as dbSet } from "firebase/database";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faUsers,
@@ -66,6 +67,44 @@ const ADMIN_EMAIL = "anitapatrick025@gmail.com";
 
 export function isAdmin(user) {
   return user?.email === ADMIN_EMAIL;
+}
+
+/**
+ * One-off bulk backfill: mirrors every existing Firestore user profile
+ * (and their subcollections' parent doc data) into Realtime Database.
+ * Needed because RTDB mirroring only started happening for NEW accounts
+ * going forward — existing users who registered before that never got
+ * a users/{uid} record in RTDB. Safe to run repeatedly: it just
+ * overwrites each users/{uid} node with the latest Firestore data,
+ * same as the self-heal/createUserProfile mirrors already do.
+ * Returns { synced, failed } counts.
+ */
+async function syncUsersToRTDB(users, onProgress) {
+  let synced = 0;
+  let failed = 0;
+
+  for (const u of users) {
+    try {
+      // Convert Firestore Timestamps to ISO strings the same way
+      // createUserProfile()/selfHealProfile() do, so shapes match.
+      const { id, ...rest } = u;
+      const converted = {};
+      for (const [key, val] of Object.entries(rest)) {
+        converted[key] =
+          val && typeof val.toDate === "function"
+            ? val.toDate().toISOString()
+            : val;
+      }
+      await dbSet(dbRef(rtdb, `users/${id}`), converted);
+      synced++;
+    } catch (err) {
+      console.warn(`RTDB sync failed for user ${u.id}:`, err.message);
+      failed++;
+    }
+    onProgress?.(synced + failed, users.length);
+  }
+
+  return { synced, failed };
 }
 
 function addCalendarMonths(date, months) {
@@ -333,6 +372,336 @@ function ActivateTrialControl({ u, onActivated }) {
   );
 }
 
+/**
+ * For accounts that already exist in Firebase Authentication but never
+ * got a Firestore profile (registration was interrupted, or they
+ * predate profile-writing entirely). Unlike AddUserModal, this does
+ * NOT call createUserWithEmailAndPassword — the Auth account already
+ * exists. It just writes the missing users/{uid} doc (+ RTDB mirror)
+ * for a UID you paste in from Firebase Console → Authentication.
+ */
+function LinkExistingUserModal({ onClose, onSuccess }) {
+  const [errMsg, setErrMsg] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [referrersList, setReferrersList] = useState([]);
+  const [form, setForm] = useState({
+    uid: "",
+    businessName: "",
+    ownerName: "",
+    email: "",
+    phone: "",
+    county: "",
+    subcounty: "",
+    subscriptionMonths: "1",
+    referrer: "",
+    subscriptionPlan: "starter",
+  });
+
+  useEffect(() => {
+    const unsub = onSnapshot(
+      collection(db, "referrers"),
+      (snap) =>
+        setReferrersList(snap.docs.map((d) => ({ id: d.id, ...d.data() }))),
+      () => {},
+    );
+    return unsub;
+  }, []);
+
+  const set = (k, v) => setForm((p) => ({ ...p, [k]: v }));
+  const selectedCounty = kenyaCounties.find((c) => c.county === form.county);
+  const subcounties = selectedCounty?.subcounties || [];
+
+  const handleLink = async () => {
+    const uid = form.uid.trim();
+    if (!uid)
+      return setErrMsg(
+        "Paste the User UID from Firebase Console → Authentication.",
+      );
+    if (!/^[A-Za-z0-9]{20,40}$/.test(uid))
+      return setErrMsg(
+        "That doesn't look like a valid Firebase UID — double-check you copied the whole thing.",
+      );
+    if (!form.businessName.trim())
+      return setErrMsg("Business name is required.");
+    if (!form.ownerName.trim()) return setErrMsg("Owner name is required.");
+    if (!form.email.trim()) return setErrMsg("Email is required.");
+    if (!form.county) return setErrMsg("County is required.");
+
+    setErrMsg("");
+    setSaving(true);
+
+    try {
+      // Refuse to silently overwrite an existing profile — that would
+      // wipe out real data if the admin pastes the wrong UID.
+      const existing = await getDoc(doc(db, "users", uid));
+      if (existing.exists()) {
+        setSaving(false);
+        return setErrMsg(
+          "This UID already has a profile. Use the regular Users list to edit it instead.",
+        );
+      }
+
+      const months = parseInt(form.subscriptionMonths) || 1;
+      const expiry = addCalendarMonths(new Date(), months);
+      const nowDate = new Date();
+
+      const profileData = {
+        businessName: form.businessName.trim(),
+        ownerName: form.ownerName.trim(),
+        email: form.email.trim(),
+        realEmail: form.email.trim(),
+        phone: form.phone.trim() || null,
+        county: form.county,
+        subcounty: form.subcounty,
+        referrer: form.referrer || null,
+        role: "user",
+        subscriptionStatus: "active",
+        subscriptionExpiry: Timestamp.fromDate(expiry),
+        subscriptionPlan: form.subscriptionPlan || "starter",
+        createdAt: serverTimestamp(),
+        createdByAdmin: true,
+        linkedFromExistingAuth: true, // flag: this was a manual UID backfill, not a fresh signup
+        deleted: false,
+      };
+
+      await setDoc(doc(db, "users", uid), profileData);
+
+      await addDoc(collection(db, "users", uid, "paymentHistory"), {
+        type: "admin_extension",
+        months,
+        newExpiry: Timestamp.fromDate(expiry),
+        note: `Profile linked to existing Auth account by admin — ${months} month${months !== 1 ? "s" : ""}`,
+        createdAt: serverTimestamp(),
+      });
+
+      // Mirror into RTDB immediately
+      try {
+        await dbSet(dbRef(rtdb, `users/${uid}`), {
+          ...profileData,
+          subscriptionExpiry: expiry.toISOString(),
+          createdAt: nowDate.toISOString(),
+        });
+      } catch (rtdbErr) {
+        console.warn(
+          "RTDB mirror failed (link existing user):",
+          rtdbErr.message,
+        );
+      }
+
+      onSuccess?.(`Linked "${form.businessName.trim()}" to existing account.`);
+    } catch (err) {
+      setErrMsg(err.message || "Failed to link account.");
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div
+        className="modal-card admin-modal"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="admin-modal-header">
+          <h3>
+            <FontAwesomeIcon icon={faUserPlus} /> Link Existing Auth Account
+          </h3>
+          <button className="admin-modal-close" onClick={onClose}>
+            <FontAwesomeIcon icon={faXmark} />
+          </button>
+        </div>
+
+        <div className="admin-modal-body">
+          <p
+            style={{
+              fontSize: 12,
+              color: "var(--muted)",
+              marginTop: -4,
+              marginBottom: 14,
+              lineHeight: 1.6,
+            }}
+          >
+            For accounts already in Firebase Authentication that have no profile
+            here yet. Copy the UID from Firebase Console → Authentication →
+            Users, paste it below — this does <strong>not</strong> create a new
+            login, it just fills in their missing profile.
+          </p>
+
+          <div className="amf-section">Account</div>
+          <div className="amf-field">
+            <label>User UID *</label>
+            <div className="amf-input-wrap">
+              <FontAwesomeIcon icon={faLock} />
+              <input
+                placeholder="e.g. i9uBX654xlSi8Z3hedG3MMvCHnA2"
+                value={form.uid}
+                onChange={(e) => set("uid", e.target.value.trim())}
+                style={{ fontFamily: "monospace", fontSize: 12 }}
+              />
+            </div>
+          </div>
+
+          <div className="amf-row">
+            <div className="amf-field">
+              <label>Email *</label>
+              <div className="amf-input-wrap">
+                <FontAwesomeIcon icon={faEnvelope} />
+                <input
+                  type="email"
+                  placeholder="user@email.com"
+                  value={form.email}
+                  onChange={(e) => set("email", e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="amf-field">
+              <label>Phone</label>
+              <div className="amf-input-wrap">
+                <FontAwesomeIcon icon={faPhone} />
+                <input
+                  type="tel"
+                  placeholder="07..."
+                  value={form.phone}
+                  onChange={(e) => set("phone", e.target.value)}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="amf-section">Business Details</div>
+          <div className="amf-row">
+            <div className="amf-field">
+              <label>Business Name *</label>
+              <div className="amf-input-wrap">
+                <FontAwesomeIcon icon={faStore} />
+                <input
+                  placeholder="e.g. Wanjiru General Store"
+                  value={form.businessName}
+                  onChange={(e) => set("businessName", e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="amf-field">
+              <label>Owner Name *</label>
+              <div className="amf-input-wrap">
+                <FontAwesomeIcon icon={faUser} />
+                <input
+                  placeholder="Full name"
+                  value={form.ownerName}
+                  onChange={(e) => set("ownerName", e.target.value)}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="amf-section">Location</div>
+          <div className="amf-row">
+            <div className="amf-field">
+              <label>County *</label>
+              <select
+                value={form.county}
+                onChange={(e) => {
+                  set("county", e.target.value);
+                  set("subcounty", "");
+                }}
+              >
+                <option value="">Select County</option>
+                {kenyaCounties.map((c) => (
+                  <option key={c.county} value={c.county}>
+                    {c.county}
+                  </option>
+                ))}
+              </select>
+            </div>
+            {subcounties.length > 0 && (
+              <div className="amf-field">
+                <label>Sub-county</label>
+                <select
+                  value={form.subcounty}
+                  onChange={(e) => set("subcounty", e.target.value)}
+                >
+                  <option value="">Select Sub-county</option>
+                  {subcounties.map((s) => (
+                    <option key={s} value={s}>
+                      {s}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+          </div>
+
+          <div className="amf-section">Subscription</div>
+          <div className="amf-row">
+            <div className="amf-field">
+              <label>Plan</label>
+              <select
+                value={form.subscriptionPlan}
+                onChange={(e) => set("subscriptionPlan", e.target.value)}
+              >
+                {PLAN_ORDER.map((id) => (
+                  <option key={id} value={id}>
+                    {PLANS[id].name} — KES {PLANS[id].price.toLocaleString()}/mo
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="amf-field">
+              <label>Months to activate</label>
+              <select
+                value={form.subscriptionMonths}
+                onChange={(e) => set("subscriptionMonths", e.target.value)}
+              >
+                {[1, 2, 3, 6, 12].map((m) => (
+                  <option key={m} value={m}>
+                    {m} month{m !== 1 ? "s" : ""}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <div className="amf-row">
+            <div className="amf-field">
+              <label>Referrer (optional)</label>
+              <select
+                value={form.referrer}
+                onChange={(e) => set("referrer", e.target.value)}
+              >
+                <option value="">None</option>
+                {referrersList.map((r) => (
+                  <option key={r.id} value={r.name}>
+                    {r.name}
+                  </option>
+                ))}
+                <option value="Admin">Admin (direct)</option>
+              </select>
+            </div>
+          </div>
+
+          {errMsg && (
+            <div className="admin-modal-error">
+              <FontAwesomeIcon icon={faTriangleExclamation} /> {errMsg}
+            </div>
+          )}
+
+          <div className="admin-modal-actions">
+            <button className="adm-act-btn adm-ghost" onClick={onClose}>
+              Cancel
+            </button>
+            <button
+              className="adm-act-btn adm-green"
+              onClick={handleLink}
+              disabled={saving}
+            >
+              <FontAwesomeIcon icon={faUserPlus} />{" "}
+              {saving ? "Linking…" : "Link Account"}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function AddUserModal({ onClose, onSuccess }) {
   const [step, setStep] = useState(0); // 0=form, 1=saving, 2=done, -1=error
   const [errMsg, setErrMsg] = useState("");
@@ -398,7 +767,8 @@ function AddUserModal({ onClose, onSuccess }) {
       const expiry = addCalendarMonths(new Date(), months);
 
       // Write Firestore profile
-      await setDoc(doc(db, "users", newUid), {
+      const nowDate = new Date();
+      const profileData = {
         businessName: form.businessName.trim(),
         ownerName: form.ownerName.trim(),
         email: form.email.trim(),
@@ -413,7 +783,25 @@ function AddUserModal({ onClose, onSuccess }) {
         subscriptionPlan: form.subscriptionPlan || "starter",
         createdAt: serverTimestamp(),
         createdByAdmin: true,
-      });
+      };
+      await setDoc(doc(db, "users", newUid), profileData);
+
+      // Mirror into Realtime Database — same as the self-signup path in
+      // useUserProfile.js's createUserProfile(). Best-effort: Firestore
+      // (the source of truth) already succeeded above, so we don't want
+      // to fail admin account creation just because the RTDB mirror failed.
+      try {
+        await dbSet(dbRef(rtdb, `users/${newUid}`), {
+          ...profileData,
+          subscriptionExpiry: expiry.toISOString(),
+          createdAt: nowDate.toISOString(),
+        });
+      } catch (rtdbErr) {
+        console.warn(
+          "RTDB profile mirror failed (admin create):",
+          rtdbErr.message,
+        );
+      }
 
       // Log payment history
       await addDoc(collection(db, "users", newUid, "paymentHistory"), {
@@ -807,10 +1195,13 @@ export default function AdminPanel() {
   const [selectedUser, setSelectedUser] = useState(null);
   const [expandedUser, setExpandedUser] = useState(null);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showLinkModal, setShowLinkModal] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const { toast, showToast } = useToast();
 
   const [fetchError, setFetchError] = useState(null);
+  const [rtdbSyncing, setRtdbSyncing] = useState(false);
+  const [rtdbSyncResult, setRtdbSyncResult] = useState(null);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -1033,6 +1424,15 @@ export default function AdminPanel() {
           }}
         />
       )}
+      {showLinkModal && (
+        <LinkExistingUserModal
+          onClose={() => setShowLinkModal(false)}
+          onSuccess={(msg) => {
+            showToast(msg);
+            setShowLinkModal(false);
+          }}
+        />
+      )}
       {deleteTarget && (
         <DeleteUserModal
           user={deleteTarget}
@@ -1087,6 +1487,44 @@ export default function AdminPanel() {
             title="Manually refresh user list"
           >
             ↻ Refresh
+          </button>
+          <button
+            className="admin-add-btn"
+            style={{
+              background: "var(--bg2)",
+              color: "var(--text)",
+              border: "1px solid var(--border2)",
+              opacity: rtdbSyncing ? 0.6 : 1,
+              cursor: rtdbSyncing ? "not-allowed" : "pointer",
+            }}
+            disabled={rtdbSyncing}
+            onClick={async () => {
+              setRtdbSyncing(true);
+              setRtdbSyncResult(null);
+              const { synced, failed } = await syncUsersToRTDB(users);
+              setRtdbSyncing(false);
+              setRtdbSyncResult({ synced, failed });
+              showToast(
+                failed > 0
+                  ? `Synced ${synced} users to RTDB, ${failed} failed (check console)`
+                  : `Synced ${synced} users to Realtime Database`,
+              );
+            }}
+            title="Mirror every existing Firestore user profile into Realtime Database — safe to run repeatedly"
+          >
+            {rtdbSyncing ? "Syncing…" : "⇅ Sync to RTDB"}
+          </button>
+          <button
+            className="admin-add-btn"
+            style={{
+              background: "var(--bg2)",
+              color: "var(--text)",
+              border: "1px solid var(--border2)",
+            }}
+            onClick={() => setShowLinkModal(true)}
+            title="Create a profile for an account that already exists in Firebase Authentication but has no profile here"
+          >
+            <FontAwesomeIcon icon={faUserPlus} /> Link Existing
           </button>
           <button
             className="admin-add-btn"
