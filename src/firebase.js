@@ -5,10 +5,12 @@ import {
   persistentMultipleTabManager,
 } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
+import { getDatabase } from "firebase/database";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAyZbACvYwWxnGt2vQprG-zmu8HzVb_nj0",
   authDomain: "quickduka.firebaseapp.com",
+  databaseURL: "https://quickduka-default-rtdb.firebaseio.com",
   projectId: "quickduka",
   storageBucket: "quickduka.firebasestorage.app",
   messagingSenderId: "995653940433",
@@ -27,6 +29,8 @@ export const db = initializeFirestore(app, {
 });
 
 export const auth = getAuth(app);
+
+export const rtdb = getDatabase(app);
 
 // Secondary app — used ONLY when creating staff accounts so the owner's
 // auth session is never interrupted (createUserWithEmailAndPassword would

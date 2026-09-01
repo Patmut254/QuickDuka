@@ -34,6 +34,8 @@ const firebaseConfig = {
 };
 ```
 
+
+https://quickduka-default-rtdb.firebaseio.com/
 ---
 
 ## STEP 3 - Enable Firebase Auth
