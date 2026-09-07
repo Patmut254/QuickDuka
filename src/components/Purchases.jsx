@@ -18,6 +18,60 @@ export default function Purchases({ ownerUid }) {
   } = useCollection("stock", ownerUid ? { ownerUid } : undefined);
   const { toast, showToast } = useToast();
 
+  const findStockMatch = (name) =>
+    stock.find((s) => s.name.trim().toLowerCase() === (name || "").trim().toLowerCase());
+
+  // Editing an existing purchase row (via the table's inline edit) is
+  // still "I purchased this" — if the quantity or amount changes, or the
+  // item is renamed, the linked stock entry needs to move by the same
+  // delta, not just the Purchases ledger.
+  const handleUpdate = async (id, newData, oldData) => {
+    await updateItem(id, newData, oldData);
+
+    const oldQty = Number(oldData?.quantity || 0);
+    const newQty = Number(newData?.quantity ?? oldQty);
+    const oldAmount = Number(oldData?.amount || 0);
+    const newAmount = Number(newData?.amount ?? oldAmount);
+    const oldItemName = oldData?.item || "";
+    const newItemName = newData?.item ?? oldItemName;
+
+    if (oldItemName.trim().toLowerCase() === newItemName.trim().toLowerCase()) {
+      // Same item — just move by the difference.
+      const deltaQty = newQty - oldQty;
+      const deltaAmount = newAmount - oldAmount;
+      const match = findStockMatch(newItemName);
+      if (match && (deltaQty !== 0 || deltaAmount !== 0)) {
+        await recordStockPurchase(match.id, deltaQty, deltaAmount);
+      }
+    } else {
+      // Renamed to a different item — reverse the old item's stock,
+      // then apply the new quantity/amount to the new item (if it exists
+      // in the catalog; if not, leave it — same as the "no match" case
+      // on create, this is an edge case worth a manual check).
+      const oldMatch = findStockMatch(oldItemName);
+      if (oldMatch && oldQty) {
+        await recordStockPurchase(oldMatch.id, -oldQty, -oldAmount);
+      }
+      const newMatch = findStockMatch(newItemName);
+      if (newMatch && newQty) {
+        await recordStockPurchase(newMatch.id, newQty, newAmount);
+      }
+    }
+  };
+
+  // Deleting a purchase means it never happened — pull that quantity and
+  // spend back out of stock too, so Stock stays in sync either direction.
+  const handleDelete = async (id, itemData) => {
+    await deleteItem(id, itemData);
+    const qty = Number(itemData?.quantity || 0);
+    const amount = Number(itemData?.amount || 0);
+    if (!qty) return;
+    const match = findStockMatch(itemData?.item);
+    if (match) {
+      await recordStockPurchase(match.id, -qty, -amount);
+    }
+  };
+
   const emptyForm = {
     date: new Date().toISOString().split("T")[0],
     item: "",
@@ -292,8 +346,8 @@ export default function Purchases({ ownerUid }) {
         items={items}
         loading={loading}
         columns={columns}
-        onDelete={deleteItem}
-        onUpdate={updateItem}
+        onDelete={handleDelete}
+        onUpdate={handleUpdate}
         showToast={showToast}
         emptyMessage={t.noPurchases}
       />
