@@ -75,6 +75,24 @@ export default function Stock({ sub, ownerUid }) {
         totalPurchaseValue: qty * buyPrice,
         notes: form.notes.trim(),
       });
+
+      // A brand-new item's opening quantity is a purchase too — log it
+      // in the Purchases ledger, same as a restock or an edit-quantity
+      // increase would. Without this, the very first stock-in for an
+      // item never shows up on the Purchases page.
+      if (qty > 0) {
+        await addPurchase({
+          date: new Date().toISOString().split("T")[0],
+          item: form.name.trim(),
+          supplier: "",
+          phone: "",
+          quantity: qty,
+          amount: qty * buyPrice,
+          category: "Stock update",
+          notes: "Auto-added from a new stock item",
+        });
+      }
+
       setStatus("saved");
       showToast(t.saved || "Saved!");
       setTimeout(() => {
