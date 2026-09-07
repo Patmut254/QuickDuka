@@ -369,6 +369,23 @@ const topItems = useMemo(() => {
     .map(([name, value]) => ({ name, value }));
 }, [sales, inRange]);
 
+// ── Sales by location/branch — "which branch sold better" ──────────────
+// Only sales tagged with a branchName (owner picked one in the Sales
+// form, or a staff member logged in under a branch) show up here.
+const salesByLocation = useMemo(() => {
+  const map = {};
+  sales.filter(inRange).forEach((s) => {
+    if (!s.branchName) return;
+    if (!map[s.branchName]) map[s.branchName] = { revenue: 0, count: 0 };
+    map[s.branchName].revenue += Number(s.amount || 0);
+    map[s.branchName].count += 1;
+  });
+  return Object.entries(map)
+    .map(([name, v]) => ({ name, value: v.revenue, count: v.count }))
+    .sort((a, b) => b.value - a.value);
+}, [sales, inRange]);
+const bestLocation = salesByLocation[0] || null;
+
 // ── CSV Download ──────────────────────────────────────────────────────
 const downloadCSV = () => {
   const rows = [
@@ -379,7 +396,7 @@ const downloadCSV = () => {
         "Sale",
         s.date || "",
         s.description || s.item || "",
-        "",
+        s.branchName || "",
         s.quantity ?? "",
         s.paymentMethod || "cash",
         s.amount || 0,
@@ -864,6 +881,63 @@ return (
           </ResponsiveContainer>
         )}
       </div>
+
+      {/* Sales by location/branch — "which place sold better" */}
+      {salesByLocation.length > 0 && (
+        <div className="chart-card">
+          <h3>📍 Sales by Location — {periodLabel}</h3>
+          {bestLocation && salesByLocation.length > 1 && (
+            <div
+              style={{
+                fontSize: 13,
+                marginBottom: 10,
+                padding: "6px 10px",
+                borderRadius: 8,
+                background: "#22c55e15",
+                color: "#22c55e",
+                fontWeight: 600,
+              }}
+            >
+              🏆 Best performing: {bestLocation.name} — KES{" "}
+              {bestLocation.value.toLocaleString()}
+            </div>
+          )}
+          <ResponsiveContainer width="100%" height={220}>
+            <BarChart
+              layout="vertical"
+              data={salesByLocation}
+              margin={{ top: 5, right: 20, left: 10, bottom: 0 }}
+            >
+              <CartesianGrid strokeDasharray="3 3" stroke="#2a2a3a" />
+              <XAxis
+                type="number"
+                tick={{ fill: "#9ca3af", fontSize: 11 }}
+                tickFormatter={(v) =>
+                  v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v
+                }
+              />
+              <YAxis
+                type="category"
+                dataKey="name"
+                tick={{ fill: "#9ca3af", fontSize: 11 }}
+                width={90}
+              />
+              <Tooltip
+                contentStyle={{
+                  background: "#1a1a2e",
+                  border: "1px solid #333",
+                  color: "#fff",
+                }}
+                formatter={(v, n, p) => [
+                  `KES ${Number(v).toLocaleString()} (${p.payload.count} sale${p.payload.count === 1 ? "" : "s"})`,
+                  "Revenue",
+                ]}
+              />
+              <Bar dataKey="value" fill="#14b8a6" radius={[0, 4, 4, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      )}
     </div>
 
     {/* ── Profit badge ── */}

@@ -24,6 +24,7 @@ export default function Stock({ sub, ownerUid }) {
   // range so you can offer a discount while selling.
   const emptyForm = {
     name: "",
+    variant: "",
     buyPrice: "",
     priceMode: "fixed", // "fixed" | "range"
     price: "",
@@ -58,6 +59,7 @@ export default function Stock({ sub, ownerUid }) {
       const buyPrice = form.buyPrice !== "" ? parseFloat(form.buyPrice) : 0;
       await addItem({
         name: form.name.trim(),
+        variant: form.variant.trim(),
         buyPrice,
         priceMode: form.priceMode,
         price: !isRange ? parseFloat(form.price) : null,
@@ -106,6 +108,7 @@ export default function Stock({ sub, ownerUid }) {
         editTarget.id,
         {
           name: editForm.name.trim(),
+          variant: editForm.variant?.trim() || "",
           buyPrice,
           priceMode: editForm.priceMode || "fixed",
           price: !isRange ? parseFloat(editForm.price) : null,
@@ -180,9 +183,14 @@ export default function Stock({ sub, ownerUid }) {
     }
   };
 
-  const filtered = items.filter(
-    (i) => !search || i.name?.toLowerCase().includes(search.toLowerCase()),
-  );
+  const filtered = items.filter((i) => {
+    if (!search) return true;
+    const q = search.toLowerCase();
+    return (
+      i.name?.toLowerCase().includes(q) ||
+      i.variant?.toLowerCase().includes(q)
+    );
+  });
 
   const sellPriceLabel = (item) => {
     if (item.priceMode === "range") {
@@ -207,6 +215,30 @@ export default function Stock({ sub, ownerUid }) {
     }
     return item.price;
   };
+
+  // Expected profit — if ALL remaining stock sells at the listed price.
+  // Actual profit — from units already sold, using the same listed price
+  // as a stand-in for the real sale price (a fair estimate since discounts
+  // on individual sales aren't tracked back to the stock item).
+  const profitFigures = (item) => {
+    const uv = sellUnitValue(item);
+    const buy = Number(item.buyPrice || 0);
+    if (uv == null) return { expected: null, actual: null };
+    const margin = uv - buy;
+    const remaining = Number(item.quantity || 0);
+    const sold = Number(item.totalSold || 0);
+    return { expected: margin * remaining, actual: margin * sold };
+  };
+
+  // Business-wide totals for the header stat row.
+  const totalExpectedProfit = items.reduce(
+    (a, item) => a + (profitFigures(item).expected || 0),
+    0,
+  );
+  const totalActualProfit = items.reduce(
+    (a, item) => a + (profitFigures(item).actual || 0),
+    0,
+  );
 
   return (
     <div className="module-page">
@@ -244,6 +276,24 @@ export default function Stock({ sub, ownerUid }) {
             {items.length}
           </span>
         </div>
+        <div className="module-stat" title={t.expectedProfitHint}>
+          <span className="stat-label">{t.totalExpectedProfit}</span>
+          <span
+            className="stat-value"
+            style={{ color: totalExpectedProfit >= 0 ? "#22c55e" : "#ef4444" }}
+          >
+            KES {totalExpectedProfit.toLocaleString()}
+          </span>
+        </div>
+        <div className="module-stat" title={t.actualProfitHint}>
+          <span className="stat-label">{t.totalActualProfit}</span>
+          <span
+            className="stat-value"
+            style={{ color: totalActualProfit >= 0 ? "#22c55e" : "#ef4444" }}
+          >
+            KES {totalActualProfit.toLocaleString()}
+          </span>
+        </div>
         <button
           className="btn-primary"
           onClick={() => {
@@ -271,6 +321,17 @@ export default function Stock({ sub, ownerUid }) {
                 value={form.name}
                 onChange={set("name")}
                 required
+              />
+            </div>
+            <div className="field-group">
+              <label htmlFor="stock-variant">{t.variant}</label>
+              <input
+                id="stock-variant"
+                name="stock-variant"
+                autoComplete="off"
+                placeholder={t.variantPh}
+                value={form.variant}
+                onChange={set("variant")}
               />
             </div>
             <div className="field-group">
@@ -443,6 +504,12 @@ export default function Stock({ sub, ownerUid }) {
                 <th style={{ textAlign: "right" }}>{t.qtyInStock}</th>
                 <th style={{ textAlign: "right" }}>{t.stockValue}</th>
                 <th style={{ textAlign: "right" }}>{t.totalBought}</th>
+                <th style={{ textAlign: "right" }} title={t.expectedProfitHint}>
+                  {t.expectedProfit}
+                </th>
+                <th style={{ textAlign: "right" }} title={t.actualProfitHint}>
+                  {t.actualProfit}
+                </th>
                 <th>{t.actions}</th>
               </tr>
             </thead>
@@ -451,10 +518,28 @@ export default function Stock({ sub, ownerUid }) {
                 const remaining = Number(item.quantity || 0);
                 const uv = sellUnitValue(item);
                 const stockVal = uv != null ? remaining * uv : null;
+                const { expected, actual } = profitFigures(item);
                 return (
                   <tr key={item.id}>
                     <td>
-                      <div style={{ fontWeight: 600 }}>{item.name}</div>
+                      <div style={{ fontWeight: 600 }}>
+                        {item.name}
+                        {item.variant && (
+                          <span
+                            style={{
+                              marginLeft: 6,
+                              fontSize: 11,
+                              fontWeight: 600,
+                              padding: "1px 7px",
+                              borderRadius: 20,
+                              background: "var(--accent)15",
+                              color: "var(--accent)",
+                            }}
+                          >
+                            {item.variant}
+                          </span>
+                        )}
+                      </div>
                       {item.notes && (
                         <div style={{ fontSize: 11, color: "var(--muted)" }}>
                           {item.notes}
@@ -502,6 +587,34 @@ export default function Stock({ sub, ownerUid }) {
                     <td style={{ textAlign: "right" }}>
                       KES {Number(item.totalPurchaseValue || 0).toLocaleString()}
                     </td>
+                    <td
+                      style={{
+                        textAlign: "right",
+                        color:
+                          expected != null
+                            ? expected >= 0
+                              ? "#22c55e"
+                              : "#ef4444"
+                            : "inherit",
+                      }}
+                    >
+                      {expected != null
+                        ? `KES ${expected.toLocaleString()}`
+                        : "—"}
+                    </td>
+                    <td
+                      style={{
+                        textAlign: "right",
+                        color:
+                          actual != null
+                            ? actual >= 0
+                              ? "#22c55e"
+                              : "#ef4444"
+                            : "inherit",
+                      }}
+                    >
+                      {actual != null ? `KES ${actual.toLocaleString()}` : "—"}
+                    </td>
                     <td>
                       <div className="action-btns">
                         <button
@@ -521,6 +634,7 @@ export default function Stock({ sub, ownerUid }) {
                             setEditTarget(item);
                             setEditForm({
                               name: item.name,
+                              variant: item.variant || "",
                               buyPrice: item.buyPrice ?? "",
                               priceMode: item.priceMode || "fixed",
                               price: item.price ?? "",
@@ -647,6 +761,17 @@ export default function Stock({ sub, ownerUid }) {
                   value={editForm.name}
                   onChange={setEdit("name")}
                   required
+                />
+              </div>
+              <div className="field-group">
+                <label htmlFor="edit-stock-variant">{t.variant}</label>
+                <input
+                  id="edit-stock-variant"
+                  name="edit-stock-variant"
+                  autoComplete="off"
+                  placeholder={t.variantPh}
+                  value={editForm.variant || ""}
+                  onChange={setEdit("variant")}
                 />
               </div>
               <div className="field-group">

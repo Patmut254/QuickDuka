@@ -485,6 +485,7 @@ function AppShell({ user, profile, theme, toggleTheme }) {
               {activeTab === "sales" && (
                 <Sales
                   ownerUid={user.uid}
+                  sub={sub}
                   prefillData={prefillData.sales}
                   onPrefillConsumed={() => clearPrefill("sales")}
                 />

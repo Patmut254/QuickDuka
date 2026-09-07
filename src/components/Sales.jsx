@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { collection, onSnapshot } from "firebase/firestore";
+import { db } from "../firebase";
 import { useCollection } from "../hooks/useCollection";
 import { useStock, recordStockSale } from "../hooks/useStock";
 import { useLang } from "../LangContext";
@@ -7,7 +9,7 @@ import { Toast, useToast } from "./Toast";
 
 const PAYMENT_METHODS = ["cash", "mpesa", "airtel", "card"];
 
-export default function Sales({ ownerUid }) {
+export default function Sales({ ownerUid, sub }) {
   const { t } = useLang();
   // If ownerUid is passed, query by ownerUid to get all sales including staff.
   // Otherwise fall back to normal userId query (staff's own view).
@@ -15,6 +17,27 @@ export default function Sales({ ownerUid }) {
     useCollection("sales", ownerUid ? { ownerUid } : undefined);
   const stock = useStock();
   const { toast, showToast } = useToast();
+
+  // Owner's branches — lets the owner tag a sale with WHERE it happened
+  // (e.g. Nairobi vs Mombasa), so Reports can compare locations. Only
+  // relevant on the Business plan (multipleBranches), and only when the
+  // owner has actually set up at least one branch.
+  const [branches, setBranches] = useState([]);
+  const canUseBranches = ownerUid && sub?.can?.("multipleBranches");
+  useEffect(() => {
+    if (!canUseBranches) return;
+    const unsub = onSnapshot(
+      collection(db, "users", ownerUid, "branches"),
+      (snap) =>
+        setBranches(
+          snap.docs
+            .map((d) => ({ id: d.id, ...d.data() }))
+            .filter((b) => b.active !== false),
+        ),
+      () => setBranches([]),
+    );
+    return () => unsub();
+  }, [ownerUid, canUseBranches]);
 
   const emptyForm = {
     date: new Date().toISOString().split("T")[0],
@@ -24,6 +47,7 @@ export default function Sales({ ownerUid }) {
     quantity: "1",
     amount: "",
     paymentMethod: "cash",
+    branchId: "",
     notes: "",
   };
   const [form, setForm] = useState(emptyForm);
@@ -105,11 +129,18 @@ export default function Sales({ ownerUid }) {
 
     setStatus("saving");
     try {
-      await addItem({
-        ...form,
-        amount: parseFloat(form.amount),
-        quantity: qty,
-      });
+      const chosenBranch = branches.find((b) => b.id === form.branchId);
+      const { branchId: _branchId, ...saleData } = form;
+      await addItem(
+        {
+          ...saleData,
+          amount: parseFloat(form.amount),
+          quantity: qty,
+        },
+        chosenBranch
+          ? { branchId: chosenBranch.id, branchName: chosenBranch.name }
+          : {},
+      );
 
       // Bookkeeping: reduce stock quantity by the amount sold.
       if (matchedStock && matchedStock.quantity != null) {
@@ -187,6 +218,18 @@ export default function Sales({ ownerUid }) {
       ),
     },
     { key: "notes", label: t.notes },
+    // branchName is display-only — where this sale happened (Nairobi,
+    // Mombasa, etc). Only shown for owners on the Business plan.
+    ...(canUseBranches && branches.length > 0
+      ? [{
+          key: "branchName",
+          label: "Location",
+          readOnly: true,
+          format: (v) => v
+            ? <span style={{ fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 20, background: "#3b82f615", color: "#3b82f6" }}>📍 {v}</span>
+            : <span style={{ fontSize: 11, color: "var(--muted)" }}>—</span>,
+        }]
+      : []),
     // staffName is display-only — mark readOnly so EntryTable skips it in edit mode
     ...(ownerUid
       ? [{
@@ -240,6 +283,27 @@ export default function Sales({ ownerUid }) {
                 required
               />
             </div>
+            {canUseBranches && branches.length > 0 && (
+              <div className="field-group">
+                <label htmlFor="sale-branch">📍 Location / Branch</label>
+                <select
+                  id="sale-branch"
+                  name="sale-branch"
+                  value={form.branchId}
+                  onChange={(e) =>
+                    setForm({ ...form, branchId: e.target.value })
+                  }
+                >
+                  <option value="">— No specific branch —</option>
+                  {branches.map((b) => (
+                    <option key={b.id} value={b.id}>
+                      {b.name}
+                      {b.location ? ` (${b.location})` : ""}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
             {stock.length > 0 && (
               <div className="field-group">
                 <label htmlFor="sale-stock">{t.pickStock}</label>
