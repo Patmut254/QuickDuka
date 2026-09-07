@@ -11,6 +11,12 @@ export default function Stock({ sub, ownerUid }) {
   const { t } = useLang();
   const { items, loading, addItem, deleteItem, updateItem } =
     useCollection("stock", ownerUid ? { ownerUid } : undefined);
+  // A restock (or a manual quantity increase) is a purchase — it should
+  // land in the Purchases ledger too, not just bump the stock counters.
+  const { addItem: addPurchase } = useCollection(
+    "purchases",
+    ownerUid ? { ownerUid } : undefined,
+  );
   const { toast, showToast } = useToast();
 
   // buyPrice: what you paid per item (always fixed — you know your cost).
@@ -84,22 +90,54 @@ export default function Stock({ sub, ownerUid }) {
     e.preventDefault();
     try {
       const isRange = editForm.priceMode === "range";
+      const buyPrice =
+        editForm.buyPrice !== "" ? parseFloat(editForm.buyPrice) : 0;
+      const newQty =
+        editForm.quantity !== "" ? parseFloat(editForm.quantity) : 0;
+      const originalQty = Number(editTarget.quantity || 0);
+      // If the edit raised the quantity, that increase is a purchase —
+      // log it (using the BUY price, never the selling price) and roll it
+      // into the running "purchased" totals so Purchased/Total Bought
+      // stay accurate. A lowered quantity is left alone here (use Losses
+      // for shrinkage/damage, or Sales for an actual sale).
+      const delta = newQty - originalQty;
+
       await updateItem(
         editTarget.id,
         {
           name: editForm.name.trim(),
-          buyPrice:
-            editForm.buyPrice !== "" ? parseFloat(editForm.buyPrice) : 0,
+          buyPrice,
           priceMode: editForm.priceMode || "fixed",
           price: !isRange ? parseFloat(editForm.price) : null,
           minPrice: isRange ? parseFloat(editForm.minPrice) : null,
           maxPrice: isRange ? parseFloat(editForm.maxPrice) : null,
           unit: editForm.unit?.trim() || "",
-          quantity: editForm.quantity !== "" ? parseFloat(editForm.quantity) : 0,
+          quantity: newQty,
           notes: editForm.notes?.trim() || "",
+          ...(delta > 0
+            ? {
+                totalPurchased: Number(editTarget.totalPurchased || 0) + delta,
+                totalPurchaseValue:
+                  Number(editTarget.totalPurchaseValue || 0) + delta * buyPrice,
+              }
+            : {}),
         },
         editTarget,
       );
+
+      if (delta > 0) {
+        await addPurchase({
+          date: new Date().toISOString().split("T")[0],
+          item: editForm.name.trim(),
+          supplier: "",
+          phone: "",
+          quantity: delta,
+          amount: delta * buyPrice,
+          category: "Stock update",
+          notes: "Auto-added from a stock quantity edit",
+        });
+      }
+
       showToast(t.saved || "Updated!");
       setEditTarget(null);
     } catch {
@@ -120,6 +158,18 @@ export default function Stock({ sub, ownerUid }) {
           ? parseFloat(restockForm.cost)
           : Number(restockTarget.buyPrice || 0);
       await recordStockPurchase(restockTarget.id, qty, costPerItem * qty);
+      // A restock IS a purchase — log it in the Purchases ledger too, using
+      // the buy price (costPerItem), never the item's selling price.
+      await addPurchase({
+        date: new Date().toISOString().split("T")[0],
+        item: restockTarget.name,
+        supplier: "",
+        phone: "",
+        quantity: qty,
+        amount: costPerItem * qty,
+        category: "Restock",
+        notes: "Auto-added from a stock restock",
+      });
       showToast(`${restockTarget.name} +${qty} ${t.qtyInStock || "in stock"}.`);
       setRestockStatus("idle");
       setRestockTarget(null);

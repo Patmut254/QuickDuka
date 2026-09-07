@@ -32,22 +32,41 @@ export default function Sales({ ownerUid }) {
   // Tracks the matched stock item (if any) so we know its id (to decrement
   // quantity on save) and its price mode (to bound the discount slider).
   const [selectedStock, setSelectedStock] = useState(null);
+  // Per-unit price of the selected stock item — kept separate from
+  // form.amount (which is the TOTAL) so total = unitPrice × quantity
+  // always stays correct as either one changes.
+  const [unitPrice, setUnitPrice] = useState(null);
 
   const handleStockSelect = (e) => {
     const found = stock.find((c) => c.name === e.target.value);
     setSelectedStock(found || null);
-    let amount = form.amount;
+    let up = null;
     if (found) {
-      if (found.priceMode === "range" && found.maxPrice != null) {
-        amount = String(found.maxPrice); // default to full price; discount by dragging down
-      } else if (found.price != null) {
-        amount = String(found.price);
-      }
+      // default to full price; discount by dragging the range slider down
+      up =
+        found.priceMode === "range" && found.maxPrice != null
+          ? Number(found.maxPrice)
+          : found.price != null
+            ? Number(found.price)
+            : null;
     }
+    setUnitPrice(up);
+    const qty = parseFloat(form.quantity) || 1;
     setForm((f) => ({
       ...f,
       description: found ? found.name : e.target.value,
-      amount,
+      amount: up != null ? String(up * qty) : f.amount,
+    }));
+  };
+
+  // Quantity changed — recompute the total from the known unit price so
+  // "10 items at 1,000 each" always lands on 10,000, not 1,000.
+  const handleQuantityChange = (e) => {
+    const q = e.target.value;
+    setForm((f) => ({
+      ...f,
+      quantity: q,
+      amount: unitPrice != null ? String(unitPrice * (parseFloat(q) || 0)) : f.amount,
     }));
   };
 
@@ -103,6 +122,7 @@ export default function Sales({ ownerUid }) {
         setStatus("idle");
         setForm(emptyForm);
         setSelectedStock(null);
+        setUnitPrice(null);
         setShowForm(false);
       }, 1500);
     } catch {
@@ -196,6 +216,7 @@ export default function Sales({ ownerUid }) {
             if (showForm) {
               setForm(emptyForm);
               setSelectedStock(null);
+              setUnitPrice(null);
             }
           }}
         >
@@ -291,7 +312,7 @@ export default function Sales({ ownerUid }) {
                 min="1"
                 step="1"
                 value={form.quantity}
-                onChange={(e) => setForm({ ...form, quantity: e.target.value })}
+                onChange={handleQuantityChange}
               />
               {selectedStock?.quantity != null && (
                 <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 4 }}>
@@ -321,27 +342,43 @@ export default function Sales({ ownerUid }) {
                     min={selectedStock.minPrice}
                     max={selectedStock.maxPrice}
                     step="0.01"
-                    value={form.amount || selectedStock.maxPrice}
-                    onChange={(e) => setForm({ ...form, amount: e.target.value })}
+                    value={unitPrice ?? selectedStock.maxPrice}
+                    onChange={(e) => {
+                      const up = parseFloat(e.target.value);
+                      const qty = parseFloat(form.quantity) || 1;
+                      setUnitPrice(up);
+                      setForm((f) => ({ ...f, amount: String(up * qty) }));
+                    }}
                     style={{ width: "100%" }}
                   />
                   <div style={{ fontWeight: 600, marginTop: 4 }}>
-                    KES {Number(form.amount || selectedStock.maxPrice).toLocaleString()}
+                    KES {Number(unitPrice ?? selectedStock.maxPrice).toLocaleString()} / unit
+                    {" × "}
+                    {parseFloat(form.quantity) || 1} = KES{" "}
+                    {Number(form.amount || 0).toLocaleString()}
                   </div>
                 </div>
               ) : (
-                <input
-                  id="sale-amount"
-                  name="sale-amount"
-                  type="number"
-                  autoComplete="off"
-                  min="0"
-                  step="0.01"
-                  placeholder="0.00"
-                  value={form.amount}
-                  onChange={(e) => setForm({ ...form, amount: e.target.value })}
-                  required
-                />
+                <>
+                  <input
+                    id="sale-amount"
+                    name="sale-amount"
+                    type="number"
+                    autoComplete="off"
+                    min="0"
+                    step="0.01"
+                    placeholder="0.00"
+                    value={form.amount}
+                    onChange={(e) => setForm({ ...form, amount: e.target.value })}
+                    required
+                  />
+                  {unitPrice != null && Number(form.quantity) > 1 && (
+                    <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 4 }}>
+                      KES {unitPrice.toLocaleString()} × {form.quantity} ={" "}
+                      KES {(unitPrice * (parseFloat(form.quantity) || 0)).toLocaleString()}
+                    </div>
+                  )}
+                </>
               )}
             </div>
             <div className="field-group">

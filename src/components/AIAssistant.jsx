@@ -511,7 +511,10 @@ ${JSON.stringify(context, null, 2)}
             Authorization: `Bearer ${import.meta.env.VITE_GROQ_API_KEY}`,
           },
           body: JSON.stringify({
-            model: "llama-3.3-70b-versatile",
+            // Groq decommissioned llama-3.3-70b-versatile on 16 Aug 2026 —
+            // this is why the assistant stopped responding. gpt-oss-120b is
+            // Groq's recommended replacement (same tier, still fast).
+            model: "openai/gpt-oss-120b",
             messages: apiMessages,
             temperature: 0.5,
             max_tokens: 300,

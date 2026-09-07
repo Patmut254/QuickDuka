@@ -8,9 +8,12 @@ import {
 import emailjs from "@emailjs/browser";
 import { useLang } from "../LangContext";
 
-const EMAILJS_SERVICE_ID = "YOUR_SERVICE_ID";
-const EMAILJS_TEMPLATE_ID = "YOUR_TEMPLATE_ID";
-const EMAILJS_PUBLIC_KEY = "YOUR_PUBLIC_KEY";
+// Same EmailJS project used by src/emailService.js — see that file for
+// full setup steps. This form needs its own template (contact-form fields
+// differ from the notification emails), so it gets its own env var.
+const EMAILJS_SERVICE_ID = import.meta.env.VITE_EMAILJS_SERVICE_ID || "";
+const EMAILJS_TEMPLATE_ID = import.meta.env.VITE_EMAILJS_TEMPLATE_CONTACT || "";
+const EMAILJS_PUBLIC_KEY = import.meta.env.VITE_EMAILJS_PUBLIC_KEY || "";
 
 export default function ContactPage() {
   const { t } = useLang();

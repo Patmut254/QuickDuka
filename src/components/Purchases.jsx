@@ -31,13 +31,31 @@ export default function Purchases({ ownerUid }) {
   const [form, setForm] = useState(emptyForm);
   const [status, setStatus] = useState("idle");
   const [showForm, setShowForm] = useState(false);
+  // Per-unit buy price of the selected stock item — kept separate from
+  // form.amount (the TOTAL spend) so total = unitPrice × quantity always
+  // stays correct as either one changes.
+  const [unitPrice, setUnitPrice] = useState(null);
 
   const handleStockSelect = (e) => {
     const found = stock.find((c) => c.name === e.target.value);
+    const up = found?.buyPrice != null ? Number(found.buyPrice) : null;
+    setUnitPrice(up);
+    const qty = parseFloat(form.quantity) || 1;
     setForm((f) => ({
       ...f,
       item: found ? found.name : e.target.value,
-      amount: found?.buyPrice != null ? String(found.buyPrice) : f.amount,
+      amount: up != null ? String(up * qty) : f.amount,
+    }));
+  };
+
+  // Quantity changed — recompute the total so "10 items at 1,000 each"
+  // always lands on 10,000, not 1,000.
+  const handleQuantityChange = (e) => {
+    const q = e.target.value;
+    setForm((f) => ({
+      ...f,
+      quantity: q,
+      amount: unitPrice != null ? String(unitPrice * (parseFloat(q) || 0)) : f.amount,
     }));
   };
 
@@ -82,6 +100,7 @@ export default function Purchases({ ownerUid }) {
       setTimeout(() => {
         setStatus("idle");
         setForm(emptyForm);
+        setUnitPrice(null);
         setShowForm(false);
       }, 1500);
     } catch {
@@ -225,7 +244,7 @@ export default function Purchases({ ownerUid }) {
                 step="1"
                 placeholder={t.quantityPh}
                 value={form.quantity}
-                onChange={(e) => setForm({ ...form, quantity: e.target.value })}
+                onChange={handleQuantityChange}
               />
             </div>
             <div className="field-group">
@@ -239,6 +258,12 @@ export default function Purchases({ ownerUid }) {
                 onChange={(e) => setForm({ ...form, amount: e.target.value })}
                 required
               />
+              {unitPrice != null && Number(form.quantity) > 1 && (
+                <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 4 }}>
+                  KES {unitPrice.toLocaleString()} × {form.quantity} ={" "}
+                  KES {(unitPrice * (parseFloat(form.quantity) || 0)).toLocaleString()}
+                </div>
+              )}
             </div>
             <div className="field-group full-width">
               <label>{t.notes}</label>

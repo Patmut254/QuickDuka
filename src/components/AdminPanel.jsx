@@ -28,6 +28,13 @@ import {
   set as dbSet,
   remove as dbRemove,
 } from "firebase/database";
+import {
+  sendReferrerAcceptedEmail,
+  sendReferrerRejectedEmail,
+  sendReferrerPaidEmail,
+  sendAccountSuspendedEmail,
+  sendAccountDeletedEmail,
+} from "../emailService";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faUsers,
@@ -1137,6 +1144,11 @@ function DeleteUserModal({ user, onClose, onDeleted }) {
       // This is the final lockout — no profile = no access.
       await deleteDoc(userRef);
 
+      sendAccountDeletedEmail({
+        toEmail: user.realEmail || user.email,
+        toName: user.businessName || user.ownerName,
+      });
+
       // STEP 4: Remove the RTDB mirror. Every create/login path writes
       // users/{uid} into RTDB, but nothing removed it on delete until now —
       // that's exactly why orphaned RTDB records (with no matching Auth
@@ -1351,6 +1363,10 @@ export default function AdminPanel() {
       type: "admin_suspend",
       note: "Manually suspended by admin",
       createdAt: serverTimestamp(),
+    });
+    sendAccountSuspendedEmail({
+      toEmail: u.realEmail || u.email,
+      toName: u.businessName || u.ownerName,
     });
     showToast(`Suspended ${u.businessName || u.email}`);
   };
@@ -3082,6 +3098,7 @@ function ReferrersTab({ users, showToast }) {
       note: "Manual payment by admin",
       createdAt: serverTimestamp(),
     });
+    sendReferrerPaidEmail({ toEmail: r.email, toName: r.name, amount });
     showToast(`KES ${amount} marked as paid to ${r.name}`);
   };
 
@@ -3101,6 +3118,7 @@ function ReferrersTab({ users, showToast }) {
     await updateDoc(doc(db, "referrerApplications", app.id), {
       status: "approved",
     });
+    sendReferrerAcceptedEmail({ toEmail: app.email, toName: app.fullName });
     showToast(`${app.fullName} approved and added as referrer!`);
   };
 
@@ -3108,6 +3126,7 @@ function ReferrersTab({ users, showToast }) {
     await updateDoc(doc(db, "referrerApplications", app.id), {
       status: "rejected",
     });
+    sendReferrerRejectedEmail({ toEmail: app.email, toName: app.fullName });
     showToast(`Application from ${app.fullName} rejected.`);
   };
 

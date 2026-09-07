@@ -17,6 +17,7 @@ import {
   serverTimestamp as serverTimestamp_visit,
 } from "firebase/firestore";
 import { useUserProfile } from "./hooks/useUserProfile";
+import { sendLoginSuccessEmail } from "./emailService";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faChartLine,
@@ -591,6 +592,10 @@ export default function App() {
     try {
       const email = await resolveLoginEmail(loginId);
       await signInWithEmailAndPassword(auth, email, loginPw);
+      // Fire-and-forget: never let a notification delay/block the login
+      // that already succeeded. sendLoginSuccessEmail swallows its own
+      // errors internally.
+      sendLoginSuccessEmail({ toEmail: email, toName: loginId });
     } catch {
       setLoginErr("Incorrect email/phone or password. Please try again.");
     }
