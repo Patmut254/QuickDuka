@@ -396,119 +396,149 @@ export default function Register({ onBack }) {
                 marginBottom: 18,
               }}
             >
-              {PLANS.map((plan) => (
-                <button
-                  key={plan.id}
-                  type="button"
-                  onClick={() => setSelectedPlan(plan.id)}
-                  style={{
-                    border: `2px solid ${selectedPlan === plan.id ? plan.color : "var(--border)"}`,
-                    borderRadius: 10,
-                    padding: "10px 14px",
-                    background:
-                      selectedPlan === plan.id
-                        ? `${plan.color}0d`
-                        : "var(--bg2)",
-                    cursor: "pointer",
-                    textAlign: "left",
-                    transition: "all 0.15s",
-                    fontFamily: "inherit",
-                  }}
-                >
-                  <div
-                    style={{ display: "flex", alignItems: "center", gap: 9 }}
-                  >
-                    <div
-                      style={{
-                        width: 16,
-                        height: 16,
-                        borderRadius: "50%",
-                        border: `2px solid ${plan.color}`,
-                        background:
-                          selectedPlan === plan.id ? plan.color : "transparent",
-                        flexShrink: 0,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                      }}
-                    >
-                      {selectedPlan === plan.id && (
-                        <div
-                          style={{
-                            width: 5,
-                            height: 5,
-                            borderRadius: "50%",
-                            background: "#fff",
-                          }}
-                        />
-                      )}
-                    </div>
-                    <span
-                      style={{
-                        fontWeight: 700,
-                        fontSize: 13,
-                        color: plan.color,
-                      }}
-                    >
-                      {plan.name}
-                    </span>
-                    {plan.badge && (
-                      <span
-                        style={{
-                          fontSize: 9,
-                          fontWeight: 700,
-                          padding: "2px 7px",
-                          borderRadius: 20,
-                          letterSpacing: 0.5,
-                          background: plan.color,
-                          color: "#fff",
-                        }}
-                      >
-                        {plan.badge}
-                      </span>
-                    )}
-                    <span
-                      style={{
-                        marginLeft: "auto",
-                        fontWeight: 700,
-                        fontSize: 13,
-                        color: "var(--text)",
-                      }}
-                    >
-                      KES {plan.price.toLocaleString()}
-                      <span
-                        style={{
-                          fontSize: 11,
-                          fontWeight: 400,
-                          color: "var(--muted)",
-                        }}
-                      >
-                        /mo
-                      </span>
-                    </span>
-                  </div>
-                  <ul
+              {PLANS.map((plan) => {
+                // Growth and Business aren't ready for customers yet — keep
+                // them visible (so people know they're coming) but disabled.
+                // Flip this to re-enable once a tier is ready to sell.
+                const comingSoon = plan.id !== "starter";
+                return (
+                  <button
+                    key={plan.id}
+                    type="button"
+                    disabled={comingSoon}
+                    onClick={() => !comingSoon && setSelectedPlan(plan.id)}
                     style={{
-                      margin: "5px 0 0 25px",
-                      padding: 0,
-                      listStyle: "disc",
+                      border: `2px solid ${selectedPlan === plan.id ? plan.color : "var(--border)"}`,
+                      borderRadius: 10,
+                      padding: "10px 14px",
+                      background:
+                        selectedPlan === plan.id
+                          ? `${plan.color}0d`
+                          : "var(--bg2)",
+                      cursor: comingSoon ? "not-allowed" : "pointer",
+                      textAlign: "left",
+                      transition: "all 0.15s",
+                      fontFamily: "inherit",
+                      opacity: comingSoon ? 0.55 : 1,
                     }}
                   >
-                    {plan.features.map((f) => (
-                      <li
-                        key={f}
+                    <div
+                      style={{ display: "flex", alignItems: "center", gap: 9 }}
+                    >
+                      <div
                         style={{
-                          fontSize: 11,
-                          color: "var(--muted)",
-                          lineHeight: 1.6,
+                          width: 16,
+                          height: 16,
+                          borderRadius: "50%",
+                          border: `2px solid ${plan.color}`,
+                          background:
+                            selectedPlan === plan.id
+                              ? plan.color
+                              : "transparent",
+                          flexShrink: 0,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
                         }}
                       >
-                        {f}
-                      </li>
-                    ))}
-                  </ul>
-                </button>
-              ))}
+                        {selectedPlan === plan.id && (
+                          <div
+                            style={{
+                              width: 5,
+                              height: 5,
+                              borderRadius: "50%",
+                              background: "#fff",
+                            }}
+                          />
+                        )}
+                      </div>
+                      <span
+                        style={{
+                          fontWeight: 700,
+                          fontSize: 13,
+                          color: plan.color,
+                        }}
+                      >
+                        {plan.name}
+                      </span>
+                      {comingSoon ? (
+                        <span
+                          style={{
+                            fontSize: 9,
+                            fontWeight: 700,
+                            padding: "2px 7px",
+                            borderRadius: 20,
+                            letterSpacing: 0.5,
+                            background: "var(--muted)",
+                            color: "#fff",
+                          }}
+                        >
+                          Coming soon
+                        </span>
+                      ) : (
+                        plan.badge && (
+                          <span
+                            style={{
+                              fontSize: 9,
+                              fontWeight: 700,
+                              padding: "2px 7px",
+                              borderRadius: 20,
+                              letterSpacing: 0.5,
+                              background: plan.color,
+                              color: "#fff",
+                            }}
+                          >
+                            {plan.badge}
+                          </span>
+                        )
+                      )}
+                      {!comingSoon && (
+                        <span
+                          style={{
+                            marginLeft: "auto",
+                            fontWeight: 700,
+                            fontSize: 13,
+                            color: "var(--text)",
+                          }}
+                        >
+                          KES {plan.price.toLocaleString()}
+                          <span
+                            style={{
+                              fontSize: 11,
+                              fontWeight: 400,
+                              color: "var(--muted)",
+                            }}
+                          >
+                            /mo
+                          </span>
+                        </span>
+                      )}
+                    </div>
+                    {!comingSoon && (
+                      <ul
+                        style={{
+                          margin: "5px 0 0 25px",
+                          padding: 0,
+                          listStyle: "disc",
+                        }}
+                      >
+                        {plan.features.map((f) => (
+                          <li
+                            key={f}
+                            style={{
+                              fontSize: 11,
+                              color: "var(--muted)",
+                              lineHeight: 1.6,
+                            }}
+                          >
+                            {f}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </button>
+                );
+              })}
             </div>
             <button
               type="button"

@@ -127,9 +127,7 @@ export default function SubscriptionWall({ profile }) {
       const data = await res.json();
       if (res.ok && data.success) {
         setStkStatus("sent");
-        setStkMsg(
-          "M-Pesa prompt sent! Check your phone and enter your PIN.",
-        );
+        setStkMsg("M-Pesa prompt sent! Check your phone and enter your PIN.");
       } else {
         setStkStatus("error");
         setStkMsg(
@@ -326,84 +324,111 @@ export default function SubscriptionWall({ profile }) {
                 overflow: "hidden",
               }}
             >
-              {PLANS.map((plan) => (
-                <button
-                  key={plan.id}
-                  type="button"
-                  onClick={() => {
-                    setActivePlan(plan.id);
-                    setShowPlans(false);
-                    setStkStatus("idle");
-                    setStkMsg("");
-                    setCheckStatus("idle");
-                    setCheckMsg("");
-                  }}
-                  style={{
-                    width: "100%",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 12,
-                    padding: "12px 16px",
-                    textAlign: "left",
-                    background:
-                      activePlan === plan.id ? `${plan.color}0f` : "var(--bg2)",
-                    border: "none",
-                    borderBottom: "1px solid var(--border)",
-                    cursor: "pointer",
-                    fontFamily: "inherit",
-                  }}
-                >
-                  <div
-                    style={{
-                      width: 16,
-                      height: 16,
-                      borderRadius: "50%",
-                      border: `2px solid ${plan.color}`,
-                      background:
-                        activePlan === plan.id ? plan.color : "transparent",
-                      flexShrink: 0,
+              {PLANS.map((plan) => {
+                // Growth and Business aren't ready yet — same "coming soon"
+                // treatment as the Register page. Flip this once ready.
+                const comingSoon = plan.id !== "starter";
+                return (
+                  <button
+                    key={plan.id}
+                    type="button"
+                    disabled={comingSoon}
+                    onClick={() => {
+                      if (comingSoon) return;
+                      setActivePlan(plan.id);
+                      setShowPlans(false);
+                      setStkStatus("idle");
+                      setStkMsg("");
+                      setCheckStatus("idle");
+                      setCheckMsg("");
                     }}
-                  />
-                  <div style={{ flex: 1 }}>
-                    <div
-                      style={{
-                        fontWeight: 700,
-                        fontSize: 13,
-                        color: plan.color,
-                      }}
-                    >
-                      {plan.name}
-                      {plan.badge && (
-                        <span
-                          style={{
-                            marginLeft: 6,
-                            fontSize: 9,
-                            background: plan.color,
-                            color: "#fff",
-                            padding: "1px 6px",
-                            borderRadius: 20,
-                          }}
-                        >
-                          {plan.badge}
-                        </span>
-                      )}
-                    </div>
-                    <div style={{ fontSize: 11, color: "var(--muted)" }}>
-                      {plan.features.join(" · ")}
-                    </div>
-                  </div>
-                  <span
                     style={{
-                      fontWeight: 700,
-                      fontSize: 13,
-                      color: "var(--text)",
-                      whiteSpace: "nowrap",
+                      width: "100%",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 12,
+                      padding: "12px 16px",
+                      textAlign: "left",
+                      background:
+                        activePlan === plan.id
+                          ? `${plan.color}0f`
+                          : "var(--bg2)",
+                      border: "none",
+                      borderBottom: "1px solid var(--border)",
+                      cursor: comingSoon ? "not-allowed" : "pointer",
+                      fontFamily: "inherit",
+                      opacity: comingSoon ? 0.55 : 1,
                     }}
                   >
-                    KES {plan.price.toLocaleString()}
-                  </span>
-                </button>
-              ))}
+                    <div
+                      style={{
+                        width: 16,
+                        height: 16,
+                        borderRadius: "50%",
+                        border: `2px solid ${plan.color}`,
+                        background:
+                          activePlan === plan.id ? plan.color : "transparent",
+                        flexShrink: 0,
+                      }}
+                    />
+                    <div style={{ flex: 1 }}>
+                      <div
+                        style={{
+                          fontWeight: 700,
+                          fontSize: 13,
+                          color: plan.color,
+                        }}
+                      >
+                        {plan.name}
+                        {comingSoon ? (
+                          <span
+                            style={{
+                              marginLeft: 6,
+                              fontSize: 9,
+                              background: "var(--muted)",
+                              color: "#fff",
+                              padding: "1px 6px",
+                              borderRadius: 20,
+                            }}
+                          >
+                            Coming soon
+                          </span>
+                        ) : (
+                          plan.badge && (
+                            <span
+                              style={{
+                                marginLeft: 6,
+                                fontSize: 9,
+                                background: plan.color,
+                                color: "#fff",
+                                padding: "1px 6px",
+                                borderRadius: 20,
+                              }}
+                            >
+                              {plan.badge}
+                            </span>
+                          )
+                        )}
+                      </div>
+                      <div style={{ fontSize: 11, color: "var(--muted)" }}>
+                        {plan.features.join(" · ")}
+                      </div>
+                    </div>
+                    {!comingSoon && (
+                      <span
+                        style={{
+                          fontWeight: 700,
+                          fontSize: 13,
+                          color: "var(--text)",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        KES {plan.price.toLocaleString()}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
             </div>
           )}
 
