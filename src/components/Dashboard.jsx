@@ -8,6 +8,7 @@ import {
   faArrowTrendUp,
   faArrowTrendDown,
   faTriangleExclamation,
+  faHandHoldingDollar,
 } from "@fortawesome/free-solid-svg-icons";
 import { useMemo } from "react";
 import { useCollection } from "../hooks/useCollection";
@@ -31,6 +32,7 @@ import {
 } from "date-fns";
 
 import FeatureGate from "./FeatureGate";
+import { balanceOf, dueStatus } from "../supplierDebt";
 
 export default function Dashboard({ setActiveTab, sub, ownerUid }) {
   const { t } = useLang();
@@ -38,6 +40,7 @@ export default function Dashboard({ setActiveTab, sub, ownerUid }) {
   const { items: purchases } = useCollection("purchases", ownerUid ? { ownerUid } : undefined);
   const { items: expenses } = useCollection("expenses", ownerUid ? { ownerUid } : undefined);
   const { items: losses } = useCollection("losses", ownerUid ? { ownerUid } : undefined);
+  const { items: credits } = useCollection("credits", ownerUid ? { ownerUid } : undefined);
 
   const now = new Date();
   const monthStart = startOfMonth(now);
@@ -65,6 +68,13 @@ export default function Dashboard({ setActiveTab, sub, ownerUid }) {
     .filter(inMonth)
     .reduce((a, b) => a + (Number(b.amount) || 0), 0);
   const profit = totalSales - totalPurchases - totalExpenses - totalLosses;
+
+  // Stock bought on credit that still has to be paid for — soonest promised
+  // repayment date first, undated ones last.
+  const supplierDebts = purchases
+    .filter((p) => balanceOf(p) > 0)
+    .sort((a, b) => (a.dueDate || "9999").localeCompare(b.dueDate || "9999"));
+  const supplierOwedTotal = supplierDebts.reduce((a, p) => a + balanceOf(p), 0);
 
   const chartData = useMemo(() => {
     const months = [];
@@ -138,8 +148,24 @@ export default function Dashboard({ setActiveTab, sub, ownerUid }) {
     },
   ];
 
+  // A credit shows up here the moment it's given — at KES 0 collected — and
+  // its amount grows as the customer pays. The payments themselves are also
+  // saved as Sales (fromCredit), so those rows are hidden from this list to
+  // avoid showing the same money twice. Sales totals/charts are unchanged.
+  const creditRows = credits.slice(0, 3).map((c) => ({
+    ...c,
+    type: "credit",
+    description: c.itemTaken ? `${c.customer} — ${c.itemTaken}` : c.customer,
+    amount: Number(c.paidAmount) || 0,
+    date: c.lastPaymentDate || c.dateIssued || c.date,
+  }));
+
   const recent = [
-    ...sales.slice(0, 3).map((s) => ({ ...s, type: "sale" })),
+    ...sales
+      .filter((s) => !s.fromCredit)
+      .slice(0, 3)
+      .map((s) => ({ ...s, type: "sale" })),
+    ...creditRows,
     ...purchases.slice(0, 2).map((p) => ({ ...p, type: "purchase" })),
     ...expenses.slice(0, 2).map((e) => ({ ...e, type: "expense" })),
   ]
@@ -178,6 +204,89 @@ export default function Dashboard({ setActiveTab, sub, ownerUid }) {
           </div>
         ))}
       </div>
+
+      {supplierDebts.length > 0 && (
+        <div
+          style={{
+            margin: "0 0 18px",
+            padding: "14px 16px",
+            background: "var(--bg2)",
+            border: "1px solid var(--border)",
+            borderRadius: "var(--radius)",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              gap: 10,
+              flexWrap: "wrap",
+              marginBottom: 8,
+            }}
+          >
+            <strong>
+              ⏰ {t.supplierPaymentsDue} — KES {supplierOwedTotal.toLocaleString()}
+            </strong>
+            <button
+              className="link-btn"
+              onClick={() => {
+                sessionStorage.setItem("qd-stock-view", "purchases");
+                setActiveTab("stock");
+              }}
+            >
+              {t.viewPurchases}
+            </button>
+          </div>
+          {supplierDebts.slice(0, 5).map((p) => {
+            const st = dueStatus(p);
+            return (
+              <div
+                key={p.id}
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  gap: 10,
+                  padding: "6px 0",
+                  fontSize: 13,
+                  borderTop: "1px solid var(--border)",
+                }}
+              >
+                <span>
+                  {p.item}
+                  {p.supplier ? ` · ${p.supplier}` : ""}
+                </span>
+                <span style={{ whiteSpace: "nowrap" }}>
+                  <strong>KES {balanceOf(p).toLocaleString()}</strong>
+                  {p.dueDate && (
+                    <span
+                      style={{
+                        marginLeft: 8,
+                        color:
+                          st === "overdue"
+                            ? "#ef4444"
+                            : st === "soon"
+                              ? "#f59e0b"
+                              : "var(--muted)",
+                        fontWeight: st === "later" ? 400 : 700,
+                      }}
+                    >
+                      {t.dueOn} {p.dueDate}
+                      {st === "overdue" && ` · ${t.overdueLabel}`}
+                      {st === "soon" && ` · ${t.dueSoon}`}
+                    </span>
+                  )}
+                </span>
+              </div>
+            );
+          })}
+          {supplierDebts.length > 5 && (
+            <div style={{ fontSize: 12, color: "var(--muted)", paddingTop: 6 }}>
+              +{supplierDebts.length - 5} …
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="chart-section">
         <div className="section-header">
@@ -279,7 +388,9 @@ export default function Dashboard({ setActiveTab, sub, ownerUid }) {
                     icon={
                       item.type === "sale"
                         ? faMoneyBillTrendUp
-                        : item.type === "purchase"
+                        : item.type === "credit"
+                          ? faHandHoldingDollar
+                          : item.type === "purchase"
                           ? faCartPlus
                           : faReceipt
                     }
@@ -295,19 +406,26 @@ export default function Dashboard({ setActiveTab, sub, ownerUid }) {
                   <div className="recent-meta">
                     {item.type === "sale"
                       ? t.sales
-                      : item.type === "purchase"
-                        ? t.purchases
-                        : t.expenses}{" "}
+                      : item.type === "credit"
+                        ? t.credits
+                        : item.type === "purchase"
+                          ? t.purchases
+                          : t.expenses}{" "}
                     · {item.date || "-"}
+                    {item.type === "credit" &&
+                      ` · KES ${item.amount.toLocaleString()} / ${Number(item.totalAmount || 0).toLocaleString()}`}
                   </div>
                 </div>
                 <div
                   className="recent-amount"
                   style={{
-                    color: item.type === "sale" ? "#22c55e" : "#f97316",
+                    color:
+                      item.type === "sale" || item.type === "credit"
+                        ? "#22c55e"
+                        : "#f97316",
                   }}
                 >
-                  {item.type === "sale" ? "+" : "-"}KES{" "}
+                  {item.type === "sale" || item.type === "credit" ? "+" : "-"}KES{" "}
                   {Number(item.amount).toLocaleString()}
                 </div>
               </div>

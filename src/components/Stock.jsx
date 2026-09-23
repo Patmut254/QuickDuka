@@ -18,7 +18,12 @@ import Purchases from "./Purchases";
 // Purchases tab was removed from the sidebar in App.jsx.
 export default function Stock(props) {
   const { t } = useLang();
-  const [view, setView] = useState("stock");
+  // Dashboard's "supplier payments" reminder deep-links to the purchases view.
+  const [view, setView] = useState(() => {
+    const want = sessionStorage.getItem("qd-stock-view");
+    if (want) sessionStorage.removeItem("qd-stock-view");
+    return want === "purchases" ? "purchases" : "stock";
+  });
   const views = [
     { id: "stock", label: t.stock },
     { id: "purchases", label: t.purchaseHistory || t.purchases },
@@ -103,7 +108,9 @@ function StockList({ sub, ownerUid }) {
     quantity: "",
     cost: "",
     supplier: "",
-    paidNow: "", // blank = paid in full
+    payStatus: "paid", // "paid" | "credit"
+    paidNow: "",
+    dueDate: "",
   });
   const [restockStatus, setRestockStatus] = useState("idle");
   const [search, setSearch] = useState("");
@@ -246,14 +253,15 @@ function StockList({ sub, ownerUid }) {
           : Number(restockTarget.buyPrice || 0);
       const totalCost = roundMoney(costPerItem * qty);
       // Bought on credit? "Paid so far" below the total leaves a balance owed
-      // to the supplier (tracked on the Purchases view). Blank = paid in full.
+      // to the supplier (tracked on the Purchases view, with a reminder on
+      // the promised repayment date).
       const paidNow =
-        restockForm.paidNow === ""
-          ? totalCost
-          : Math.min(
+        restockForm.payStatus === "credit"
+          ? Math.min(
               Math.max(parseFloat(restockForm.paidNow) || 0, 0),
               totalCost,
-            );
+            )
+          : totalCost;
       const onCredit = paidNow < totalCost;
       const today = new Date().toISOString().split("T")[0];
 
@@ -273,6 +281,7 @@ function StockList({ sub, ownerUid }) {
         ...(onCredit
           ? {
               paidAmount: roundMoney(paidNow),
+              dueDate: restockForm.dueDate || "",
               payments:
                 paidNow > 0
                   ? [
@@ -295,7 +304,14 @@ function StockList({ sub, ownerUid }) {
       );
       setRestockStatus("idle");
       setRestockTarget(null);
-      setRestockForm({ quantity: "", cost: "", supplier: "", paidNow: "" });
+      setRestockForm({
+      quantity: "",
+      cost: "",
+      supplier: "",
+      payStatus: "paid",
+      paidNow: "",
+      dueDate: "",
+    });
     } catch {
       setRestockStatus("idle");
       showToast(t.failedSave || "Restock failed. Try again.", "error");
@@ -742,7 +758,14 @@ function StockList({ sub, ownerUid }) {
                           title={t.restock}
                           onClick={() => {
                             setRestockTarget(item);
-                            setRestockForm({ quantity: "", cost: "", supplier: "", paidNow: "" });
+                            setRestockForm({
+      quantity: "",
+      cost: "",
+      supplier: "",
+      payStatus: "paid",
+      paidNow: "",
+      dueDate: "",
+    });
                           }}
                         >
                           ➕
@@ -852,54 +875,72 @@ function StockList({ sub, ownerUid }) {
                 />
               </div>
               <div className="field-group">
-                <label htmlFor="restock-paid">{t.amountPaidNow}</label>
-                <input
-                  id="restock-paid"
-                  name="restock-paid"
-                  type="number"
-                  autoComplete="off"
-                  min="0"
-                  step="0.01"
-                  value={restockForm.paidNow}
+                <label htmlFor="restock-paystatus">{t.paymentStatus}</label>
+                <select
+                  id="restock-paystatus"
+                  name="restock-paystatus"
+                  value={restockForm.payStatus}
                   onChange={(e) =>
-                    setRestockForm((f) => ({ ...f, paidNow: e.target.value }))
+                    setRestockForm((f) => ({ ...f, payStatus: e.target.value }))
                   }
-                />
-                {(() => {
-                  const q = parseFloat(restockForm.quantity) || 0;
-                  const c =
-                    restockForm.cost !== ""
-                      ? parseFloat(restockForm.cost) || 0
-                      : Number(restockTarget.buyPrice || 0);
-                  const total = roundMoney(q * c);
-                  const owed =
-                    restockForm.paidNow !== ""
-                      ? Math.max(
-                          0,
-                          roundMoney(total - (parseFloat(restockForm.paidNow) || 0)),
-                        )
-                      : 0;
-                  return (
-                    <div
-                      style={{ fontSize: 12, color: "var(--muted)", marginTop: 4 }}
-                    >
-                      {total > 0 && (
-                        <>
-                          {t.totalCost}: KES {total.toLocaleString()}
-                          {owed > 0 && (
-                            <>
-                              {" · "}
-                              {t.balanceOwed}: KES {owed.toLocaleString()}
-                            </>
-                          )}
-                          <br />
-                        </>
-                      )}
-                      {t.amountPaidNowHint}
-                    </div>
-                  );
-                })()}
+                >
+                  <option value="paid">{t.paidInFull}</option>
+                  <option value="credit">{t.notFullyPaid}</option>
+                </select>
               </div>
+              {restockForm.payStatus === "credit" && (
+                <>
+                  <div className="field-group">
+                    <label htmlFor="restock-paid">{t.amountPaidNow}</label>
+                    <input
+                      id="restock-paid"
+                      name="restock-paid"
+                      type="number"
+                      autoComplete="off"
+                      min="0"
+                      step="0.01"
+                      placeholder="0.00"
+                      value={restockForm.paidNow}
+                      onChange={(e) =>
+                        setRestockForm((f) => ({ ...f, paidNow: e.target.value }))
+                      }
+                    />
+                    {(() => {
+                      const q = parseFloat(restockForm.quantity) || 0;
+                      const c =
+                        restockForm.cost !== ""
+                          ? parseFloat(restockForm.cost) || 0
+                          : Number(restockTarget.buyPrice || 0);
+                      const total = roundMoney(q * c);
+                      const owed = Math.max(
+                        0,
+                        roundMoney(total - (parseFloat(restockForm.paidNow) || 0)),
+                      );
+                      return total > 0 ? (
+                        <div
+                          style={{ fontSize: 12, color: "var(--muted)", marginTop: 4 }}
+                        >
+                          {t.totalCost}: KES {total.toLocaleString()} ·{" "}
+                          {t.balanceOwed}: KES {owed.toLocaleString()}
+                        </div>
+                      ) : null;
+                    })()}
+                  </div>
+                  <div className="field-group">
+                    <label htmlFor="restock-due">{t.repayDate} *</label>
+                    <input
+                      id="restock-due"
+                      name="restock-due"
+                      type="date"
+                      value={restockForm.dueDate}
+                      onChange={(e) =>
+                        setRestockForm((f) => ({ ...f, dueDate: e.target.value }))
+                      }
+                      required
+                    />
+                  </div>
+                </>
+              )}
               <div className="alert-actions">
                 <button
                   type="button"

@@ -9,22 +9,11 @@ import {
 } from "../hooks/useStock";
 import { useLang } from "../LangContext";
 import { PAYMENT_METHODS } from "../paymentMethods";
+import { paidOf, balanceOf, dueStatus } from "../supplierDebt";
 import EntryTable from "./EntryTable";
 import { Toast, useToast } from "./Toast";
 
 const todayStr = () => new Date().toISOString().split("T")[0];
-
-// ── Supplier balances ────────────────────────────────────────────────────────
-// `amount` is always the FULL cost of the purchase. `paidAmount` only exists on
-// purchases that were bought on credit (or later edited); a record without it
-// — every purchase made before this feature — is treated as paid in full, so
-// old data keeps showing a zero balance.
-const paidOf = (p) =>
-  p.paidAmount != null && p.paidAmount !== ""
-    ? Number(p.paidAmount)
-    : Number(p.amount || 0);
-const balanceOf = (p) =>
-  Math.max(0, roundMoney(Number(p.amount || 0) - paidOf(p)));
 
 // Rendered inside the Stock page (Stock/Purchases). It is no longer a
 // top-level tab in App.jsx.
@@ -117,7 +106,9 @@ export default function Purchases({ ownerUid }) {
     phone: "",
     quantity: "",
     amount: "",
-    paidNow: "", // blank = paid in full
+    payStatus: "paid", // "paid" | "credit"
+    paidNow: "", // only used when payStatus === "credit"
+    dueDate: "", // promised repayment date (credit only)
     category: "",
     notes: "",
   };
@@ -135,6 +126,7 @@ export default function Purchases({ ownerUid }) {
   const [payAmount, setPayAmount] = useState("");
   const [payMethod, setPayMethod] = useState("cash");
   const [payNote, setPayNote] = useState("");
+  const [payDue, setPayDue] = useState("");
   const [paySaving, setPaySaving] = useState(false);
 
   const handleStockSelect = (e) => {
@@ -171,15 +163,20 @@ export default function Purchases({ ownerUid }) {
     try {
       const qty = form.quantity !== "" ? roundQty(parseFloat(form.quantity)) : null;
       const spend = form.amount ? parseFloat(form.amount) : 0;
-      // How much has actually been paid. Blank = paid in full. Anything
-      // less means the goods were taken on credit and the rest is owed.
+      // Paid in full, or bought on credit? On credit, `paidNow` is what has
+      // been paid so far (0 if nothing) and the rest is owed to the supplier.
       const paidNow =
-        form.paidNow === ""
-          ? spend
-          : Math.min(Math.max(parseFloat(form.paidNow) || 0, 0), spend);
+        form.payStatus === "credit"
+          ? Math.min(Math.max(parseFloat(form.paidNow) || 0, 0), spend)
+          : spend;
       const onCredit = paidNow < spend;
 
-      const { paidNow: _paidNow, ...purchaseData } = form;
+      const {
+        paidNow: _paidNow,
+        payStatus: _payStatus,
+        dueDate: _dueDate,
+        ...purchaseData
+      } = form;
       await addItem({
         ...purchaseData,
         amount: spend,
@@ -187,6 +184,7 @@ export default function Purchases({ ownerUid }) {
         ...(onCredit
           ? {
               paidAmount: roundMoney(paidNow),
+              dueDate: form.dueDate || "",
               payments:
                 paidNow > 0
                   ? [
@@ -253,6 +251,7 @@ export default function Purchases({ ownerUid }) {
     setPayAmount("");
     setPayMethod("cash");
     setPayNote("");
+    setPayDue(purchase.dueDate || "");
   };
 
   const handleSupplierPayment = async () => {
@@ -267,6 +266,8 @@ export default function Purchases({ ownerUid }) {
         payTarget.id,
         {
           paidAmount: roundMoney(paidOf(payTarget) + amt),
+          // partial payment → they may promise a new date for the rest
+          ...(amt < balance && payDue ? { dueDate: payDue } : {}),
           payments: [
             ...(payTarget.payments || []),
             { amount: amt, date: todayStr(), method: payMethod, note: payNote },
@@ -285,6 +286,8 @@ export default function Purchases({ ownerUid }) {
 
   const total = items.reduce((a, b) => a + (Number(b.amount) || 0), 0);
   const totalOwed = items.reduce((a, b) => a + balanceOf(b), 0);
+  const overdueCount = items.filter((p) => dueStatus(p) === "overdue").length;
+  const soonCount = items.filter((p) => dueStatus(p) === "soon").length;
   const CATS = t.purchaseCategories;
 
   const columns = [
@@ -338,6 +341,30 @@ export default function Purchases({ ownerUid }) {
         return (
           <span title={history || undefined}>
             KES {paidOf(item).toLocaleString()}
+          </span>
+        );
+      },
+    },
+    {
+      key: "dueDate",
+      label: t.repayDate,
+      inputType: "date",
+      format: (v, item) => {
+        const st = dueStatus(item);
+        if (!v || balanceOf(item) <= 0) return "-";
+        return (
+          <span style={{ whiteSpace: "nowrap" }}>
+            {v}
+            {st === "overdue" && (
+              <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 700, color: "#ef4444" }}>
+                {t.overdueLabel}
+              </span>
+            )}
+            {st === "soon" && (
+              <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 700, color: "#f59e0b" }}>
+                {t.dueSoon}
+              </span>
+            )}
           </span>
         );
       },
@@ -408,6 +435,26 @@ export default function Purchases({ ownerUid }) {
           {showForm ? `✕ ${t.cancel}` : `+ ${t.newPurchase}`}
         </button>
       </div>
+
+      {(overdueCount > 0 || soonCount > 0) && (
+        <div
+          style={{
+            marginBottom: 14,
+            padding: "10px 14px",
+            borderRadius: 8,
+            fontSize: 13,
+            fontWeight: 600,
+            border: `1px solid ${overdueCount > 0 ? "#ef4444" : "#f59e0b"}`,
+            background: overdueCount > 0 ? "#ef444415" : "#f59e0b15",
+            color: overdueCount > 0 ? "#ef4444" : "#b45309",
+          }}
+        >
+          ⏰ {t.supplierPaymentsDue}:{" "}
+          {overdueCount > 0 && `${overdueCount} ${t.overdueLabel.toLowerCase()}`}
+          {overdueCount > 0 && soonCount > 0 && " · "}
+          {soonCount > 0 && `${soonCount} ${t.dueSoon.toLowerCase()}`}
+        </div>
+      )}
 
       {showForm && (
         <form className="entry-form" onSubmit={handleSubmit}>
@@ -507,29 +554,53 @@ export default function Purchases({ ownerUid }) {
               )}
             </div>
             <div className="field-group">
-              <label>{t.amountPaidNow}</label>
-              <input
-                type="number"
-                min="0"
-                step="0.01"
-                placeholder={form.amount || "0.00"}
-                value={form.paidNow}
-                onChange={(e) => setForm({ ...form, paidNow: e.target.value })}
-              />
-              <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 4 }}>
-                {form.paidNow !== "" && parseFloat(form.amount) > 0 ? (
-                  <>
-                    {t.balanceOwed}: KES{" "}
-                    {Math.max(
-                      0,
-                      roundMoney(parseFloat(form.amount) - (parseFloat(form.paidNow) || 0)),
-                    ).toLocaleString()}
-                  </>
-                ) : (
-                  t.amountPaidNowHint
-                )}
-              </div>
+              <label>{t.paymentStatus}</label>
+              <select
+                value={form.payStatus}
+                onChange={(e) => setForm({ ...form, payStatus: e.target.value })}
+              >
+                <option value="paid">{t.paidInFull}</option>
+                <option value="credit">{t.notFullyPaid}</option>
+              </select>
             </div>
+            {form.payStatus === "credit" && (
+              <>
+                <div className="field-group">
+                  <label>{t.amountPaidNow}</label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    placeholder="0.00"
+                    value={form.paidNow}
+                    onChange={(e) => setForm({ ...form, paidNow: e.target.value })}
+                  />
+                  <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 4 }}>
+                    {parseFloat(form.amount) > 0 ? (
+                      <>
+                        {t.balanceOwed}: KES{" "}
+                        {Math.max(
+                          0,
+                          roundMoney(parseFloat(form.amount) - (parseFloat(form.paidNow) || 0)),
+                        ).toLocaleString()}
+                      </>
+                    ) : (
+                      t.amountPaidNowHint
+                    )}
+                  </div>
+                </div>
+                <div className="field-group">
+                  <label>{t.repayDate} *</label>
+                  <input
+                    type="date"
+                    min={form.date}
+                    value={form.dueDate}
+                    onChange={(e) => setForm({ ...form, dueDate: e.target.value })}
+                    required
+                  />
+                </div>
+              </>
+            )}
             <div className="field-group full-width">
               <label>{t.notes}</label>
               <input
@@ -632,6 +703,16 @@ export default function Purchases({ ownerUid }) {
                       ))}
                     </select>
                   </div>
+                  {entered > 0 && actual < balance && (
+                    <div className="field-group">
+                      <label>{t.newRepayDate}</label>
+                      <input
+                        type="date"
+                        value={payDue}
+                        onChange={(e) => setPayDue(e.target.value)}
+                      />
+                    </div>
+                  )}
                   <div className="field-group">
                     <label>{t.paymentNote}</label>
                     <input
