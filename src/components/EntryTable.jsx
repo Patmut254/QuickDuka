@@ -180,11 +180,16 @@ export default function EntryTable({
                               })
                             }
                           >
-                            {c.options?.map((o) => (
-                              <option key={o} value={o}>
-                                {o}
-                              </option>
-                            ))}
+                            {c.options?.map((o) => {
+                              // options can be plain strings or {value, label}
+                              const val = typeof o === "object" ? o.value : o;
+                              const lab = typeof o === "object" ? o.label : o;
+                              return (
+                                <option key={val} value={val}>
+                                  {lab}
+                                </option>
+                              );
+                            })}
                           </select>
                         ) : (
                           <input

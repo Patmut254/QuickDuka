@@ -2,12 +2,18 @@ import { useState, useEffect } from "react";
 import { collection, onSnapshot } from "firebase/firestore";
 import { db } from "../firebase";
 import { useCollection } from "../hooks/useCollection";
-import { useStock, recordStockSale } from "../hooks/useStock";
+import {
+  useStock,
+  recordStockSale,
+  stockLabel,
+  findStockByLabel,
+  roundQty,
+  roundMoney,
+} from "../hooks/useStock";
+import { PAYMENT_METHODS, paymentMethodOptions } from "../paymentMethods";
 import { useLang } from "../LangContext";
 import EntryTable from "./EntryTable";
 import { Toast, useToast } from "./Toast";
-
-const PAYMENT_METHODS = ["cash", "mpesa", "airtel", "card"];
 
 export default function Sales({ ownerUid, sub }) {
   const { t } = useLang();
@@ -61,8 +67,11 @@ export default function Sales({ ownerUid, sub }) {
   // always stays correct as either one changes.
   const [unitPrice, setUnitPrice] = useState(null);
 
+  // The picker goes by stock id (not name) so two sizes of the same product —
+  // e.g. Water 0.375 L and Water 0.5 L — can each be picked, priced and
+  // deducted separately.
   const handleStockSelect = (e) => {
-    const found = stock.find((c) => c.name === e.target.value);
+    const found = stock.find((c) => c.id === e.target.value);
     setSelectedStock(found || null);
     let up = null;
     if (found) {
@@ -78,8 +87,8 @@ export default function Sales({ ownerUid, sub }) {
     const qty = parseFloat(form.quantity) || 1;
     setForm((f) => ({
       ...f,
-      description: found ? found.name : e.target.value,
-      amount: up != null ? String(up * qty) : f.amount,
+      description: found ? stockLabel(found) : "",
+      amount: up != null ? String(roundMoney(up * qty)) : f.amount,
     }));
   };
 
@@ -90,7 +99,10 @@ export default function Sales({ ownerUid, sub }) {
     setForm((f) => ({
       ...f,
       quantity: q,
-      amount: unitPrice != null ? String(unitPrice * (parseFloat(q) || 0)) : f.amount,
+      amount:
+        unitPrice != null
+          ? String(roundMoney(unitPrice * (parseFloat(q) || 0)))
+          : f.amount,
     }));
   };
 
@@ -98,29 +110,26 @@ export default function Sales({ ownerUid, sub }) {
     e.preventDefault();
     if (status !== "idle") return;
 
-    const qty = parseFloat(form.quantity) || 1;
+    // Quantity may be fractional (0.375 L, 0.5 kg …)
+    const qty = roundQty(parseFloat(form.quantity)) || 1;
 
     // Resolve the stock match even if it wasn't picked from the dropdown
     // (e.g. typed straight into the description field), so a zero-stock
     // item can't be sold just by bypassing the picker.
     const matchedStock =
-      selectedStock ||
-      stock.find(
-        (c) => c.name.trim().toLowerCase() === form.description.trim().toLowerCase(),
-      ) ||
-      null;
+      selectedStock || findStockByLabel(stock, form.description);
 
     // If this sale is against a tracked stock item, make sure there's
     // enough left — and block entirely if it's out of stock.
     if (matchedStock && matchedStock.quantity != null) {
       const available = Number(matchedStock.quantity);
-      if (available <= 0) {
-        showToast(`${matchedStock.name} is out of stock.`, "error");
+      if (available <= 1e-9) {
+        showToast(`${stockLabel(matchedStock)} is out of stock.`, "error");
         return;
       }
-      if (qty > available) {
+      if (qty > available + 1e-9) {
         showToast(
-          `Only ${available.toLocaleString()} ${matchedStock.name} left in stock.`,
+          `Only ${available.toLocaleString()} ${stockLabel(matchedStock)} left in stock.`,
           "error",
         );
         return;
@@ -200,7 +209,7 @@ export default function Sales({ ownerUid, sub }) {
       key: "paymentMethod",
       label: t.paymentMethod,
       type: "select",
-      options: PAYMENT_METHODS,
+      options: paymentMethodOptions(t),
       format: (v) => (
         <span
           style={{
@@ -311,14 +320,14 @@ export default function Sales({ ownerUid, sub }) {
                   id="sale-stock"
                   name="sale-stock"
                   onChange={handleStockSelect}
-                  value={form.description}
+                  value={selectedStock?.id || ""}
                 >
                   <option value="">{t.selectItem}</option>
                   {stock.map((c) => {
                     const outOfStock = c.quantity != null && Number(c.quantity) <= 0;
                     return (
-                      <option key={c.id} value={c.name} disabled={outOfStock}>
-                        {c.name}
+                      <option key={c.id} value={c.id} disabled={outOfStock}>
+                        {stockLabel(c)}
                         {c.price != null
                           ? ` — KES ${Number(c.price).toLocaleString()}${c.unit ? `/${c.unit}` : ""}`
                           : ""}
@@ -367,14 +376,18 @@ export default function Sales({ ownerUid, sub }) {
               />
             </div>
             <div className="field-group">
-              <label htmlFor="sale-quantity">{t.quantity}</label>
+              <label htmlFor="sale-quantity">
+                {t.quantity}
+                {selectedStock?.unit ? ` (${selectedStock.unit})` : ""}
+              </label>
               <input
                 id="sale-quantity"
                 name="sale-quantity"
                 type="number"
                 autoComplete="off"
-                min="1"
-                step="1"
+                min="0.001"
+                step="any"
+                inputMode="decimal"
                 value={form.quantity}
                 onChange={handleQuantityChange}
               />
@@ -411,7 +424,10 @@ export default function Sales({ ownerUid, sub }) {
                       const up = parseFloat(e.target.value);
                       const qty = parseFloat(form.quantity) || 1;
                       setUnitPrice(up);
-                      setForm((f) => ({ ...f, amount: String(up * qty) }));
+                      setForm((f) => ({
+                        ...f,
+                        amount: String(roundMoney(up * qty)),
+                      }));
                     }}
                     style={{ width: "100%" }}
                   />

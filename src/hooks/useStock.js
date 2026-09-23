@@ -15,12 +15,37 @@ import {
 } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 
+// ── Helpers shared by Sales / Credits / Purchases ────────────────────────────
+// Two stock items can share a name and differ only by variant (e.g. Water in
+// 0.375 L and 0.5 L bottles). Everything that picks or matches a stock item
+// therefore goes by id / full label — never by name alone.
+export const stockLabel = (s) =>
+  !s ? "" : s.variant ? `${s.name} (${s.variant})` : s.name;
+
+// Match free text (typed description) to a stock item: exact label first,
+// then plain name.
+export const findStockByLabel = (stock, text) => {
+  const q = (text || "").trim().toLowerCase();
+  if (!q) return null;
+  return (
+    stock.find((s) => stockLabel(s).trim().toLowerCase() === q) ||
+    stock.find((s) => (s.name || "").trim().toLowerCase() === q) ||
+    null
+  );
+};
+
+// Quantities can be fractional (0.375 L, 0.5 kg…). Round to 3 decimals so
+// floating-point dust (0.30000000000000004) never reaches Firestore.
+export const roundQty = (n) => Math.round((Number(n) || 0) * 1000) / 1000;
+export const roundMoney = (n) => Math.round((Number(n) || 0) * 100) / 100;
+
 // recordStockPurchase — goods coming IN (a purchase, or a manual restock).
 // Bumps the remaining quantity up, plus running totals for "purchased" and
 // "amount spent" so the stock page can show a full ledger, not just a
 // current snapshot.
 export async function recordStockPurchase(stockId, qty, value = 0) {
   if (!stockId || !qty) return;
+  qty = roundQty(qty);
   try {
     await updateDoc(doc(db, "stock", stockId), {
       quantity: increment(qty),
@@ -36,6 +61,7 @@ export async function recordStockPurchase(stockId, qty, value = 0) {
 // down and the running "sold" total up.
 export async function recordStockSale(stockId, qty) {
   if (!stockId || !qty) return;
+  qty = roundQty(qty);
   try {
     await updateDoc(doc(db, "stock", stockId), {
       quantity: increment(-qty),
@@ -43,6 +69,21 @@ export async function recordStockSale(stockId, qty) {
     });
   } catch (err) {
     console.error("Stock sale update failed:", err.message);
+  }
+}
+
+// recordStockReturn — goods coming BACK (a cancelled credit / returned sale).
+// Reverses recordStockSale: remaining goes up, "sold" goes down.
+export async function recordStockReturn(stockId, qty) {
+  if (!stockId || !qty) return;
+  qty = roundQty(qty);
+  try {
+    await updateDoc(doc(db, "stock", stockId), {
+      quantity: increment(qty),
+      totalSold: increment(-qty),
+    });
+  } catch (err) {
+    console.error("Stock return update failed:", err.message);
   }
 }
 

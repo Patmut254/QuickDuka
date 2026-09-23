@@ -1,13 +1,71 @@
 /* eslint-disable react-hooks/rules-of-hooks */
 import { useState } from "react";
 import { useCollection } from "../hooks/useCollection";
-import { recordStockPurchase } from "../hooks/useStock";
+import {
+  recordStockPurchase,
+  stockLabel,
+  roundQty,
+  roundMoney,
+} from "../hooks/useStock";
 import { useLang } from "../LangContext";
 import { Toast, useToast } from "./Toast";
 import AlertDialog from "./AlertDialog";
 import FeatureGate from "./FeatureGate";
+import Purchases from "./Purchases";
 
-export default function Stock({ sub, ownerUid }) {
+// Stock/Purchases — one nav entry, two views. "Stock" is the item list;
+// "Purchases" is the purchase ledger (with supplier balances). The separate
+// Purchases tab was removed from the sidebar in App.jsx.
+export default function Stock(props) {
+  const { t } = useLang();
+  const [view, setView] = useState("stock");
+  const views = [
+    { id: "stock", label: t.stock },
+    { id: "purchases", label: t.purchaseHistory || t.purchases },
+  ];
+  return (
+    <div>
+      <div
+        style={{
+          display: "flex",
+          borderBottom: "1px solid var(--border)",
+          marginBottom: 16,
+        }}
+      >
+        {views.map((v) => (
+          <button
+            key={v.id}
+            type="button"
+            onClick={() => setView(v.id)}
+            style={{
+              padding: "10px 18px",
+              border: "none",
+              background: "none",
+              cursor: "pointer",
+              fontFamily: "inherit",
+              fontSize: 13,
+              fontWeight: 600,
+              borderBottom:
+                view === v.id
+                  ? "2.5px solid var(--accent)"
+                  : "2.5px solid transparent",
+              color: view === v.id ? "var(--accent)" : "var(--muted)",
+            }}
+          >
+            {v.label}
+          </button>
+        ))}
+      </div>
+      {view === "stock" ? (
+        <StockList {...props} />
+      ) : (
+        <Purchases ownerUid={props.ownerUid} />
+      )}
+    </div>
+  );
+}
+
+function StockList({ sub, ownerUid }) {
   const { t } = useLang();
   const { items, loading, addItem, deleteItem, updateItem } =
     useCollection("stock", ownerUid ? { ownerUid } : undefined);
@@ -41,7 +99,12 @@ export default function Stock({ sub, ownerUid }) {
   const [editTarget, setEditTarget] = useState(null);
   const [editForm, setEditForm] = useState({});
   const [restockTarget, setRestockTarget] = useState(null);
-  const [restockForm, setRestockForm] = useState({ quantity: "", cost: "" });
+  const [restockForm, setRestockForm] = useState({
+    quantity: "",
+    cost: "",
+    supplier: "",
+    paidNow: "", // blank = paid in full
+  });
   const [restockStatus, setRestockStatus] = useState("idle");
   const [search, setSearch] = useState("");
 
@@ -55,7 +118,7 @@ export default function Stock({ sub, ownerUid }) {
     setStatus("saving");
     try {
       const isRange = form.priceMode === "range";
-      const qty = form.quantity !== "" ? parseFloat(form.quantity) : 0;
+      const qty = form.quantity !== "" ? roundQty(parseFloat(form.quantity)) : 0;
       const buyPrice = form.buyPrice !== "" ? parseFloat(form.buyPrice) : 0;
       await addItem({
         name: form.name.trim(),
@@ -83,7 +146,7 @@ export default function Stock({ sub, ownerUid }) {
       if (qty > 0) {
         await addPurchase({
           date: new Date().toISOString().split("T")[0],
-          item: form.name.trim(),
+          item: stockLabel({ name: form.name.trim(), variant: form.variant.trim() }),
           supplier: "",
           phone: "",
           quantity: qty,
@@ -113,14 +176,14 @@ export default function Stock({ sub, ownerUid }) {
       const buyPrice =
         editForm.buyPrice !== "" ? parseFloat(editForm.buyPrice) : 0;
       const newQty =
-        editForm.quantity !== "" ? parseFloat(editForm.quantity) : 0;
+        editForm.quantity !== "" ? roundQty(parseFloat(editForm.quantity)) : 0;
       const originalQty = Number(editTarget.quantity || 0);
       // If the edit raised the quantity, that increase is a purchase —
       // log it (using the BUY price, never the selling price) and roll it
       // into the running "purchased" totals so Purchased/Total Bought
       // stay accurate. A lowered quantity is left alone here (use Losses
       // for shrinkage/damage, or Sales for an actual sale).
-      const delta = newQty - originalQty;
+      const delta = roundQty(newQty - originalQty);
 
       await updateItem(
         editTarget.id,
@@ -149,7 +212,10 @@ export default function Stock({ sub, ownerUid }) {
       if (delta > 0) {
         await addPurchase({
           date: new Date().toISOString().split("T")[0],
-          item: editForm.name.trim(),
+          item: stockLabel({
+            name: editForm.name.trim(),
+            variant: editForm.variant?.trim() || "",
+          }),
           supplier: "",
           phone: "",
           quantity: delta,
@@ -169,7 +235,7 @@ export default function Stock({ sub, ownerUid }) {
   const handleRestock = async (e) => {
     e.preventDefault();
     if (restockStatus !== "idle") return;
-    const qty = parseFloat(restockForm.quantity);
+    const qty = roundQty(parseFloat(restockForm.quantity));
     if (!qty || qty <= 0) return;
     setRestockStatus("saving");
     try {
@@ -178,23 +244,58 @@ export default function Stock({ sub, ownerUid }) {
         restockForm.cost !== ""
           ? parseFloat(restockForm.cost)
           : Number(restockTarget.buyPrice || 0);
-      await recordStockPurchase(restockTarget.id, qty, costPerItem * qty);
+      const totalCost = roundMoney(costPerItem * qty);
+      // Bought on credit? "Paid so far" below the total leaves a balance owed
+      // to the supplier (tracked on the Purchases view). Blank = paid in full.
+      const paidNow =
+        restockForm.paidNow === ""
+          ? totalCost
+          : Math.min(
+              Math.max(parseFloat(restockForm.paidNow) || 0, 0),
+              totalCost,
+            );
+      const onCredit = paidNow < totalCost;
+      const today = new Date().toISOString().split("T")[0];
+
+      // Stock value always counts the full cost, paid or not.
+      await recordStockPurchase(restockTarget.id, qty, totalCost);
       // A restock IS a purchase — log it in the Purchases ledger too, using
       // the buy price (costPerItem), never the item's selling price.
       await addPurchase({
-        date: new Date().toISOString().split("T")[0],
-        item: restockTarget.name,
-        supplier: "",
+        date: today,
+        item: stockLabel(restockTarget),
+        supplier: restockForm.supplier.trim(),
         phone: "",
         quantity: qty,
-        amount: costPerItem * qty,
+        amount: totalCost,
         category: "Restock",
         notes: "Auto-added from a stock restock",
+        ...(onCredit
+          ? {
+              paidAmount: roundMoney(paidNow),
+              payments:
+                paidNow > 0
+                  ? [
+                      {
+                        amount: roundMoney(paidNow),
+                        date: today,
+                        method: "",
+                        note: "",
+                      },
+                    ]
+                  : [],
+            }
+          : {}),
       });
-      showToast(`${restockTarget.name} +${qty} ${t.qtyInStock || "in stock"}.`);
+      showToast(
+        `${stockLabel(restockTarget)} +${qty} ${t.qtyInStock || "in stock"}.` +
+          (onCredit
+            ? ` ${t.balanceOwed}: KES ${roundMoney(totalCost - paidNow).toLocaleString()}`
+            : ""),
+      );
       setRestockStatus("idle");
       setRestockTarget(null);
-      setRestockForm({ quantity: "", cost: "" });
+      setRestockForm({ quantity: "", cost: "", supplier: "", paidNow: "" });
     } catch {
       setRestockStatus("idle");
       showToast(t.failedSave || "Restock failed. Try again.", "error");
@@ -449,7 +550,8 @@ export default function Stock({ sub, ownerUid }) {
                 type="number"
                 autoComplete="off"
                 min="0"
-                step="1"
+                step="any"
+                inputMode="decimal"
                 placeholder={t.quantityPh}
                 value={form.quantity}
                 onChange={set("quantity")}
@@ -640,7 +742,7 @@ export default function Stock({ sub, ownerUid }) {
                           title={t.restock}
                           onClick={() => {
                             setRestockTarget(item);
-                            setRestockForm({ quantity: "", cost: "" });
+                            setRestockForm({ quantity: "", cost: "", supplier: "", paidNow: "" });
                           }}
                         >
                           ➕
@@ -692,7 +794,7 @@ export default function Stock({ sub, ownerUid }) {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="alert-title">
-              📥 {t.restock} — {restockTarget.name}
+              📥 {t.restock} — {stockLabel(restockTarget)}
             </div>
             <form
               onSubmit={handleRestock}
@@ -706,8 +808,9 @@ export default function Stock({ sub, ownerUid }) {
                   name="restock-qty"
                   type="number"
                   autoComplete="off"
-                  min="1"
-                  step="1"
+                  min="0.001"
+                  step="any"
+                  inputMode="decimal"
                   value={restockForm.quantity}
                   onChange={(e) =>
                     setRestockForm((f) => ({ ...f, quantity: e.target.value }))
@@ -734,6 +837,68 @@ export default function Stock({ sub, ownerUid }) {
                     setRestockForm((f) => ({ ...f, cost: e.target.value }))
                   }
                 />
+              </div>
+              <div className="field-group">
+                <label htmlFor="restock-supplier">{t.restockSupplier}</label>
+                <input
+                  id="restock-supplier"
+                  name="restock-supplier"
+                  autoComplete="off"
+                  placeholder={t.supplierPh}
+                  value={restockForm.supplier}
+                  onChange={(e) =>
+                    setRestockForm((f) => ({ ...f, supplier: e.target.value }))
+                  }
+                />
+              </div>
+              <div className="field-group">
+                <label htmlFor="restock-paid">{t.amountPaidNow}</label>
+                <input
+                  id="restock-paid"
+                  name="restock-paid"
+                  type="number"
+                  autoComplete="off"
+                  min="0"
+                  step="0.01"
+                  value={restockForm.paidNow}
+                  onChange={(e) =>
+                    setRestockForm((f) => ({ ...f, paidNow: e.target.value }))
+                  }
+                />
+                {(() => {
+                  const q = parseFloat(restockForm.quantity) || 0;
+                  const c =
+                    restockForm.cost !== ""
+                      ? parseFloat(restockForm.cost) || 0
+                      : Number(restockTarget.buyPrice || 0);
+                  const total = roundMoney(q * c);
+                  const owed =
+                    restockForm.paidNow !== ""
+                      ? Math.max(
+                          0,
+                          roundMoney(total - (parseFloat(restockForm.paidNow) || 0)),
+                        )
+                      : 0;
+                  return (
+                    <div
+                      style={{ fontSize: 12, color: "var(--muted)", marginTop: 4 }}
+                    >
+                      {total > 0 && (
+                        <>
+                          {t.totalCost}: KES {total.toLocaleString()}
+                          {owed > 0 && (
+                            <>
+                              {" · "}
+                              {t.balanceOwed}: KES {owed.toLocaleString()}
+                            </>
+                          )}
+                          <br />
+                        </>
+                      )}
+                      {t.amountPaidNowHint}
+                    </div>
+                  );
+                })()}
               </div>
               <div className="alert-actions">
                 <button
@@ -886,7 +1051,8 @@ export default function Stock({ sub, ownerUid }) {
                   type="number"
                   autoComplete="off"
                   min="0"
-                  step="1"
+                  step="any"
+                  inputMode="decimal"
                   placeholder={t.quantityPh}
                   value={editForm.quantity}
                   onChange={setEdit("quantity")}

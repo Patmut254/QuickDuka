@@ -22,7 +22,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faChartLine,
   faMoneyBillTrendUp,
-  faCartPlus,
+  // faCartPlus, // Purchases tab merged into Stock/Purchases
   faReceipt,
   faBox,
   faClockRotateLeft,
@@ -49,7 +49,8 @@ import {
 import { faSquareCheck } from "@fortawesome/free-regular-svg-icons";
 import Dashboard from "./components/Dashboard";
 import Sales from "./components/Sales";
-import Purchases from "./components/Purchases";
+// Purchases now lives inside the Stock page (Stock/Purchases) — see Stock.jsx
+// import Purchases from "./components/Purchases";
 import Expenses from "./components/Expenses";
 import Reports from "./components/Reports";
 import History from "./components/History";
@@ -175,9 +176,12 @@ function AppFooter({ offset }) {
 }
 
 function AppShell({ user, profile, theme, toggleTheme }) {
-  const [activeTab, setActiveTab] = useState(
-    () => sessionStorage.getItem("qd-active-tab") || "dashboard",
-  );
+  const [activeTab, setActiveTab] = useState(() => {
+    const saved = sessionStorage.getItem("qd-active-tab");
+    // "purchases" no longer has its own tab — it lives under Stock/Purchases.
+    if (saved === "purchases") return "stock";
+    return saved || "dashboard";
+  });
 
   // ── Prefill state — AI assistant populates this when user asks to record ──
   // { sales: {...}, expenses: {...}, losses: {...}, credits: {...} }
@@ -274,10 +278,12 @@ function AppShell({ user, profile, theme, toggleTheme }) {
       badge: t.debt,
       badgeClass: "nav-badge-debt",
     },
-    { id: "purchases", label: t.purchases, icon: faCartPlus },
+    // Purchases is merged into the Stock page (Stock/Purchases), so it no longer
+    // gets its own sidebar / bottom-nav entry.
+    // { id: "purchases", label: t.purchases, icon: faCartPlus },
     { id: "expenses", label: t.expenses, icon: faReceipt },
     { id: "losses", label: t.losses, icon: faTriangleExclamation },
-    { id: "stock", label: t.stock, icon: faBox },
+    { id: "stock", label: t.stockPurchases || "Stock/Purchases", icon: faBox },
     { id: "reports", label: t.reports, icon: faSackDollar },
     { id: "history", label: t.history, icon: faClockRotateLeft },
     { id: "contact", label: t.contact, icon: faHeadset },
@@ -497,7 +503,7 @@ function AppShell({ user, profile, theme, toggleTheme }) {
                   onPrefillConsumed={() => clearPrefill("credits")}
                 />
               )}
-              {activeTab === "purchases" && <Purchases ownerUid={user.uid} />}
+              {/* {activeTab === "purchases" && <Purchases ownerUid={user.uid} />} */}
               {activeTab === "expenses" && (
                 <Expenses
                   ownerUid={user.uid}
