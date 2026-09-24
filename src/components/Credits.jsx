@@ -843,7 +843,8 @@ export default function Credits({ ownerUid }) {
                     label={t.paymentDate}
                     value={payDate}
                     onChange={setPayDate}
-                    min={payingCredit.dateIssued || undefined}
+                    plain
+                    hint={t.paymentDateHint}
                   />
                   <div className="field-group">
                     <label>{t.amountPaid}</label>
@@ -1315,7 +1316,6 @@ export default function Credits({ ownerUid }) {
                         <input
                           type="date"
                           value={editDate}
-                          min={managed.dateIssued || undefined}
                           max={localToday()}
                           onChange={(e) => setEditDate(e.target.value)}
                         />

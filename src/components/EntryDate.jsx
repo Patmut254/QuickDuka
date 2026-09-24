@@ -13,6 +13,10 @@ export default function EntryDate({
   min,
   allowFuture = false,
   required = true,
+  // Payment dates: just the calendar — no Today/Yesterday buttons or
+  // "not today" banner, and a short hint instead.
+  plain = false,
+  hint,
 }) {
   const { t } = useLang();
   const today = localToday();
@@ -54,11 +58,18 @@ export default function EntryDate({
         onChange={(e) => onChange(e.target.value)}
         required={required}
       />
-      <div style={{ display: "flex", gap: 6, marginTop: 6, flexWrap: "wrap" }}>
-        {chip(t.todayLabel, today)}
-        {chip(t.yesterdayLabel, localYesterday())}
-      </div>
-      {isPast && (
+      {hint && (
+        <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 4 }}>
+          {hint}
+        </div>
+      )}
+      {!plain && (
+        <div style={{ display: "flex", gap: 6, marginTop: 6, flexWrap: "wrap" }}>
+          {chip(t.todayLabel, today)}
+          {chip(t.yesterdayLabel, localYesterday())}
+        </div>
+      )}
+      {!plain && isPast && (
         <div
           style={{
             marginTop: 6,

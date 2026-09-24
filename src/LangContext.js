@@ -258,6 +258,8 @@ export const T = {
     recordingFor: "Recording for",
     notToday: "not today",
     paymentDate: "Payment date",
+    paymentDateHint:
+      "Pick the day the money was actually paid — it can be earlier than the debt itself.",
     updateStockLabel: "Also update my current stock",
     updateStockHint:
       "Tick this if the goods really leave (or arrive in) your stock now. Leave it unticked for older entries that your stock count already reflects.",
@@ -950,6 +952,8 @@ export const T = {
     recordingFor: "Unarekodi kwa tarehe",
     notToday: "si leo",
     paymentDate: "Tarehe ya malipo",
+    paymentDateHint:
+      "Chagua siku pesa zilipolipwa kweli — inaweza kuwa kabla ya deni lenyewe.",
     updateStockLabel: "Sasisha pia bidhaa zilizopo dukani",
     updateStockHint:
       "Weka tiki ikiwa bidhaa zinatoka (au zinaingia) dukani sasa. Usiweke tiki kwa rekodi za zamani ambazo tayari zimo kwenye idadi yako ya dukani.",

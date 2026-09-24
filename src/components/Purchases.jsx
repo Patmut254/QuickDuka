@@ -712,7 +712,8 @@ export default function Purchases({ ownerUid }) {
                     label={t.paymentDate}
                     value={payDate}
                     onChange={setPayDate}
-                    min={payTarget.date || undefined}
+                    plain
+                    hint={t.paymentDateHint}
                   />
                   <div className="field-group">
                     <label>{t.amountPaid}</label>
