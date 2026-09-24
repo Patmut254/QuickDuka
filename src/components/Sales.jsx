@@ -11,6 +11,8 @@ import {
   roundMoney,
 } from "../hooks/useStock";
 import { PAYMENT_METHODS, paymentMethodOptions } from "../paymentMethods";
+import EntryDate, { StockUpdateToggle } from "./EntryDate";
+import { localToday, stockUpdateWanted } from "../dates";
 import { useLang } from "../LangContext";
 import EntryTable from "./EntryTable";
 import { Toast, useToast } from "./Toast";
@@ -45,8 +47,14 @@ export default function Sales({ ownerUid, sub }) {
     return () => unsub();
   }, [ownerUid, canUseBranches]);
 
+  // Date stays on the last day used, so a batch of old sales (e.g. April) can be
+  // entered one after another without re-picking the date each time.
+  const [lastDate, setLastDate] = useState(localToday);
+  // Whether a back-dated sale should also change current stock (null = default)
+  const [stockChoice, setStockChoice] = useState(null);
+
   const emptyForm = {
-    date: new Date().toISOString().split("T")[0],
+    date: lastDate,
     description: "",
     customer: "",
     phone: "",
@@ -119,9 +127,12 @@ export default function Sales({ ownerUid, sub }) {
     const matchedStock =
       selectedStock || findStockByLabel(stock, form.description);
 
+    // Old sales usually don't touch today's stock count (see dates.js)
+    const touchStock = stockUpdateWanted(form.date, stockChoice);
+
     // If this sale is against a tracked stock item, make sure there's
     // enough left — and block entirely if it's out of stock.
-    if (matchedStock && matchedStock.quantity != null) {
+    if (touchStock && matchedStock && matchedStock.quantity != null) {
       const available = Number(matchedStock.quantity);
       if (available <= 1e-9) {
         showToast(`${stockLabel(matchedStock)} is out of stock.`, "error");
@@ -152,15 +163,18 @@ export default function Sales({ ownerUid, sub }) {
       );
 
       // Bookkeeping: reduce stock quantity by the amount sold.
-      if (matchedStock && matchedStock.quantity != null) {
+      if (touchStock && matchedStock && matchedStock.quantity != null) {
         await recordStockSale(matchedStock.id, qty);
       }
 
       setStatus("saved");
       showToast(t.saved);
+      const savedDate = form.date;
       setTimeout(() => {
         setStatus("idle");
-        setForm(emptyForm);
+        setLastDate(savedDate); // next entry starts on the same day
+        setForm({ ...emptyForm, date: savedDate });
+        setStockChoice(null);
         setSelectedStock(null);
         setUnitPrice(null);
         setShowForm(false);
@@ -280,18 +294,21 @@ export default function Sales({ ownerUid, sub }) {
         <form className="entry-form" onSubmit={handleSubmit}>
           <h3>📦 {t.recordSale}</h3>
           <div className="form-grid">
-            <div className="field-group">
-              <label htmlFor="sale-date">{t.date} *</label>
-              <input
-                id="sale-date"
-                name="sale-date"
-                type="date"
-                autoComplete="off"
-                value={form.date}
-                onChange={(e) => setForm({ ...form, date: e.target.value })}
-                required
+            <EntryDate
+              id="sale-date"
+              value={form.date}
+              onChange={(d) => {
+                setForm({ ...form, date: d });
+                setStockChoice(null);
+              }}
+            />
+            {(selectedStock || findStockByLabel(stock, form.description)) && (
+              <StockUpdateToggle
+                date={form.date}
+                checked={stockUpdateWanted(form.date, stockChoice)}
+                onChange={setStockChoice}
               />
-            </div>
+            )}
             {canUseBranches && branches.length > 0 && (
               <div className="field-group">
                 <label htmlFor="sale-branch">📍 Location / Branch</label>

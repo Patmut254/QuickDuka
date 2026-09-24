@@ -13,6 +13,8 @@ import { PAYMENT_METHODS } from "../paymentMethods";
 import { useLang } from "../LangContext";
 import { Toast, useToast } from "./Toast";
 import AlertDialog from "./AlertDialog";
+import EntryDate, { StockUpdateToggle } from "./EntryDate";
+import { localToday, stockUpdateWanted } from "../dates";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faPlus,
@@ -27,6 +29,7 @@ import {
   faArrowRight,
   faMoneyBillWave,
   faChartBar,
+  faPen,
 } from "@fortawesome/free-solid-svg-icons";
 
 export default function Credits({ ownerUid }) {
@@ -45,19 +48,30 @@ export default function Credits({ ownerUid }) {
   // Previously these hooks had no ownerUid context, so staff-created
   // records would be stamped with the staff member's uid as ownerUid,
   // making them invisible to the business owner.
-  const { addItem: addSale } = useCollection(
-    "sales",
-    ownerUid ? { ownerUid } : undefined,
-  );
-  const { addItem: addLoss } = useCollection(
-    "losses",
-    ownerUid ? { ownerUid } : undefined,
-  );
+  // `sales` / `losses` are also read so a payment or write-off can be found
+  // again (and undone) when the credit is edited later.
+  const {
+    items: sales,
+    addItem: addSale,
+    updateItem: updateSale,
+    deleteItem: deleteSale,
+  } = useCollection("sales", ownerUid ? { ownerUid } : undefined);
+  const {
+    items: losses,
+    addItem: addLoss,
+    deleteItem: deleteLoss,
+  } = useCollection("losses", ownerUid ? { ownerUid } : undefined);
   const stock = useStock();
   const { toast, showToast } = useToast();
 
+  // Issue date stays on the last day used, so a batch of old credits can be
+  // entered one after another. `stockChoice`: should a back-dated credit also
+  // take goods out of current stock? (null = yes if recent, no if older than a week)
+  const [lastDate, setLastDate] = useState(localToday);
+  const [stockChoice, setStockChoice] = useState(null);
+
   const emptyForm = {
-    date: new Date().toISOString().split("T")[0],
+    date: lastDate,
     customer: "",
     phone: "",
     itemTaken: "",
@@ -73,6 +87,7 @@ export default function Credits({ ownerUid }) {
   const [payAmount, setPayAmount] = useState("");
   const [payNote, setPayNote] = useState("");
   const [payMethod, setPayMethod] = useState("cash");
+  const [payDate, setPayDate] = useState(localToday);
   // Stock item picked for this credit (so it can be deducted on save) and its
   // per-unit price — kept apart from form.totalAmount so total = unit × qty
   // stays right as the quantity changes. Same idea as the Sales form.
@@ -80,9 +95,17 @@ export default function Credits({ ownerUid }) {
   const [unitPrice, setUnitPrice] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [badDebtTarget, setBadDebtTarget] = useState(null);
+  // Edit-credit modal (fix a wrong payment / reopen a written-off debt)
+  const [manageId, setManageId] = useState(null);
+  const [editIdx, setEditIdx] = useState(null);
+  const [editAmount, setEditAmount] = useState("");
+  const [editMethod, setEditMethod] = useState("cash");
+  const [editDate, setEditDate] = useState("");
+  const [confirmIdx, setConfirmIdx] = useState(null);
+  const [manageBusy, setManageBusy] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  const today = () => new Date().toISOString().split("T")[0];
+  const today = localToday; // local date (not UTC)
 
   // ── Stock picker / quantity handlers (mirrors Sales) ───────────────────────
   const handleStockSelect = (e) => {
@@ -136,8 +159,11 @@ export default function Credits({ ownerUid }) {
     const qty = roundQty(parseFloat(form.quantity)) || 1;
     const matchedStock =
       selectedStock || findStockByLabel(stock, form.itemTaken);
+    // Old credits (older than a week) don't take goods out of today's stock
+    // unless the user ticks "update my current stock" — see dates.js.
+    const touchStock = stockUpdateWanted(form.date, stockChoice);
 
-    if (matchedStock && matchedStock.quantity != null) {
+    if (touchStock && matchedStock && matchedStock.quantity != null) {
       const available = Number(matchedStock.quantity);
       if (available <= 1e-9) {
         showToast(`${stockLabel(matchedStock)} is out of stock.`, "error");
@@ -165,16 +191,22 @@ export default function Credits({ ownerUid }) {
         // remember which stock item this came from so a cancelled credit can
         // put the goods back
         stockId:
-          matchedStock && matchedStock.quantity != null ? matchedStock.id : null,
+          touchStock && matchedStock && matchedStock.quantity != null
+            ? matchedStock.id
+            : null,
       });
 
       // Bookkeeping: the goods have left the shelf.
-      if (matchedStock && matchedStock.quantity != null) {
+      if (touchStock && matchedStock && matchedStock.quantity != null) {
         await recordStockSale(matchedStock.id, qty);
       }
 
       showToast(t.saved);
-      resetCreditForm();
+      setLastDate(form.date); // next credit starts on the same day
+      setForm({ ...emptyForm, date: form.date });
+      setSelectedStock(null);
+      setUnitPrice(null);
+      setStockChoice(null);
       setShowForm(false);
     } catch (err) {
       console.error(err);
@@ -197,23 +229,12 @@ export default function Credits({ ownerUid }) {
     const isFullyPaid = newPaid >= payingCredit.totalAmount;
 
     try {
-      const newPayments = [
-        ...(payingCredit.payments || []),
-        { amount: actualAmount, date: today(), note: payNote, method: payMethod },
-      ];
-
-      await updateItem(payingCredit.id, {
-        paidAmount: newPaid,
-        payments: newPayments,
-        status: isFullyPaid ? "paid" : "outstanding",
-        lastPaymentDate: today(),
-      });
-
       // ✅ Payment goes to Sales — no extraMeta needed because the addSale
       // hook is already initialised with the correct ownerUid context above.
-      // useCollection.addItem will use overrideOwnerUid from its own closure.
-      await addSale({
-        date: today(),
+      // The new Sales entry's id is kept on the payment so the payment can be
+      // corrected or undone later (Edit on the credit card).
+      const saleRef = await addSale({
+        date: payDate || today(),
         description:
           `${t.creditPaymentDesc || "Credit payment"} — ${payingCredit.customer}` +
           (payingCredit.itemTaken ? ` (${payingCredit.itemTaken})` : ""),
@@ -231,6 +252,24 @@ export default function Credits({ ownerUid }) {
           (payNote || "")
         ).trim(),
         fromCredit: payingCredit.id,
+      });
+
+      const newPayments = [
+        ...(payingCredit.payments || []),
+        {
+          amount: actualAmount,
+          date: payDate || today(),
+          note: payNote,
+          method: payMethod,
+          saleId: saleRef?.id || null,
+        },
+      ];
+
+      await updateItem(payingCredit.id, {
+        paidAmount: roundMoney(newPaid),
+        payments: newPayments,
+        status: isFullyPaid ? "paid" : "outstanding",
+        lastPaymentDate: payDate || today(),
       });
 
       if (isFullyPaid) {
@@ -268,16 +307,13 @@ export default function Credits({ ownerUid }) {
         (credit.totalAmount || 0) - (credit.paidAmount || 0),
       );
 
-      await updateItem(credit.id, {
-        status: "bad_debt",
-        closedDate: today(),
-        badDebtAmount: unpaid,
-      });
-
       // ✅ Unpaid remainder goes to Losses — no extraMeta needed because
       // the addLoss hook is already initialised with the correct ownerUid.
+      // The loss id is kept on the credit so the write-off can be reversed
+      // ("Reopen debt") if the customer decides to pay after all.
+      let lossId = null;
       if (unpaid > 0) {
-        await addLoss({
+        const lossRef = await addLoss({
           date: today(),
           item:
             `${t.badDebtWrittenOff || "Bad debt written off"} — ${credit.customer}` +
@@ -298,7 +334,15 @@ export default function Credits({ ownerUid }) {
             ".",
           fromCredit: credit.id,
         });
+        lossId = lossRef?.id || null;
       }
+
+      await updateItem(credit.id, {
+        status: "bad_debt",
+        closedDate: today(),
+        badDebtAmount: unpaid,
+        lossId,
+      });
 
       showToast(
         unpaid > 0
@@ -314,6 +358,129 @@ export default function Credits({ ownerUid }) {
       showToast(t.failedSave, "error");
       setBadDebtTarget(null);
     }
+  };
+
+  // ── Edit a paid / written-off credit ───────────────────────────────────────
+  const managed = manageId ? credits.find((c) => c.id === manageId) : null;
+
+  const closeManage = () => {
+    setManageId(null);
+    setEditIdx(null);
+    setConfirmIdx(null);
+  };
+
+  // The Sales entry a payment created. New payments carry its id; payments
+  // recorded before that existed are matched on credit + amount + date.
+  const findSaleFor = (credit, p) => {
+    if (p.saleId) return sales.find((s) => s.id === p.saleId) || null;
+    return (
+      sales.find(
+        (s) =>
+          s.fromCredit === credit.id &&
+          Number(s.amount) === Number(p.amount) &&
+          s.date === p.date,
+      ) || null
+    );
+  };
+
+  // Paid amount / status / last payment date, recomputed from the payment list
+  const summarize = (credit, payments) => {
+    const paid = roundMoney(
+      payments.reduce((a, p) => a + Number(p.amount || 0), 0),
+    );
+    return {
+      paidAmount: paid,
+      status: paid >= Number(credit.totalAmount || 0) - 0.005 ? "paid" : "outstanding",
+      lastPaymentDate: payments.length ? payments[payments.length - 1].date : null,
+    };
+  };
+
+  const removePayment = async (idx) => {
+    const credit = managed;
+    if (!credit || manageBusy) return;
+    setManageBusy(true);
+    try {
+      const p = credit.payments[idx];
+      const sale = findSaleFor(credit, p);
+      const payments = credit.payments.filter((_, i) => i !== idx);
+      await updateItem(credit.id, { payments, ...summarize(credit, payments) }, credit);
+      if (sale) await deleteSale(sale.id, sale);
+      showToast(sale ? t.paymentRemovedToast : t.salesEntryMissing, sale ? "success" : "error");
+    } catch (err) {
+      console.error(err);
+      showToast(t.failedSave, "error");
+    }
+    setConfirmIdx(null);
+    setManageBusy(false);
+  };
+
+  const saveEditedPayment = async (idx) => {
+    const credit = managed;
+    if (!credit || manageBusy) return;
+    const entered = roundMoney(parseFloat(editAmount) || 0);
+    if (entered <= 0) return;
+    setManageBusy(true);
+    try {
+      const others = credit.payments.reduce(
+        (a, p, i) => (i === idx ? a : a + Number(p.amount || 0)),
+        0,
+      );
+      // can't take more than the credit's total across all payments
+      const amt = Math.min(entered, roundMoney(Number(credit.totalAmount || 0) - others));
+      const old = credit.payments[idx];
+      const sale = findSaleFor(credit, old);
+      const payments = credit.payments.map((p, i) =>
+        i === idx
+          ? {
+              ...p,
+              amount: amt,
+              method: editMethod,
+              date: editDate || p.date,
+              saleId: sale?.id || p.saleId || null,
+            }
+          : p,
+      );
+      await updateItem(credit.id, { payments, ...summarize(credit, payments) }, credit);
+      if (sale) {
+        await updateSale(
+          sale.id,
+          { amount: amt, paymentMethod: editMethod, date: editDate || sale.date },
+          sale,
+        );
+      }
+      showToast(sale ? t.paymentUpdatedToast : t.salesEntryMissing, sale ? "success" : "error");
+      setEditIdx(null);
+    } catch (err) {
+      console.error(err);
+      showToast(t.failedSave, "error");
+    }
+    setManageBusy(false);
+  };
+
+  // Written-off debt → active again: take the write-off back out of Losses.
+  // Anything already collected stays in Sales; stock stays deducted.
+  const reopenDebt = async () => {
+    const credit = managed;
+    if (!credit || manageBusy) return;
+    setManageBusy(true);
+    try {
+      const loss =
+        (credit.lossId && losses.find((l) => l.id === credit.lossId)) ||
+        losses.find((l) => l.fromCredit === credit.id) ||
+        null;
+      await updateItem(
+        credit.id,
+        { status: "outstanding", closedDate: null, badDebtAmount: null, lossId: null },
+        credit,
+      );
+      if (loss) await deleteLoss(loss.id, loss);
+      showToast(t.debtReopenedToast);
+      closeManage();
+    } catch (err) {
+      console.error(err);
+      showToast(t.failedSave, "error");
+    }
+    setManageBusy(false);
   };
 
   // ── Helpers ─────────────────────────────────────────────────────────────────
@@ -465,15 +632,22 @@ export default function Credits({ ownerUid }) {
           </h3>
           <form onSubmit={handleSubmit}>
             <div className="form-grid">
-              <div className="field-group">
-                <label>{t.dateIssued}</label>
-                <input
-                  type="date"
-                  value={form.date}
-                  onChange={(e) => setForm({ ...form, date: e.target.value })}
-                  required
+              <EntryDate
+                id="credit-date"
+                label={t.dateIssued}
+                value={form.date}
+                onChange={(d) => {
+                  setForm({ ...form, date: d });
+                  setStockChoice(null);
+                }}
+              />
+              {(selectedStock || findStockByLabel(stock, form.itemTaken)) && (
+                <StockUpdateToggle
+                  date={form.date}
+                  checked={stockUpdateWanted(form.date, stockChoice)}
+                  onChange={setStockChoice}
                 />
-              </div>
+              )}
               <div className="field-group">
                 <label>{t.dueDate}</label>
                 <input
@@ -664,6 +838,13 @@ export default function Credits({ ownerUid }) {
                 <div
                   style={{ display: "flex", flexDirection: "column", gap: 12 }}
                 >
+                  <EntryDate
+                    id="credit-pay-date"
+                    label={t.paymentDate}
+                    value={payDate}
+                    onChange={setPayDate}
+                    min={payingCredit.dateIssued || undefined}
+                  />
                   <div className="field-group">
                     <label>{t.amountPaid}</label>
                     <input
@@ -1003,6 +1184,7 @@ export default function Credits({ ownerUid }) {
                         className="btn-pay"
                         onClick={() => {
                           setPayingCredit(credit);
+                          setPayDate(localToday());
                           setPayAmount("");
                           setPayNote("");
                           setPayMethod("cash");
@@ -1025,6 +1207,19 @@ export default function Credits({ ownerUid }) {
                       </button>
                     </>
                   )}
+                  {(!isOutstanding || credit.payments?.length > 0) && (
+                    <button
+                      className="btn-secondary"
+                      style={{ fontSize: 12, padding: "7px 12px" }}
+                      onClick={() => {
+                        setManageId(credit.id);
+                        setEditIdx(null);
+                        setConfirmIdx(null);
+                      }}
+                    >
+                      <FontAwesomeIcon icon={faPen} /> {t.edit}
+                    </button>
+                  )}
                   <button
                     className="btn-danger"
                     style={{
@@ -1040,6 +1235,207 @@ export default function Credits({ ownerUid }) {
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* Edit credit: fix a wrong payment / reopen a written-off debt */}
+      {managed && (
+        <div className="modal-overlay" onClick={closeManage}>
+          <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+            <h3>
+              {t.editCreditTitle} — {managed.customer}
+            </h3>
+            <div className="credit-modal-meta">
+              <div className="credit-modal-row">
+                <span>{t.totalAmount}</span>
+                <strong>KES {Number(managed.totalAmount || 0).toLocaleString()}</strong>
+              </div>
+              <div className="credit-modal-row">
+                <span>{t.alreadyPaid}</span>
+                <strong className="text-green">
+                  KES {Number(managed.paidAmount || 0).toLocaleString()}
+                </strong>
+              </div>
+              <div className="credit-modal-row credit-modal-row-highlight">
+                <span>{t.remaining}</span>
+                <strong className="text-red">
+                  KES{" "}
+                  {Math.max(
+                    0,
+                    Number(managed.totalAmount || 0) - Number(managed.paidAmount || 0),
+                  ).toLocaleString()}
+                </strong>
+              </div>
+            </div>
+
+            {managed.status === "bad_debt" && (
+              <div style={{ margin: "12px 0" }}>
+                <p style={{ fontSize: 13, color: "var(--muted)", marginBottom: 10 }}>
+                  {t.reopenDebtHint}
+                </p>
+                <button
+                  className="btn-primary"
+                  onClick={reopenDebt}
+                  disabled={manageBusy}
+                >
+                  {t.reopenDebt}
+                </button>
+              </div>
+            )}
+
+            {managed.payments?.length > 0 && (
+              <div style={{ margin: "12px 0" }}>
+                <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 6 }}>
+                  {t.paymentsReceived}
+                </div>
+                {managed.status === "bad_debt" ? (
+                  <p style={{ fontSize: 12, color: "var(--muted)", marginBottom: 6 }}>
+                    {t.reopenPaymentsHint}
+                  </p>
+                ) : (
+                  <p style={{ fontSize: 12, color: "var(--muted)", marginBottom: 6 }}>
+                    {t.removePaymentHint}
+                  </p>
+                )}
+                {managed.payments.map((p, i) => {
+                  const canEdit = managed.status !== "bad_debt";
+                  if (editIdx === i) {
+                    return (
+                      <div
+                        key={i}
+                        style={{
+                          display: "flex",
+                          flexWrap: "wrap",
+                          gap: 6,
+                          alignItems: "center",
+                          padding: "6px 0",
+                          borderTop: "1px solid var(--border)",
+                        }}
+                      >
+                        <input
+                          type="date"
+                          value={editDate}
+                          min={managed.dateIssued || undefined}
+                          max={localToday()}
+                          onChange={(e) => setEditDate(e.target.value)}
+                        />
+                        <input
+                          type="number"
+                          min="0.01"
+                          step="0.01"
+                          value={editAmount}
+                          onChange={(e) => setEditAmount(e.target.value)}
+                          style={{ width: 110 }}
+                          autoFocus
+                        />
+                        <select
+                          value={editMethod}
+                          onChange={(e) => setEditMethod(e.target.value)}
+                        >
+                          {PAYMENT_METHODS.map((m) => (
+                            <option key={m} value={m}>
+                              {t.paymentMethods?.[m] || m}
+                            </option>
+                          ))}
+                        </select>
+                        <button
+                          className="btn-primary"
+                          style={{ fontSize: 12, padding: "6px 12px" }}
+                          onClick={() => saveEditedPayment(i)}
+                          disabled={manageBusy}
+                        >
+                          {t.save}
+                        </button>
+                        <button
+                          className="btn-secondary"
+                          style={{ fontSize: 12, padding: "6px 12px" }}
+                          onClick={() => setEditIdx(null)}
+                        >
+                          {t.cancel}
+                        </button>
+                      </div>
+                    );
+                  }
+                  return (
+                    <div
+                      key={i}
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        gap: 8,
+                        flexWrap: "wrap",
+                        padding: "6px 0",
+                        fontSize: 13,
+                        borderTop: "1px solid var(--border)",
+                      }}
+                    >
+                      <span>
+                        KES {Number(p.amount).toLocaleString()} — {p.date}
+                        {p.method
+                          ? ` · ${t.paymentMethods?.[p.method] || p.method}`
+                          : ""}
+                        {p.note ? ` (${p.note})` : ""}
+                      </span>
+                      {canEdit &&
+                        (confirmIdx === i ? (
+                          <span style={{ display: "inline-flex", gap: 6, alignItems: "center" }}>
+                            <span style={{ fontSize: 12 }}>{t.removePaymentSure}</span>
+                            <button
+                              className="btn-danger"
+                              style={{ fontSize: 12, padding: "4px 10px" }}
+                              onClick={() => removePayment(i)}
+                              disabled={manageBusy}
+                            >
+                              {t.yes}
+                            </button>
+                            <button
+                              className="btn-secondary"
+                              style={{ fontSize: 12, padding: "4px 10px" }}
+                              onClick={() => setConfirmIdx(null)}
+                            >
+                              {t.no}
+                            </button>
+                          </span>
+                        ) : (
+                          <span style={{ display: "inline-flex", gap: 6 }}>
+                            <button
+                              className="btn-secondary"
+                              style={{ fontSize: 12, padding: "4px 10px" }}
+                              onClick={() => {
+                                setEditIdx(i);
+                                setEditAmount(String(p.amount));
+                                setEditMethod(p.method || "cash");
+                                setEditDate(p.date || "");
+                                setConfirmIdx(null);
+                              }}
+                            >
+                              {t.edit}
+                            </button>
+                            <button
+                              className="btn-danger"
+                              style={{ fontSize: 12, padding: "4px 10px" }}
+                              onClick={() => {
+                                setConfirmIdx(i);
+                                setEditIdx(null);
+                              }}
+                            >
+                              {t.removePayment}
+                            </button>
+                          </span>
+                        ))}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            <div className="modal-actions">
+              <button className="btn-secondary" onClick={closeManage}>
+                {t.closeLabel}
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
@@ -1062,7 +1458,7 @@ export default function Credits({ ownerUid }) {
                   (alreadyHad
                     ? ` KES ${badDebtTarget.paidAmount.toLocaleString()} ${t.staysInSales || "already collected stays in Sales"}.`
                     : "") +
-                  ` ${t.cannotBeUndone || "This cannot be undone."}`
+                  ` ${t.badDebtCanReopen}`
                 );
               })()
             : ""

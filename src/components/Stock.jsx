@@ -12,6 +12,8 @@ import { Toast, useToast } from "./Toast";
 import AlertDialog from "./AlertDialog";
 import FeatureGate from "./FeatureGate";
 import Purchases from "./Purchases";
+import EntryDate from "./EntryDate";
+import { localToday } from "../dates";
 
 // Stock/Purchases — one nav entry, two views. "Stock" is the item list;
 // "Purchases" is the purchase ledger (with supplier balances). The separate
@@ -111,6 +113,7 @@ function StockList({ sub, ownerUid }) {
     payStatus: "paid", // "paid" | "credit"
     paidNow: "",
     dueDate: "",
+    date: localToday(),
   });
   const [restockStatus, setRestockStatus] = useState("idle");
   const [search, setSearch] = useState("");
@@ -263,7 +266,7 @@ function StockList({ sub, ownerUid }) {
             )
           : totalCost;
       const onCredit = paidNow < totalCost;
-      const today = new Date().toISOString().split("T")[0];
+      const today = restockForm.date || localToday();
 
       // Stock value always counts the full cost, paid or not.
       await recordStockPurchase(restockTarget.id, qty, totalCost);
@@ -311,6 +314,7 @@ function StockList({ sub, ownerUid }) {
       payStatus: "paid",
       paidNow: "",
       dueDate: "",
+      date: localToday(), // purchase date (change it to back-date)
     });
     } catch {
       setRestockStatus("idle");
@@ -765,6 +769,7 @@ function StockList({ sub, ownerUid }) {
       payStatus: "paid",
       paidNow: "",
       dueDate: "",
+      date: localToday(), // purchase date (change it to back-date)
     });
                           }}
                         >
@@ -824,6 +829,11 @@ function StockList({ sub, ownerUid }) {
               className="login-form"
               style={{ marginTop: 16 }}
             >
+              <EntryDate
+                id="restock-date"
+                value={restockForm.date}
+                onChange={(d) => setRestockForm((f) => ({ ...f, date: d }))}
+              />
               <div className="field-group">
                 <label htmlFor="restock-qty">{t.restockQty} *</label>
                 <input

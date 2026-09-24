@@ -11,9 +11,11 @@ import { useLang } from "../LangContext";
 import { PAYMENT_METHODS } from "../paymentMethods";
 import { paidOf, balanceOf, dueStatus } from "../supplierDebt";
 import EntryTable from "./EntryTable";
+import EntryDate, { StockUpdateToggle } from "./EntryDate";
+import { localToday, stockUpdateWanted } from "../dates";
 import { Toast, useToast } from "./Toast";
 
-const todayStr = () => new Date().toISOString().split("T")[0];
+const todayStr = localToday; // local date, not UTC
 
 // Rendered inside the Stock page (Stock/Purchases). It is no longer a
 // top-level tab in App.jsx.
@@ -55,6 +57,10 @@ export default function Purchases({ ownerUid }) {
 
     await updateItem(id, data, oldData);
 
+    // Back-dated purchases entered without "update my current stock" never
+    // added to stock, so editing them must not move stock either.
+    if (oldData?.stockNotAffected) return;
+
     const oldQty = Number(oldData?.quantity || 0);
     const newQty = Number(data.quantity ?? oldQty);
     const oldAmount = Number(oldData?.amount || 0);
@@ -90,6 +96,7 @@ export default function Purchases({ ownerUid }) {
   // spend back out of stock too, so Stock stays in sync either direction.
   const handleDelete = async (id, itemData) => {
     await deleteItem(id, itemData);
+    if (itemData?.stockNotAffected) return; // never added to stock
     const qty = Number(itemData?.quantity || 0);
     const amount = Number(itemData?.amount || 0);
     if (!qty) return;
@@ -99,8 +106,14 @@ export default function Purchases({ ownerUid }) {
     }
   };
 
+  // Date stays on the last day used, so a batch of old purchases can be entered
+  // one after another. `stockChoice`: should a back-dated purchase also add to
+  // current stock? (null = default — yes if recent, no if older than a week)
+  const [lastDate, setLastDate] = useState(localToday);
+  const [stockChoice, setStockChoice] = useState(null);
+
   const emptyForm = {
-    date: todayStr(),
+    date: lastDate,
     item: "",
     supplier: "",
     phone: "",
@@ -127,6 +140,7 @@ export default function Purchases({ ownerUid }) {
   const [payMethod, setPayMethod] = useState("cash");
   const [payNote, setPayNote] = useState("");
   const [payDue, setPayDue] = useState("");
+  const [payDate, setPayDate] = useState(todayStr);
   const [paySaving, setPaySaving] = useState(false);
 
   const handleStockSelect = (e) => {
@@ -170,6 +184,9 @@ export default function Purchases({ ownerUid }) {
           ? Math.min(Math.max(parseFloat(form.paidNow) || 0, 0), spend)
           : spend;
       const onCredit = paidNow < spend;
+      // Old purchases (older than a week) don't add to today's stock unless
+      // the user ticks "update my current stock" — see dates.js.
+      const touchStock = stockUpdateWanted(form.date, stockChoice);
 
       const {
         paidNow: _paidNow,
@@ -181,6 +198,8 @@ export default function Purchases({ ownerUid }) {
         ...purchaseData,
         amount: spend,
         quantity: qty,
+        // remembered so editing/deleting this purchase later doesn't move stock
+        ...(!touchStock && qty ? { stockNotAffected: true } : {}),
         ...(onCredit
           ? {
               paidAmount: roundMoney(paidNow),
@@ -204,7 +223,7 @@ export default function Purchases({ ownerUid }) {
       // catalog item exists, top up its quantity; otherwise create one so
       // nothing purchased falls through the cracks. Stock value always uses
       // the FULL cost, whether or not it has been paid off yet.
-      if (qty && form.item.trim()) {
+      if (touchStock && qty && form.item.trim()) {
         const match =
           stock.find((s) => s.id === selectedStockId) ||
           findStockMatch(form.item);
@@ -230,9 +249,12 @@ export default function Purchases({ ownerUid }) {
 
       setStatus("saved");
       showToast(t.saved);
+      const savedDate = form.date;
       setTimeout(() => {
         setStatus("idle");
-        setForm(emptyForm);
+        setLastDate(savedDate); // next entry starts on the same day
+        setForm({ ...emptyForm, date: savedDate });
+        setStockChoice(null);
         setSelectedStockId("");
         setUnitPrice(null);
         setShowForm(false);
@@ -252,6 +274,7 @@ export default function Purchases({ ownerUid }) {
     setPayMethod("cash");
     setPayNote("");
     setPayDue(purchase.dueDate || "");
+    setPayDate(todayStr());
   };
 
   const handleSupplierPayment = async () => {
@@ -270,7 +293,7 @@ export default function Purchases({ ownerUid }) {
           ...(amt < balance && payDue ? { dueDate: payDue } : {}),
           payments: [
             ...(payTarget.payments || []),
-            { amount: amt, date: todayStr(), method: payMethod, note: payNote },
+            { amount: amt, date: payDate || todayStr(), method: payMethod, note: payNote },
           ],
         },
         oldData,
@@ -460,15 +483,21 @@ export default function Purchases({ ownerUid }) {
         <form className="entry-form" onSubmit={handleSubmit}>
           <h3>🛒 {t.recordPurchase}</h3>
           <div className="form-grid">
-            <div className="field-group">
-              <label>{t.date} *</label>
-              <input
-                type="date"
-                value={form.date}
-                onChange={(e) => setForm({ ...form, date: e.target.value })}
-                required
+            <EntryDate
+              id="purchase-date"
+              value={form.date}
+              onChange={(d) => {
+                setForm({ ...form, date: d });
+                setStockChoice(null);
+              }}
+            />
+            {form.item.trim() && form.quantity !== "" && (
+              <StockUpdateToggle
+                date={form.date}
+                checked={stockUpdateWanted(form.date, stockChoice)}
+                onChange={setStockChoice}
               />
-            </div>
+            )}
             {stock.length > 0 && (
               <div className="field-group">
                 <label>{t.pickStock}</label>
@@ -678,6 +707,13 @@ export default function Purchases({ ownerUid }) {
                 )}
 
                 <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                  <EntryDate
+                    id="supplier-pay-date"
+                    label={t.paymentDate}
+                    value={payDate}
+                    onChange={setPayDate}
+                    min={payTarget.date || undefined}
+                  />
                   <div className="field-group">
                     <label>{t.amountPaid}</label>
                     <input

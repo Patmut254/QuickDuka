@@ -34,7 +34,12 @@ import {
 import FeatureGate from "./FeatureGate";
 import { balanceOf, dueStatus } from "../supplierDebt";
 
-export default function Dashboard({ setActiveTab, sub, ownerUid }) {
+export default function Dashboard({
+  setActiveTab,
+  sub,
+  ownerUid,
+  hideReportsLink = false,
+}) {
   const { t } = useLang();
   const { items: sales } = useCollection("sales", ownerUid ? { ownerUid } : undefined);
   const { items: purchases } = useCollection("purchases", ownerUid ? { ownerUid } : undefined);
@@ -373,9 +378,11 @@ export default function Dashboard({ setActiveTab, sub, ownerUid }) {
       <div className="recent-section">
         <div className="section-header">
           <h2>{t.recentActivity}</h2>
-          <button className="link-btn" onClick={() => setActiveTab("reports")}>
-            View Reports →
-          </button>
+          {!hideReportsLink && (
+            <button className="link-btn" onClick={() => setActiveTab("reports")}>
+              View Reports →
+            </button>
+          )}
         </div>
         {recent.length === 0 ? (
           <div className="empty-state">{t.noTransactions}</div>

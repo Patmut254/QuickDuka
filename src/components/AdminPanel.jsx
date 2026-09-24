@@ -64,6 +64,7 @@ import {
   faLock,
   faCirclePlus,
   faEdit,
+  faMobileScreen,
   faMoneyBillTrendUp,
   faPiggyBank,
   faFileLines,
@@ -300,6 +301,122 @@ function ChangePlanControl({ u, onChanged }) {
       >
         Cancel
       </button>
+    </div>
+  );
+}
+
+/**
+ * Admin: choose which pages are hidden on PHONES for one client.
+ * Saved as users/{uid}.mobileHiddenTabs = ["reports", "history", …]. The pages
+ * stay visible on a computer, and accounts without the field are unaffected.
+ */
+const PHONE_HIDEABLE_TABS = [
+  { id: "sales", label: "Sales" },
+  { id: "credits", label: "Credits" },
+  { id: "expenses", label: "Expenses" },
+  { id: "losses", label: "Losses" },
+  { id: "stock", label: "Stock/Purchases" },
+  { id: "reports", label: "Reports" },
+  { id: "history", label: "History" },
+];
+
+function MobileTabsControl({ u, onSaved }) {
+  const initial = Array.isArray(u.mobileHiddenTabs) ? u.mobileHiddenTabs : [];
+  const [saved, setSaved] = useState(initial);
+  const [open, setOpen] = useState(false);
+  const [selected, setSelected] = useState(initial);
+  const [saving, setSaving] = useState(false);
+
+  const toggle = (id) =>
+    setSelected((cur) =>
+      cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id],
+    );
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await updateDoc(doc(db, "users", u.id), { mobileHiddenTabs: selected });
+      setSaved(selected);
+      onSaved?.(selected);
+      setOpen(false);
+    } catch (e) {
+      console.error("Saving phone-hidden pages failed:", e);
+    }
+    setSaving(false);
+  };
+
+  if (!open) {
+    return (
+      <button
+        className="adm-act-btn"
+        style={{
+          background: "var(--bg2)",
+          color: "var(--text)",
+          border: "1px solid var(--border2)",
+        }}
+        onClick={() => {
+          setSelected(saved);
+          setOpen(true);
+        }}
+      >
+        <FontAwesomeIcon icon={faMobileScreen} /> Phone view
+        {saved.length > 0 ? ` (${saved.length} hidden)` : ""}
+      </button>
+    );
+  }
+
+  return (
+    <div
+      style={{
+        flexBasis: "100%",
+        padding: "10px 12px",
+        border: "1px solid var(--border2)",
+        borderRadius: 8,
+        background: "var(--bg2)",
+      }}
+    >
+      <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 8 }}>
+        <FontAwesomeIcon icon={faMobileScreen} /> Hide on phone (still visible on
+        a computer)
+      </div>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "6px 16px" }}>
+        {PHONE_HIDEABLE_TABS.map((tab) => (
+          <label
+            key={tab.id}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              fontSize: 13,
+              cursor: "pointer",
+            }}
+          >
+            <input
+              type="checkbox"
+              checked={selected.includes(tab.id)}
+              onChange={() => toggle(tab.id)}
+            />
+            {tab.label}
+          </label>
+        ))}
+      </div>
+      <div style={{ display: "flex", gap: 6, marginTop: 10 }}>
+        <button
+          className="adm-act-btn adm-green"
+          onClick={handleSave}
+          disabled={saving}
+          style={{ minWidth: 60 }}
+        >
+          {saving ? "Saving…" : "Save"}
+        </button>
+        <button
+          className="adm-act-btn adm-ghost"
+          onClick={() => setOpen(false)}
+          style={{ minWidth: 52 }}
+        >
+          Cancel
+        </button>
+      </div>
     </div>
   );
 }
@@ -1880,6 +1997,17 @@ export default function AdminPanel() {
                             onChanged={(newPlan) => {
                               showToast(
                                 `Plan changed to ${getPlan(newPlan).name} for ${u.businessName || u.email}`,
+                              );
+                            }}
+                          />
+                          {/*  Pages hidden on this client's phone  */}
+                          <MobileTabsControl
+                            u={u}
+                            onSaved={(tabs) => {
+                              showToast(
+                                tabs.length
+                                  ? `Hidden on phone for ${u.businessName || u.email}: ${tabs.join(", ")}`
+                                  : `All pages visible on phone for ${u.businessName || u.email}`,
                               );
                             }}
                           />

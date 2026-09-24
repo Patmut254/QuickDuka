@@ -64,6 +64,7 @@ import { useSubscription } from "./hooks/useSubscription";
 import { PlanBadge } from "./components/FeatureGate";
 import ContactPage from "./components/ContactPage";
 import FAQPage from "./components/FAQPage";
+import { useIsMobile } from "./hooks/useIsMobile";
 import PrivacyPage from "./components/PrivacyPage";
 import ProfilePage from "./components/ProfilePage";
 import Losses from "./components/Losses";
@@ -187,7 +188,19 @@ function AppShell({ user, profile, theme, toggleTheme }) {
   // { sales: {...}, expenses: {...}, losses: {...}, credits: {...} }
   const [prefillData, setPrefillData] = useState({});
 
+  // ── Per-client "hide on phone" pages ───────────────────────────────────────
+  // Set by the admin on the user's profile (Admin panel → user → Phone view),
+  // stored as profile.mobileHiddenTabs = ["reports", "history", …]. Those tabs
+  // stay fully available on a computer and are only removed on phone-sized
+  // screens. Accounts without the field see every page everywhere.
+  const isMobile = useIsMobile();
+  const mobileHidden = (
+    Array.isArray(profile?.mobileHiddenTabs) ? profile.mobileHiddenTabs : []
+  ).filter((id) => id !== "dashboard"); // dashboard is the fallback page
+  const isHiddenOnThisDevice = (id) => isMobile && mobileHidden.includes(id);
+
   const handleTabChange = (tab) => {
+    if (isHiddenOnThisDevice(tab)) return;
     sessionStorage.setItem("qd-active-tab", tab);
     setActiveTab(tab);
   };
@@ -208,6 +221,18 @@ function AppShell({ user, profile, theme, toggleTheme }) {
       return next;
     });
   };
+
+  // If a page is hidden on this device (e.g. restored from an old session, or
+  // the phone was rotated into a narrow window), fall back to the dashboard.
+  useEffect(() => {
+    const hidden = Array.isArray(profile?.mobileHiddenTabs)
+      ? profile.mobileHiddenTabs
+      : [];
+    if (isMobile && hidden.includes(activeTab) && activeTab !== "dashboard") {
+      sessionStorage.setItem("qd-active-tab", "dashboard");
+      setActiveTab("dashboard");
+    }
+  }, [isMobile, activeTab, profile?.mobileHiddenTabs]);
 
   useEffect(() => {
     if (!user?.uid || !activeTab) return;
@@ -297,9 +322,9 @@ function AppShell({ user, profile, theme, toggleTheme }) {
   const infoTabs = tabs.filter((t) =>
     ["contact", "faq", "privacy"].includes(t.id),
   );
-  // Reports is a PC/desktop-only page per client request — keep it out of
-  // the mobile bottom nav so it can't be reached on a phone.
-  const mobileTabs = tabs.filter((t) => t.id !== "reports");
+  // Phone bottom nav: everything except the pages this client has chosen to
+  // hide on phones (none, by default).
+  const mobileTabs = tabs.filter((t) => !mobileHidden.includes(t.id));
   const currentTab = tabs.find((t) => t.id === activeTab);
 
   const expiryDate = profile?.subscriptionExpiry?.toDate?.();
@@ -486,6 +511,7 @@ function AppShell({ user, profile, theme, toggleTheme }) {
                   setActiveTab={handleTabChange}
                   sub={sub}
                   ownerUid={user.uid}
+                  hideReportsLink={isHiddenOnThisDevice("reports")}
                 />
               )}
               {activeTab === "sales" && (

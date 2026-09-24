@@ -497,12 +497,6 @@ const typeLabel = {
 
 return (
   <div className="reports-page">
-    {/* PC/desktop-only notice — shown instead of the report on small screens */}
-    <div className="reports-desktop-only">
-      🖥️ {t.reportsDesktopOnly ||
-        "Reports are available on desktop / PC view only."}
-    </div>
-
     <div className="reports-body">
     {/* ── Controls bar ── */}
     <div className="reports-controls" style={{ flexWrap: "wrap", gap: 10 }}>

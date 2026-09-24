@@ -4,6 +4,8 @@ import { useStock } from "../hooks/useStock";
 import { useLang } from "../LangContext";
 import EntryTable from "./EntryTable";
 import { Toast, useToast } from "./Toast";
+import EntryDate from "./EntryDate";
+import { localToday } from "../dates";
 
 export default function Expenses({ ownerUid }) {
   const { t } = useLang();
@@ -15,8 +17,12 @@ export default function Expenses({ ownerUid }) {
   const CATS = t.expenseCategories;
   const OTHER = CATS[CATS.length - 1];
 
+  // Date stays on the last day used, so a batch of old entries can be added
+  // one after another without re-picking the date each time.
+  const [lastDate, setLastDate] = useState(localToday);
+
   const emptyForm = {
-    date: new Date().toISOString().split("T")[0],
+    date: lastDate,
     category: "",
     customCategory: "",
     description: "",
@@ -56,9 +62,11 @@ export default function Expenses({ ownerUid }) {
       });
       setStatus("saved");
       showToast(t.saved);
+      const savedDate = form.date;
       setTimeout(() => {
         setStatus("idle");
-        setForm(emptyForm);
+        setLastDate(savedDate);
+        setForm({ ...emptyForm, date: savedDate });
         setShowForm(false);
       }, 1500);
     } catch {
@@ -124,18 +132,11 @@ export default function Expenses({ ownerUid }) {
         <form className="entry-form" onSubmit={handleSubmit}>
           <h3>💸 {t.recordExpense}</h3>
           <div className="form-grid">
-            <div className="field-group">
-              <label htmlFor="exp-date">{t.date} *</label>
-              <input
-                id="exp-date"
-                name="exp-date"
-                type="date"
-                autoComplete="off"
-                value={form.date}
-                onChange={(e) => setForm({ ...form, date: e.target.value })}
-                required
-              />
-            </div>
+            <EntryDate
+              id="exp-date"
+              value={form.date}
+              onChange={(d) => setForm({ ...form, date: d })}
+            />
             <div className="field-group">
               <label htmlFor="exp-category">{t.expCategory} *</label>
               <select

@@ -252,6 +252,36 @@ export const T = {
     settled: "Settled",
     totalCost: "Total cost",
     restockSupplier: "Supplier (optional)",
+    // Entry dates / back-dating
+    todayLabel: "Today",
+    yesterdayLabel: "Yesterday",
+    recordingFor: "Recording for",
+    notToday: "not today",
+    paymentDate: "Payment date",
+    updateStockLabel: "Also update my current stock",
+    updateStockHint:
+      "Tick this if the goods really leave (or arrive in) your stock now. Leave it unticked for older entries that your stock count already reflects.",
+    // Edit / reopen a paid or written-off credit
+    editCreditTitle: "Edit credit",
+    paymentsReceived: "Payments received",
+    reopenDebt: "Reopen debt",
+    reopenDebtHint:
+      "Removes the write-off from Losses and makes this debt active again, so you can record payments if the customer decides to pay.",
+    reopenPaymentsHint:
+      "Reopen the debt first if you need to change or remove its payments.",
+    removePayment: "Remove",
+    removePaymentSure: "Remove this payment?",
+    removePaymentHint:
+      "Removing or changing a payment also updates the matching entry in Sales and the balance owed on this credit.",
+    yes: "Yes",
+    no: "No",
+    closeLabel: "Close",
+    debtReopenedToast: "Debt reopened — the balance is owed again.",
+    paymentRemovedToast: "Payment removed from this credit and from Sales.",
+    paymentUpdatedToast: "Payment updated.",
+    salesEntryMissing:
+      "Credit updated, but the matching Sales entry wasn't found — please check Sales.",
+    badDebtCanReopen: "You can reopen it later if the customer decides to pay.",
     paymentStatus: "Payment",
     paidInFull: "Paid in full",
     notFullyPaid: "Not fully paid (on credit)",
@@ -264,7 +294,6 @@ export const T = {
     // Credit given from stock
     creditQtyTaken: "Quantity taken",
     creditFromStock: "Deducted from stock",
-    reportsDesktopOnly: "Reports are available on desktop / PC view only.",
     editItem: "Edit Item",
     removeItem: "Remove from stock?",
     removeMsg: (name) => `Remove "${name}" from stock? This cannot be undone.`,
@@ -412,19 +441,23 @@ export const T = {
     howToSteps: [
       {
         title: "Dashboard",
-        desc: "Your dashboard is the first thing you see when you log in. It shows your sales, purchases, expenses, losses and profit for the current month at a glance. You also see your recent activity and a 6-month performance chart. Use it to know how your business is doing every day.",
+        desc: "Your dashboard is the first thing you see when you log in. It shows your sales, purchases, expenses, losses and profit for the current month at a glance. Recent activity lists your latest sales, purchases, expenses and credits — a credit shows at KES 0 when you give it and grows as the customer pays. If you owe suppliers for stock bought on credit, a reminder panel shows what is due. You also see a 6-month performance chart.",
       },
       {
         title: "Recording Sales",
-        desc: "Go to Sales and tap New Sale. Enter the date, what you sold, the customer name (optional), phone number (optional), and the amount. Save it. That sale now shows up in your reports and dashboard. Every shilling you earn should be entered here.",
+        desc: "Go to Sales and tap New Sale. The date defaults to today — tap the date to open the calendar and pick an earlier day if you are adding an old sale. Pick the item from your stock list. If you sell one product in different sizes (for example Water 0.375 L and Water 0.5 L), pick the size you sold. Enter the quantity (decimals like 0.5 are fine), the customer name and phone (both optional), and how they paid: Cash, M-Pesa, M-Pesa Till, Paybill (bank or business), Pochi la Biashara, Send Money, Airtel Money or Card. The amount fills in from your price list, and the quantity is taken out of your stock automatically.",
       },
       {
         title: "Tracking Debts with Credits",
-        desc: "When a customer takes goods on credit, go to Credits and tap New Credit. Enter their name, phone, what they took, the amount, and a due date. The app will track how much they owe. When they pay, tap Pay on their card and enter the amount. Once fully paid, it automatically moves to Sales. If someone never pays, mark them as Bad Debt.",
+        desc: "When a customer takes goods on credit, go to Credits and tap New Credit. Pick the item from your stock and enter the quantity — like a sale, it leaves your stock straight away. Then enter the customer's name, phone, total amount and a due date. When they pay, tap Pay on their card, enter the amount and choose how they paid. Each payment is added to Sales as you receive it, and the balance updates. If you delete a credit before they have paid anything, the goods go back into your stock. If someone never pays, mark them as Bad Debt and the unpaid amount is written off as a loss. Made a mistake, or the customer decides to pay later? Tap Edit on the credit to remove or correct a payment, or to reopen a written-off debt.",
       },
       {
         title: "Recording Purchases",
-        desc: "Go to Purchases and tap New Purchase. Record every item you buy for your business including stock, raw materials and supplies. Enter the date, item, supplier name, and cost. This helps you know exactly how much you are spending on stock.",
+        desc: "Purchases now live inside the Stock/Purchases page. Open Stock/Purchases, switch to the Purchase history tab and tap New Purchase. Pick the item from your stock (or type a new one and it is added to your stock automatically), then enter the supplier, quantity and total cost. The quantity is added to your stock. You can also use the Restock button on the Stock tab when new goods arrive — it records the purchase for you.",
+      },
+      {
+        title: "Buying Stock on Credit",
+        desc: "Took stock on credit or with a loan? When you record a purchase or a restock, set Payment to Not fully paid (on credit). Enter how much you have paid so far (0 if nothing) and the date you promised to pay the rest. The app keeps track of what you still owe on each purchase. Owed amounts appear on the Dashboard with the promised date, marked DUE SOON within 3 days and OVERDUE after the date. To pay the supplier, open Stock/Purchases, go to Purchase history and tap Pay next to the balance. You can pay in parts, choose the payment method and set a new date for what remains. The full cost counts in your profit from the day you bought the stock. Reminders show when you open the app.",
       },
       {
         title: "Logging Expenses",
@@ -435,8 +468,8 @@ export const T = {
         desc: "Things go wrong in business. When stock expires, gets stolen, is damaged or goes to waste, record it in Losses. Go to Losses and tap New Loss. Enter what was lost and its value. This keeps your profit calculations accurate and honest.",
       },
       {
-        title: "Stock Catalogue",
-        desc: "Use Stock to keep a list of all the items you sell along with their prices. This makes it faster to fill in sales and purchases because you can refer to your own price list. Go to Stock and add your items with their names and prices.",
+        title: "Stock Catalogue and Sizes",
+        desc: "Use Stock/Purchases to keep a list of everything you sell, with buying and selling prices and how many you have left. If you sell the same product in different sizes — for example Water 0.375 L and Water 0.5 L — add each size as its own item using the Variant field, so each has its own price and stock count. Quantities can be decimals (like 0.5 or 0.375). Sales and credits pick from this list and reduce your stock automatically. Tap Restock when new goods arrive.",
       },
       {
         title: "Reports",
@@ -490,7 +523,7 @@ export const T = {
       },
       {
         q: "How do I track who owes me money?",
-        a: "Use the Credits section. Record the customer's name, phone, item and amount. You can record partial payments and the app tracks outstanding balances automatically.",
+        a: "Use the Credits section. Pick the item from your stock and enter the quantity (it leaves your stock straight away), plus the customer's name, phone and amount. Record each payment as it comes in — partial payments are fine, and each one is added to Sales. The Dashboard shows the credit at KES 0 and it grows as the customer pays.",
       },
       {
         q: "Can I follow up on buyers or suppliers?",
@@ -506,11 +539,51 @@ export const T = {
       },
       {
         q: "What is the Credits section for?",
-        a: "Credits is where you track customers who have taken goods on credit and owe you money. You can record partial payments and monitor outstanding balances. Once a customer pays in full, the record automatically moves to Sales.",
+        a: "Credits is where you track customers who have taken goods on credit and owe you money. You can record partial payments and monitor outstanding balances. Each payment is added to Sales as you receive it, so your sales only include money you have actually collected.",
       },
       {
         q: "What is the difference between Expenses and Losses?",
         a: "Expenses are planned business costs like rent, transport and salaries. Losses are unexpected events like stolen or expired stock. Both reduce your profit but they are tracked separately so you can see what is causing your costs.",
+      },
+      {
+        q: "How do I record stock I bought on credit or with a loan?",
+        a: "Go to Stock/Purchases → Purchase history → New Purchase (or tap Restock on an item). Set Payment to Not fully paid (on credit), enter what you have paid so far and the date you promised to pay the rest. The balance you owe is tracked for you. When you pay the supplier, tap Pay next to the balance and enter the amount — part payments are fine.",
+      },
+      {
+        q: "Will I be reminded when a supplier payment is due?",
+        a: "Yes. Unpaid supplier balances show on your Dashboard with the promised date. They are marked DUE SOON when the date is within 3 days and OVERDUE after it. Reminders show when you open the app — QuickDuka does not send SMS or WhatsApp reminders.",
+      },
+      {
+        q: "Where did the Purchases page go?",
+        a: "Purchases is now part of the Stock/Purchases page. Open it and choose the Purchase history tab to add, edit or delete purchases. Your old purchases are all still there and still count in your reports.",
+      },
+      {
+        q: "How do I sell the same product in different sizes, like 0.375 L and 0.5 L water?",
+        a: "In Stock/Purchases, add each size as its own item and put the size in the Variant field (for example Water — 0.375 L, and Water — 0.5 L). Each size gets its own price and stock count. When selling, pick the exact size from the list.",
+      },
+      {
+        q: "Can I sell or buy in fractions like 0.5 kg?",
+        a: "Yes. Quantity fields accept decimals such as 0.5 or 0.375, and the amount is worked out from your price and the quantity.",
+      },
+      {
+        q: "Which payment methods can I record?",
+        a: "Cash, M-Pesa, M-Pesa Till (Buy Goods), Paybill (bank or business), Pochi la Biashara, M-Pesa Send Money, Airtel Money and Card. You can choose one on every sale, when a customer pays off a credit, and when you pay a supplier. Your reports show totals by payment method.",
+      },
+      {
+        q: "Does giving an item on credit reduce my stock?",
+        a: "Yes. Picking an item from your stock on a credit takes the quantity out of stock straight away, just like a sale. If you delete a credit before the customer has paid anything, the goods go back into your stock.",
+      },
+      {
+        q: "Why can't I see some pages (like Reports or History) on my phone?",
+        a: "Some accounts are set up to show certain pages only on a computer. Log in on a computer to see them, or contact support if you want them on your phone as well.",
+      },
+      {
+        q: "I marked a debt paid by mistake, or a customer I wrote off now wants to pay. What do I do?",
+        a: "Open Credits, find the credit and tap Edit. To fix a wrong payment, remove it or change its amount or payment method — the matching entry in Sales updates too, and the balance comes back. For a written-off debt, tap Reopen debt: the write-off is removed from Losses and you can record payments again.",
+      },
+      {
+        q: "Can I add sales or expenses from an earlier date, like last April?",
+        a: "Yes. On every form (Sales, Credits, Expenses, Losses, Purchases) tap the Date field to open the calendar and pick the day. Future dates are not allowed. The date stays on your chosen day for the next entry, with a banner reminding you it is not today — tap Today to switch back. You can also fix the date of an existing entry with its Edit button in the list. For an entry older than a week, QuickDuka does not change your current stock by default; tick Also update my current stock if it should.",
       },
     ],
 
@@ -871,6 +944,36 @@ export const T = {
     settled: "Imelipwa",
     totalCost: "Gharama jumla",
     restockSupplier: "Muuzaji (hiari)",
+    // Entry dates / back-dating
+    todayLabel: "Leo",
+    yesterdayLabel: "Jana",
+    recordingFor: "Unarekodi kwa tarehe",
+    notToday: "si leo",
+    paymentDate: "Tarehe ya malipo",
+    updateStockLabel: "Sasisha pia bidhaa zilizopo dukani",
+    updateStockHint:
+      "Weka tiki ikiwa bidhaa zinatoka (au zinaingia) dukani sasa. Usiweke tiki kwa rekodi za zamani ambazo tayari zimo kwenye idadi yako ya dukani.",
+    // Edit / reopen a paid or written-off credit
+    editCreditTitle: "Hariri mkopo",
+    paymentsReceived: "Malipo yaliyopokelewa",
+    reopenDebt: "Fungua deni tena",
+    reopenDebtHint:
+      "Huondoa kiasi kilichoandikwa kama hasara kwenye Hasara na kufanya deni liwe hai tena, ili uweze kurekodi malipo mteja akiamua kulipa.",
+    reopenPaymentsHint:
+      "Fungua deni tena kwanza ikiwa unahitaji kubadilisha au kuondoa malipo yake.",
+    removePayment: "Ondoa",
+    removePaymentSure: "Ondoa malipo haya?",
+    removePaymentHint:
+      "Kuondoa au kubadilisha malipo pia husasisha rekodi husika kwenye Mauzo na salio linalodaiwa kwenye mkopo huu.",
+    yes: "Ndiyo",
+    no: "Hapana",
+    closeLabel: "Funga",
+    debtReopenedToast: "Deni limefunguliwa tena — salio linadaiwa tena.",
+    paymentRemovedToast: "Malipo yameondolewa kwenye mkopo huu na kwenye Mauzo.",
+    paymentUpdatedToast: "Malipo yamesasishwa.",
+    salesEntryMissing:
+      "Mkopo umesasishwa, lakini rekodi husika kwenye Mauzo haikupatikana — tafadhali angalia Mauzo.",
+    badDebtCanReopen: "Unaweza kulifungua tena mteja akiamua kulipa.",
     paymentStatus: "Malipo",
     paidInFull: "Nimelipa yote",
     notFullyPaid: "Sijamaliza kulipa (deni)",
@@ -883,7 +986,6 @@ export const T = {
     // Credit given from stock
     creditQtyTaken: "Kiasi alichochukua",
     creditFromStock: "Imepunguzwa kutoka dukani",
-    reportsDesktopOnly: "Ripoti zinapatikana kwenye kompyuta (PC) pekee.",
     editItem: "Hariri Bidhaa",
     removeItem: "Ondoa kutoka Katalogi?",
     removeMsg: (name) =>
@@ -1033,19 +1135,23 @@ export const T = {
     howToSteps: [
       {
         title: "Dashibodi",
-        desc: "Dashibodi ndiyo jambo la kwanza unaona unapoingia. Inaonyesha mauzo, manunuzi, gharama, hasara na faida yako kwa mwezi huu kwa haraka. Pia unaona shughuli zako za hivi karibuni na chati ya utendaji wa miezi 6. Itumie kujua hali ya biashara yako kila siku.",
+        desc: "Dashibodi ndiyo jambo la kwanza unaona unapoingia. Inaonyesha mauzo, manunuzi, gharama, hasara na faida yako kwa mwezi huu kwa haraka. Shughuli za hivi karibuni zinaorodhesha mauzo, manunuzi, gharama na mikopo yako ya karibuni — mkopo unaonekana kama KES 0 unapoutoa na huongezeka mteja anapolipa. Ikiwa unadaiwa na wauzaji kwa hisa ulizochukua kwa deni, kikumbusho kinaonyesha kinachosubiri kulipwa. Pia unaona chati ya utendaji wa miezi 6.",
       },
       {
         title: "Kurekodi Mauzo",
-        desc: "Nenda Mauzo na gonga Mauzo Mapya. Weka tarehe, ulichouza, jina la mteja (hiari), nambari ya simu (hiari), na kiasi. Hifadhi. Mauzo hayo sasa yanaonekana kwenye ripoti na dashibodi yako. Kila shilingi unayopata inapaswa kuwekwa hapa.",
+        desc: "Nenda Mauzo na gonga Mauzo Mapya. Tarehe huwa ya leo — gonga tarehe kufungua kalenda na uchague siku ya awali ukiongeza mauzo ya zamani. Chagua bidhaa kutoka kwenye orodha yako ya bidhaa. Ukiuza bidhaa moja kwa ukubwa tofauti (mfano Maji 0.375 L na Maji 0.5 L), chagua ukubwa uliouza. Weka kiasi (desimali kama 0.5 zinaruhusiwa), jina na simu ya mteja (hiari), kisha chagua njia ya malipo: Fedha Taslimu, M-Pesa, Till ya M-Pesa, Paybill (Benki / Biashara), Pochi la Biashara, Tuma Pesa, Airtel Money au Kadi. Kiasi kinajazwa kutoka kwenye orodha yako ya bei, na bidhaa inapunguzwa dukani moja kwa moja.",
       },
       {
         title: "Kufuatilia Madeni kwa Mikopo",
-        desc: "Mteja anapotwaa bidhaa kwa mkopo, nenda Mikopo na gonga Mkopo Mpya. Weka jina lake, simu, alichochukua, kiasi, na tarehe ya mwisho. Programu itafuatilia anachokudaiwa. Analipoulipa, gonga Lipa kwenye kadi yake na weka kiasi. Anapokomesha kulipa, imwashiria kama Deni Baya.",
+        desc: "Mteja anapochukua bidhaa kwa mkopo, nenda Mikopo na gonga Mkopo Mpya. Chagua bidhaa kutoka dukani na weka kiasi — kama mauzo, bidhaa hupunguzwa dukani papo hapo. Kisha weka jina la mteja, simu, jumla ya kiasi na tarehe ya mwisho. Mteja anapolipa, gonga Lipa kwenye kadi yake, weka kiasi na uchague njia ya malipo. Kila malipo huingia kwenye Mauzo unapoyapokea, na salio husasishwa. Ukifuta mkopo kabla hajalipa chochote, bidhaa hurudi dukani. Mtu asipolipa kabisa, mwashirie kama Deni Baya na kiasi ambacho hakijalipwa kinaandikwa kama hasara. Umekosea, au mteja ameamua kulipa baadaye? Gonga Hariri kwenye mkopo kuondoa au kurekebisha malipo, au kufungua tena deni lililoandikwa kama hasara.",
       },
       {
         title: "Kurekodi Manunuzi",
-        desc: "Nenda Manunuzi na gonga Ununuzi Mpya. Rekodi kila bidhaa unayonunua kwa ajili ya biashara yako ikiwemo hisa, malighafi na vifaa. Weka tarehe, bidhaa, jina la muuzaji, na gharama. Hii inakusaidia kujua unakotumia pesa kwa hisa.",
+        desc: "Manunuzi sasa yako ndani ya ukurasa wa Bidhaa/Manunuzi. Fungua Bidhaa/Manunuzi, nenda kwenye kichupo cha Historia ya manunuzi na gonga Ununuzi Mpya. Chagua bidhaa kutoka dukani (au andika mpya na itaongezwa dukani moja kwa moja), kisha weka muuzaji, kiasi na jumla ya gharama. Kiasi kinaongezwa dukani. Unaweza pia kutumia kitufe cha Ongeza Bidhaa Dukani kwenye kichupo cha Bidhaa bidhaa mpya zinapofika — kinarekodi ununuzi kwa ajili yako.",
+      },
+      {
+        title: "Kununua Hisa kwa Deni",
+        desc: "Umechukua hisa kwa deni au mkopo? Unaporekodi ununuzi au kuongeza bidhaa dukani, weka Malipo kuwa Sijamaliza kulipa (deni). Weka ulichokwisha lipa hadi sasa (0 ikiwa hujalipa chochote) na tarehe uliyoahidi kulipa kilichobaki. Programu hufuatilia unachodaiwa kwa kila ununuzi. Madeni yanaonekana kwenye Dashibodi pamoja na tarehe ya kulipa — INAKARIBIA ikiwa imebaki siku 3 au chini, na IMECHELEWA baada ya tarehe hiyo. Unapomlipa muuzaji, fungua Bidhaa/Manunuzi, nenda Historia ya manunuzi na gonga Lipa karibu na deni. Unaweza kulipa kwa awamu, kuchagua njia ya malipo na kuweka tarehe mpya ya kilichobaki. Gharama kamili huhesabiwa kwenye faida tangu siku uliponunua hisa. Vikumbusho huonekana unapofungua programu.",
       },
       {
         title: "Kurekodi Gharama",
@@ -1056,8 +1162,8 @@ export const T = {
         desc: "Mambo mabaya hutokea biashara. Hisa inapoisha muda, kuibwa, kuharibiwa au kupotea, rekodi katika Hasara. Nenda Hasara na gonga Rekodi Hasara Mpya. Weka kilichopotea na thamani yake. Hii inaweka mahesabu ya faida yako kuwa sahihi na ya kweli.",
       },
       {
-        title: "Katalogi ya Bidhaa",
-        desc: "Tumia Bidhaa Zako kuweka orodha ya bidhaa zote unazouza pamoja na bei zao. Hii inafanya iwe rahisi zaidi kujaza mauzo na manunuzi kwa sababu unaweza kuwasiliana na orodha yako ya bei. Nenda Bidhaa Zako na ongeza bidhaa zako na bei zao.",
+        title: "Katalogi ya Bidhaa na Ukubwa",
+        desc: "Tumia Bidhaa/Manunuzi kuweka orodha ya kila kitu unachouza, pamoja na bei za kununua na kuuza na idadi iliyobaki. Ukiuza bidhaa ile ile kwa ukubwa tofauti — mfano Maji 0.375 L na Maji 0.5 L — ongeza kila ukubwa kama bidhaa yake kwa kutumia sehemu ya Aina (Rangi / Ukubwa / Kiasi), ili kila mmoja awe na bei yake na idadi yake. Kiasi kinaweza kuwa na desimali (mfano 0.5 au 0.375). Mauzo na mikopo huchagua kutoka orodha hii na kupunguza bidhaa dukani moja kwa moja. Gonga Ongeza Bidhaa Dukani bidhaa mpya zinapofika.",
       },
       {
         title: "Ripoti",
@@ -1111,7 +1217,7 @@ export const T = {
       },
       {
         q: "Ninawezaje kufuatilia wanaonidaiwa pesa?",
-        a: "Tumia sehemu ya Mikopo. Rekodi jina la mteja, simu, bidhaa na kiasi. Unaweza kurekodi malipo ya sehemu na programu inafuatilia salio zilizobaki moja kwa moja.",
+        a: "Tumia sehemu ya Mikopo. Chagua bidhaa kutoka dukani na weka kiasi (kinapungua dukani papo hapo), pamoja na jina la mteja, simu na kiasi cha deni. Rekodi kila malipo yanapoingia — malipo ya sehemu yanakubalika, na kila moja huongezwa kwenye Mauzo. Dashibodi inaonyesha mkopo kama KES 0 na huongezeka mteja anapolipa.",
       },
       {
         q: "Ninaweza kufuatilia wanunuzi au wasambazaji?",
@@ -1127,11 +1233,51 @@ export const T = {
       },
       {
         q: "Sehemu ya Mikopo ni kwa nini?",
-        a: "Mikopo ni mahali unakofuatilia wateja waliochukua bidhaa kwa mkopo na wakukuwie pesa. Unaweza kurekodi malipo ya sehemu na kufuatilia salio zilizobaki. Mteja anapokomesha kulipa kikamilifu, rekodi inahamia moja kwa moja kwenye Mauzo.",
+        a: "Mikopo ni mahali unapofuatilia wateja waliochukua bidhaa kwa mkopo na wanakudai pesa. Unaweza kurekodi malipo ya sehemu na kufuatilia salio zilizobaki. Kila malipo huongezwa kwenye Mauzo unapoyapokea, kwa hiyo mauzo yako yanajumuisha pesa ulizokusanya tu.",
       },
       {
         q: "Tofauti kati ya Gharama na Hasara ni nini?",
         a: "Gharama ni matumizi ya biashara yaliyopangwa kama pango, usafiri na mishahara. Hasara ni matukio yasiyotarajiwa kama hisa iliyoibiwa au kuisha muda. Zote mbili zinapunguza faida yako lakini zinafuatiliwa tofauti ili uweze kuona kinachosababisha gharama zako.",
+      },
+      {
+        q: "Ninawezaje kurekodi hisa nilizochukua kwa deni au mkopo?",
+        a: "Nenda Bidhaa/Manunuzi → Historia ya manunuzi → Ununuzi Mpya (au gonga Ongeza Bidhaa Dukani kwenye bidhaa). Weka Malipo kuwa Sijamaliza kulipa (deni), weka ulichokwisha lipa na tarehe uliyoahidi kulipa kilichobaki. Deni unalodaiwa hufuatiliwa kwa ajili yako. Unapomlipa muuzaji, gonga Lipa karibu na deni na weka kiasi — malipo ya sehemu yanakubalika.",
+      },
+      {
+        q: "Nitakumbushwa malipo ya muuzaji yanapofika?",
+        a: "Ndiyo. Madeni ya wauzaji ambayo hayajalipwa yanaonekana kwenye Dashibodi pamoja na tarehe uliyoahidi. Yanaandikwa INAKARIBIA tarehe ikiwa ndani ya siku 3, na IMECHELEWA baada ya tarehe. Vikumbusho vinaonekana unapofungua programu — QuickDuka haitumi vikumbusho kwa SMS au WhatsApp.",
+      },
+      {
+        q: "Ukurasa wa Manunuzi umeenda wapi?",
+        a: "Manunuzi sasa ni sehemu ya ukurasa wa Bidhaa/Manunuzi. Ufungue na uchague kichupo cha Historia ya manunuzi kuongeza, kuhariri au kufuta manunuzi. Manunuzi yako ya zamani yote bado yapo na bado yanahesabiwa kwenye ripoti zako.",
+      },
+      {
+        q: "Ninawezaje kuuza bidhaa ile ile kwa ukubwa tofauti, kama maji 0.375 L na 0.5 L?",
+        a: "Kwenye Bidhaa/Manunuzi, ongeza kila ukubwa kama bidhaa yake na weka ukubwa kwenye sehemu ya Aina (mfano Maji — 0.375 L, na Maji — 0.5 L). Kila ukubwa una bei yake na idadi yake. Unapouza, chagua ukubwa kamili kutoka kwenye orodha.",
+      },
+      {
+        q: "Naweza kuuza au kununua kwa sehemu kama kilo 0.5?",
+        a: "Ndiyo. Sehemu za kiasi zinakubali desimali kama 0.5 au 0.375, na jumla hukokotolewa kutoka kwenye bei yako na kiasi.",
+      },
+      {
+        q: "Ni njia gani za malipo ninazoweza kurekodi?",
+        a: "Fedha Taslimu, M-Pesa, Till ya M-Pesa (Lipa na M-Pesa), Paybill (Benki / Biashara), Pochi la Biashara, Tuma Pesa ya M-Pesa, Airtel Money na Kadi. Unaweza kuchagua moja kwenye kila mauzo, mteja anapolipa mkopo, na unapomlipa muuzaji. Ripoti zako zinaonyesha jumla kwa kila njia ya malipo.",
+      },
+      {
+        q: "Kutoa bidhaa kwa mkopo kunapunguza hisa yangu?",
+        a: "Ndiyo. Ukichagua bidhaa kutoka dukani kwenye mkopo, kiasi hupunguzwa dukani papo hapo, kama mauzo. Ukifuta mkopo kabla mteja hajalipa chochote, bidhaa hurudi dukani.",
+      },
+      {
+        q: "Kwa nini siwezi kuona kurasa fulani (kama Ripoti au Historia) kwenye simu yangu?",
+        a: "Baadhi ya akaunti zimewekwa kuonyesha kurasa fulani kwenye kompyuta pekee. Ingia kwenye kompyuta kuziona, au wasiliana na msaada ukitaka ziwepo pia kwenye simu.",
+      },
+      {
+        q: "Nimeweka deni kuwa limelipwa kimakosa, au mteja niliyemwandika kama deni baya sasa anataka kulipa. Nifanye nini?",
+        a: "Fungua Mikopo, tafuta mkopo na ugonge Hariri. Kurekebisha malipo yaliyokosewa, yaondoe au ubadilishe kiasi au njia ya malipo — rekodi husika kwenye Mauzo pia husasishwa, na salio linarudi. Kwa deni lililoandikwa kama hasara, gonga Fungua deni tena: kiasi hicho kinaondolewa kwenye Hasara na unaweza kurekodi malipo tena.",
+      },
+      {
+        q: "Naweza kuongeza mauzo au gharama za tarehe ya awali, kama Aprili iliyopita?",
+        a: "Ndiyo. Kwenye kila fomu (Mauzo, Mikopo, Gharama, Hasara, Manunuzi) gonga sehemu ya Tarehe kufungua kalenda na uchague siku. Tarehe za baadaye haziruhusiwi. Tarehe inabaki kwenye siku uliyochagua kwa rekodi inayofuata, na kuna ujumbe unaokukumbusha kuwa si leo — gonga Leo kurudi. Unaweza pia kurekebisha tarehe ya rekodi iliyopo kwa kitufe chake cha Hariri kwenye orodha. Kwa rekodi za zaidi ya wiki moja, QuickDuka haibadilishi bidhaa zilizopo dukani kwa chaguo-msingi; weka tiki Sasisha pia bidhaa zilizopo dukani ikiwa inapaswa.",
       },
     ],
 

@@ -4,6 +4,8 @@ import { useStock } from "../hooks/useStock";
 import { useLang } from "../LangContext";
 import EntryTable from "./EntryTable";
 import { Toast, useToast } from "./Toast";
+import EntryDate from "./EntryDate";
+import { localToday } from "../dates";
 
 export default function Losses({ ownerUid }) {
   const { t } = useLang();
@@ -14,8 +16,10 @@ export default function Losses({ ownerUid }) {
 
   const CATS = t.lossCategories;
 
+  const [lastDate, setLastDate] = useState(localToday);
+
   const emptyForm = {
-    date: new Date().toISOString().split("T")[0],
+    date: lastDate,
     item: "",
     category: CATS[0],
     quantity: "",
@@ -43,9 +47,11 @@ export default function Losses({ ownerUid }) {
       await addItem({ ...form, amount: parseFloat(form.amount) || 0 });
       setStatus("saved");
       showToast(t.saved);
+      const savedDate = form.date;
       setTimeout(() => {
         setStatus("idle");
-        setForm(emptyForm);
+        setLastDate(savedDate);
+        setForm({ ...emptyForm, date: savedDate });
         setShowForm(false);
       }, 1500);
     } catch {
@@ -139,15 +145,11 @@ export default function Losses({ ownerUid }) {
         <form className="entry-form" onSubmit={handleSubmit}>
           <h3>⚠️ {t.recordLoss}</h3>
           <div className="form-grid">
-            <div className="field-group">
-              <label>{t.date} *</label>
-              <input
-                type="date"
-                value={form.date}
-                onChange={(e) => setForm({ ...form, date: e.target.value })}
-                required
-              />
-            </div>
+            <EntryDate
+              id="loss-date"
+              value={form.date}
+              onChange={(d) => setForm({ ...form, date: d })}
+            />
             {stock.length > 0 && (
               <div className="field-group">
                 <label>{t.pickStock}</label>

@@ -15,28 +15,32 @@ import {
   faMoneyBill,
   faInfoCircle,
   faLayerGroup,
+  faHandHoldingDollar,
 } from "@fortawesome/free-solid-svg-icons";
 import { faSquareCheck as faSquareCheckR } from "@fortawesome/free-regular-svg-icons";
 import { useLang } from "../LangContext";
 
-// One entry per howToSteps item (10 total)
+// One entry per howToSteps item (11 total) — keep in the same order as
+// howToSteps in LangContext.js (English and Swahili).
 const STEP_ICONS = [
   faChartLine, // 1. Dashboard
   faMoneyBill, // 2. Recording Sales
   faSquareCheckR, // 3. Tracking Debts / Credits
   faCartPlus, // 4. Recording Purchases
-  faReceipt, // 5. Logging Expenses
-  faTriangleExclamation, // 6. Recording Losses
-  faBox, // 7. Stock Catalogue
-  faChartLine, // 8. Reports
-  faClockRotateLeft, // 9. History
-  faLayerGroup, // 10. Subscription Plans
+  faHandHoldingDollar, // 5. Buying Stock on Credit
+  faReceipt, // 6. Logging Expenses
+  faTriangleExclamation, // 7. Recording Losses
+  faBox, // 8. Stock Catalogue & Sizes
+  faChartLine, // 9. Reports
+  faClockRotateLeft, // 10. History
+  faLayerGroup, // 11. Subscription Plans
 ];
 const STEP_COLORS = [
   "var(--green)", // Dashboard
   "#22c55e", // Sales
   "var(--orange)", // Credits
   "#3b82f6", // Purchases
+  "#f97316", // Buying stock on credit
   "#a855f7", // Expenses
   "var(--red)", // Losses
   "#14b8a6", // Stock
