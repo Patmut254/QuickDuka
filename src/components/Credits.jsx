@@ -10,6 +10,7 @@ import {
   roundMoney,
 } from "../hooks/useStock";
 import { PAYMENT_METHODS } from "../paymentMethods";
+import { priceLimits, priceError } from "../stockPrice";
 import { useLang } from "../LangContext";
 import { Toast, useToast } from "./Toast";
 import AlertDialog from "./AlertDialog";
@@ -166,6 +167,16 @@ export default function Credits({ ownerUid }) {
     // Old credits (older than a week) don't take goods out of today's stock
     // unless the user ticks "update my current stock" — see dates.js.
     const touchStock = stockUpdateWanted(form.date, stockChoice);
+
+    // Same price limits as a sale: the credit's total must stay inside the
+    // range (or fixed price) set on the stock item.
+    const badPrice = matchedStock
+      ? priceError(matchedStock, qty, parseFloat(form.totalAmount), t)
+      : null;
+    if (badPrice) {
+      showToast(badPrice, "error");
+      return;
+    }
 
     if (touchStock && matchedStock && matchedStock.quantity != null) {
       const available = Number(matchedStock.quantity);
@@ -756,23 +767,61 @@ export default function Credits({ ownerUid }) {
               </div>
               <div className="field-group">
                 <label>{t.totalAmount}</label>
-                <input
-                  type="number"
-                  placeholder="0.00"
-                  step="0.01"
-                  value={form.totalAmount}
-                  onChange={(e) =>
-                    setForm({ ...form, totalAmount: e.target.value })
-                  }
-                  required
-                  min="1"
-                />
-                {unitPrice != null && Number(form.quantity) > 1 && (
-                  <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 4 }}>
-                    KES {unitPrice.toLocaleString()} × {form.quantity} ={" "}
-                    KES {roundMoney(unitPrice * (parseFloat(form.quantity) || 0)).toLocaleString()}
-                  </div>
-                )}
+                {(() => {
+                  const lim = selectedStock
+                    ? priceLimits(selectedStock, parseFloat(form.quantity) || 1)
+                    : null;
+                  return (
+                    <input
+                      type="number"
+                      placeholder="0.00"
+                      step="0.01"
+                      inputMode="decimal"
+                      value={form.totalAmount}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        setForm({ ...form, totalAmount: v });
+                        // remember the per-unit price typed, so changing the
+                        // quantity afterwards scales from it
+                        if (unitPrice != null && v !== "") {
+                          const q = parseFloat(form.quantity) || 1;
+                          setUnitPrice(roundMoney((parseFloat(v) || 0) / q));
+                        }
+                      }}
+                      required
+                      min={lim ? lim.minTotal : "1"}
+                      max={lim ? lim.maxTotal : undefined}
+                    />
+                  );
+                })()}
+                {(() => {
+                  const q = parseFloat(form.quantity) || 1;
+                  const amt = parseFloat(form.totalAmount) || 0;
+                  const lim = selectedStock ? priceLimits(selectedStock, q) : null;
+                  if (!lim && !(unitPrice != null && q > 1)) return null;
+                  const outside =
+                    lim &&
+                    amt > 0 &&
+                    (amt < lim.minTotal - 0.01 || amt > lim.maxTotal + 0.01);
+                  return (
+                    <div
+                      style={{
+                        fontSize: 12,
+                        marginTop: 4,
+                        color: outside ? "#dc2626" : "var(--muted)",
+                        fontWeight: outside ? 600 : 400,
+                      }}
+                    >
+                      KES {roundMoney(amt / q).toLocaleString()} / unit × {q} ={" "}
+                      KES {amt.toLocaleString()}
+                      {lim &&
+                        ` · ${outside ? "⚠ " : ""}${t.allowedAmount}: ` +
+                          (lim.fixed
+                            ? `KES ${lim.minTotal.toLocaleString()}`
+                            : `KES ${lim.minTotal.toLocaleString()}–${lim.maxTotal.toLocaleString()}`)}
+                    </div>
+                  );
+                })()}
               </div>
               <div className="field-group full-width">
                 <label>{t.creditNotes}</label>

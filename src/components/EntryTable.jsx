@@ -69,7 +69,12 @@ export default function EntryTable({
       showToast && showToast(t.updatedToast, "success");
     } catch (err) {
       console.error("Update failed:", err);
-      showToast && showToast(t.updatedToast ? "Update failed. Please try again." : "Update failed.", "error");
+      showToast &&
+        showToast(
+          err.userMessage ||
+            (t.updatedToast ? "Update failed. Please try again." : "Update failed."),
+          "error",
+        );
     } finally {
       setSaving(false);
     }

@@ -11,6 +11,7 @@ import {
   roundMoney,
 } from "../hooks/useStock";
 import { PAYMENT_METHODS, paymentMethodOptions } from "../paymentMethods";
+import { priceLimits, priceError } from "../stockPrice";
 import EntryDate, { StockUpdateToggle } from "./EntryDate";
 import { localToday, stockUpdateWanted } from "../dates";
 import { useLang } from "../LangContext";
@@ -114,6 +115,18 @@ export default function Sales({ ownerUid, sub }) {
     }));
   };
 
+  // The seller types the amount actually paid. Remember the per-unit price it
+  // implies, so changing the quantity afterwards scales from THAT price rather
+  // than jumping back to the list price.
+  const handleAmountChange = (e) => {
+    const value = e.target.value;
+    const qty = parseFloat(form.quantity) || 1;
+    setForm((f) => ({ ...f, amount: value }));
+    if (unitPrice != null && value !== "") {
+      setUnitPrice(roundMoney((parseFloat(value) || 0) / qty));
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (status !== "idle") return;
@@ -129,6 +142,16 @@ export default function Sales({ ownerUid, sub }) {
 
     // Old sales usually don't touch today's stock count (see dates.js)
     const touchStock = stockUpdateWanted(form.date, stockChoice);
+
+    // The amount must stay inside the price set on the stock item: a range
+    // (min–max) or the single fixed price — never above or below it.
+    const badPrice = matchedStock
+      ? priceError(matchedStock, qty, parseFloat(form.amount), t)
+      : null;
+    if (badPrice) {
+      showToast(badPrice, "error");
+      return;
+    }
 
     // If this sale is against a tracked stock item, make sure there's
     // enough left — and block entirely if it's out of stock.
@@ -183,6 +206,26 @@ export default function Sales({ ownerUid, sub }) {
       setStatus("idle");
       showToast(t.failedSave, "error");
     }
+  };
+
+  // Editing a sale's amount in the table is held to the same price limits as
+  // a new sale (only when the amount actually changed, so old entries can
+  // still have other fields corrected).
+  const handleUpdate = async (id, newData, oldData) => {
+    if (
+      !oldData?.fromCredit && // credit payments are part-payments, not prices
+      Number(newData.amount) !== Number(oldData?.amount)
+    ) {
+      const item = findStockByLabel(stock, newData.description ?? oldData?.description);
+      const qty = Number(newData.quantity ?? oldData?.quantity) || 1;
+      const msg = item ? priceError(item, qty, Number(newData.amount), t) : null;
+      if (msg) {
+        const err = new Error(msg);
+        err.userMessage = msg;
+        throw err;
+      }
+    }
+    return updateItem(id, newData, oldData);
   };
 
   const total = items.reduce((a, b) => a + (Number(b.amount) || 0), 0);
@@ -425,58 +468,55 @@ export default function Sales({ ownerUid, sub }) {
                   </span>
                 )}
               </label>
-              {selectedStock?.priceMode === "range" &&
-              selectedStock.minPrice != null &&
-              selectedStock.maxPrice != null ? (
-                <div>
-                  <input
-                    id="sale-amount"
-                    name="sale-amount"
-                    type="range"
-                    min={selectedStock.minPrice}
-                    max={selectedStock.maxPrice}
-                    step="0.01"
-                    value={unitPrice ?? selectedStock.maxPrice}
-                    onChange={(e) => {
-                      const up = parseFloat(e.target.value);
-                      const qty = parseFloat(form.quantity) || 1;
-                      setUnitPrice(up);
-                      setForm((f) => ({
-                        ...f,
-                        amount: String(roundMoney(up * qty)),
-                      }));
-                    }}
-                    style={{ width: "100%" }}
-                  />
-                  <div style={{ fontWeight: 600, marginTop: 4 }}>
-                    KES {Number(unitPrice ?? selectedStock.maxPrice).toLocaleString()} / unit
-                    {" × "}
-                    {parseFloat(form.quantity) || 1} = KES{" "}
-                    {Number(form.amount || 0).toLocaleString()}
-                  </div>
-                </div>
-              ) : (
-                <>
+              {/* The seller types what the customer actually pays. The amount must
+                  stay inside the price set on the stock item (range or fixed). */}
+              {(() => {
+                const qty = parseFloat(form.quantity) || 0;
+                const lim = selectedStock ? priceLimits(selectedStock, qty || 1) : null;
+                return (
                   <input
                     id="sale-amount"
                     name="sale-amount"
                     type="number"
                     autoComplete="off"
-                    min="0"
+                    inputMode="decimal"
+                    min={lim ? lim.minTotal : "0"}
+                    max={lim ? lim.maxTotal : undefined}
                     step="0.01"
                     placeholder="0.00"
                     value={form.amount}
-                    onChange={(e) => setForm({ ...form, amount: e.target.value })}
+                    onChange={handleAmountChange}
                     required
                   />
-                  {unitPrice != null && Number(form.quantity) > 1 && (
-                    <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 4 }}>
-                      KES {unitPrice.toLocaleString()} × {form.quantity} ={" "}
-                      KES {(unitPrice * (parseFloat(form.quantity) || 0)).toLocaleString()}
-                    </div>
-                  )}
-                </>
-              )}
+                );
+              })()}
+              {(() => {
+                const qty = parseFloat(form.quantity) || 0;
+                const amt = parseFloat(form.amount) || 0;
+                const lim = selectedStock ? priceLimits(selectedStock, qty || 1) : null;
+                if (!lim && !(unitPrice != null && qty > 1)) return null;
+                const perUnit = qty > 0 ? amt / qty : 0;
+                const outside =
+                  lim && amt > 0 && (amt < lim.minTotal - 0.01 || amt > lim.maxTotal + 0.01);
+                return (
+                  <div
+                    style={{
+                      fontSize: 12,
+                      marginTop: 4,
+                      color: outside ? "#dc2626" : "var(--muted)",
+                      fontWeight: outside ? 600 : 400,
+                    }}
+                  >
+                    KES {roundMoney(perUnit).toLocaleString()} / unit × {qty || 1} ={" "}
+                    KES {amt.toLocaleString()}
+                    {lim &&
+                      ` · ${outside ? "⚠ " : ""}${t.allowedAmount}: ` +
+                        (lim.fixed
+                          ? `KES ${lim.minTotal.toLocaleString()}`
+                          : `KES ${lim.minTotal.toLocaleString()}–${lim.maxTotal.toLocaleString()}`)}
+                  </div>
+                );
+              })()}
             </div>
             <div className="field-group">
               <label htmlFor="sale-payment-method">{t.paymentMethod}</label>
@@ -524,7 +564,7 @@ export default function Sales({ ownerUid, sub }) {
         loading={loading}
         columns={columns}
         onDelete={deleteItem}
-        onUpdate={updateItem}
+        onUpdate={handleUpdate}
         showToast={showToast}
         emptyMessage={t.noSales}
       />

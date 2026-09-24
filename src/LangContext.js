@@ -258,6 +258,9 @@ export const T = {
     recordingFor: "Recording for",
     notToday: "not today",
     paymentDate: "Payment date",
+    amountBetween: "Amount must stay between KES {min} and KES {max} (the price set in Stock).",
+    amountExactly: "Amount must be KES {total} (the price set in Stock).",
+    allowedAmount: "Allowed",
     writeOffDate: "Date written off",
     writeOffDateHint:
       "Pick the day this debt was actually written off — it can be earlier than today.",
@@ -452,7 +455,7 @@ export const T = {
       },
       {
         title: "Recording Sales",
-        desc: "Go to Sales and tap New Sale. The date defaults to today — tap the date to open the calendar and pick an earlier day if you are adding an old sale. Pick the item from your stock list. If you sell one product in different sizes (for example Water 0.375 L and Water 0.5 L), pick the size you sold. Enter the quantity (decimals like 0.5 are fine), the customer name and phone (both optional), and how they paid: Cash, M-Pesa, M-Pesa Till, Paybill (bank or business), Pochi la Biashara, Send Money, Airtel Money or Card. The amount fills in from your price list, and the quantity is taken out of your stock automatically.",
+        desc: "Go to Sales and tap New Sale. The date defaults to today — tap the date to open the calendar and pick an earlier day if you are adding an old sale. Pick the item from your stock list. If you sell one product in different sizes (for example Water 0.375 L and Water 0.5 L), pick the size you sold. Enter the quantity (decimals like 0.5 are fine), the customer name and phone (both optional), and how they paid: Cash, M-Pesa, M-Pesa Till, Paybill (bank or business), Pochi la Biashara, Send Money, Airtel Money or Card. The amount fills in from your price list. Type the amount the customer actually pays — it can be lower or higher than the list price, but only within the price range set for that item in Stock (or exactly the fixed price). The quantity is taken out of your stock automatically.",
       },
       {
         title: "Tracking Debts with Credits",
@@ -591,6 +594,10 @@ export const T = {
       {
         q: "Can I add sales or expenses from an earlier date, like last April?",
         a: "Yes. On every form (Sales, Credits, Expenses, Losses, Purchases) tap the Date field to open the calendar and pick the day. Future dates are not allowed. The date stays on your chosen day for the next entry, with a banner reminding you it is not today — tap Today to switch back. Recording a credit payment, a supplier payment or a bad-debt write-off also asks for the day it really happened (it can be earlier than the debt). You can also fix the date of an existing entry with its Edit button in the list. For an entry older than a week, QuickDuka does not change your current stock by default; tick Also update my current stock if it should.",
+      },
+      {
+        q: "Why does it say my amount is outside the allowed price?",
+        a: "Every item in Stock has a selling price: either a range (a minimum and a maximum per unit) or one fixed price. Sales and credits must stay inside it — the allowed total for the quantity you entered is shown under the amount field. Type an amount within that range. To sell at other prices, change the item's price in Stock first.",
       },
     ],
 
@@ -957,6 +964,9 @@ export const T = {
     recordingFor: "Unarekodi kwa tarehe",
     notToday: "si leo",
     paymentDate: "Tarehe ya malipo",
+    amountBetween: "Kiasi lazima kiwe kati ya KES {min} na KES {max} (bei iliyowekwa kwenye Bidhaa).",
+    amountExactly: "Kiasi lazima kiwe KES {total} (bei iliyowekwa kwenye Bidhaa).",
+    allowedAmount: "Kinaruhusiwa",
     writeOffDate: "Tarehe ilipoandikwa kama hasara",
     writeOffDateHint:
       "Chagua siku deni hili lilipoandikwa kama hasara kweli — inaweza kuwa kabla ya leo.",
@@ -1153,7 +1163,7 @@ export const T = {
       },
       {
         title: "Kurekodi Mauzo",
-        desc: "Nenda Mauzo na gonga Mauzo Mapya. Tarehe huwa ya leo — gonga tarehe kufungua kalenda na uchague siku ya awali ukiongeza mauzo ya zamani. Chagua bidhaa kutoka kwenye orodha yako ya bidhaa. Ukiuza bidhaa moja kwa ukubwa tofauti (mfano Maji 0.375 L na Maji 0.5 L), chagua ukubwa uliouza. Weka kiasi (desimali kama 0.5 zinaruhusiwa), jina na simu ya mteja (hiari), kisha chagua njia ya malipo: Fedha Taslimu, M-Pesa, Till ya M-Pesa, Paybill (Benki / Biashara), Pochi la Biashara, Tuma Pesa, Airtel Money au Kadi. Kiasi kinajazwa kutoka kwenye orodha yako ya bei, na bidhaa inapunguzwa dukani moja kwa moja.",
+        desc: "Nenda Mauzo na gonga Mauzo Mapya. Tarehe huwa ya leo — gonga tarehe kufungua kalenda na uchague siku ya awali ukiongeza mauzo ya zamani. Chagua bidhaa kutoka kwenye orodha yako ya bidhaa. Ukiuza bidhaa moja kwa ukubwa tofauti (mfano Maji 0.375 L na Maji 0.5 L), chagua ukubwa uliouza. Weka kiasi (desimali kama 0.5 zinaruhusiwa), jina na simu ya mteja (hiari), kisha chagua njia ya malipo: Fedha Taslimu, M-Pesa, Till ya M-Pesa, Paybill (Benki / Biashara), Pochi la Biashara, Tuma Pesa, Airtel Money au Kadi. Kiasi kinajazwa kutoka kwenye orodha yako ya bei. Andika kiasi anacholipa mteja kweli — kinaweza kuwa chini au juu ya bei ya orodha, lakini ndani ya kiwango cha bei kilichowekwa kwa bidhaa hiyo kwenye Bidhaa tu (au bei maalum kamili). Bidhaa inapunguzwa dukani moja kwa moja.",
       },
       {
         title: "Kufuatilia Madeni kwa Mikopo",
@@ -1292,6 +1302,10 @@ export const T = {
       {
         q: "Naweza kuongeza mauzo au gharama za tarehe ya awali, kama Aprili iliyopita?",
         a: "Ndiyo. Kwenye kila fomu (Mauzo, Mikopo, Gharama, Hasara, Manunuzi) gonga sehemu ya Tarehe kufungua kalenda na uchague siku. Tarehe za baadaye haziruhusiwi. Tarehe inabaki kwenye siku uliyochagua kwa rekodi inayofuata, na kuna ujumbe unaokukumbusha kuwa si leo — gonga Leo kurudi. Kurekodi malipo ya mkopo, malipo ya muuzaji au deni baya pia kunauliza siku ilipotokea kweli (inaweza kuwa kabla ya deni). Unaweza pia kurekebisha tarehe ya rekodi iliyopo kwa kitufe chake cha Hariri kwenye orodha. Kwa rekodi za zaidi ya wiki moja, QuickDuka haibadilishi bidhaa zilizopo dukani kwa chaguo-msingi; weka tiki Sasisha pia bidhaa zilizopo dukani ikiwa inapaswa.",
+      },
+      {
+        q: "Kwa nini inasema kiasi changu kiko nje ya bei inayoruhusiwa?",
+        a: "Kila bidhaa kwenye Bidhaa ina bei ya kuuza: ama kiwango (kiwango cha chini na cha juu kwa kila kimoja) au bei moja maalum. Mauzo na mikopo lazima vibaki ndani yake — jumla inayoruhusiwa kwa kiasi ulichoweka inaonyeshwa chini ya sehemu ya kiasi. Andika kiasi ndani ya kiwango hicho. Ili kuuza kwa bei nyingine, badilisha kwanza bei ya bidhaa kwenye Bidhaa.",
       },
     ],
 

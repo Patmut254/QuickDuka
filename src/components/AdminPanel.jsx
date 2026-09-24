@@ -311,6 +311,7 @@ function ChangePlanControl({ u, onChanged }) {
  * stay visible on a computer, and accounts without the field are unaffected.
  */
 const PHONE_HIDEABLE_TABS = [
+  { id: "dashboard", label: "Dashboard" },
   { id: "sales", label: "Sales" },
   { id: "credits", label: "Credits" },
   { id: "expenses", label: "Expenses" },

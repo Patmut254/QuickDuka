@@ -194,9 +194,9 @@ function AppShell({ user, profile, theme, toggleTheme }) {
   // stay fully available on a computer and are only removed on phone-sized
   // screens. Accounts without the field see every page everywhere.
   const isMobile = useIsMobile();
-  const mobileHidden = (
-    Array.isArray(profile?.mobileHiddenTabs) ? profile.mobileHiddenTabs : []
-  ).filter((id) => id !== "dashboard"); // dashboard is the fallback page
+  const mobileHidden = Array.isArray(profile?.mobileHiddenTabs)
+    ? profile.mobileHiddenTabs
+    : [];
   const isHiddenOnThisDevice = (id) => isMobile && mobileHidden.includes(id);
 
   const handleTabChange = (tab) => {
@@ -223,14 +223,28 @@ function AppShell({ user, profile, theme, toggleTheme }) {
   };
 
   // If a page is hidden on this device (e.g. restored from an old session, or
-  // the phone was rotated into a narrow window), fall back to the dashboard.
+  // the phone was rotated into a narrow window), fall back to the first page
+  // that is still visible.
   useEffect(() => {
     const hidden = Array.isArray(profile?.mobileHiddenTabs)
       ? profile.mobileHiddenTabs
       : [];
-    if (isMobile && hidden.includes(activeTab) && activeTab !== "dashboard") {
-      sessionStorage.setItem("qd-active-tab", "dashboard");
-      setActiveTab("dashboard");
+    if (isMobile && hidden.includes(activeTab)) {
+      // land on the first page that isn't hidden (Dashboard, unless that is
+      // hidden too — then Sales, and so on)
+      const landing =
+        [
+          "dashboard",
+          "sales",
+          "credits",
+          "expenses",
+          "losses",
+          "stock",
+          "reports",
+          "history",
+        ].find((id) => !hidden.includes(id)) || "sales";
+      sessionStorage.setItem("qd-active-tab", landing);
+      setActiveTab(landing);
     }
   }, [isMobile, activeTab, profile?.mobileHiddenTabs]);
 
