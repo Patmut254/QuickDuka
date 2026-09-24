@@ -258,6 +258,11 @@ export const T = {
     recordingFor: "Recording for",
     notToday: "not today",
     paymentDate: "Payment date",
+    writeOffDate: "Date written off",
+    writeOffDateHint:
+      "Pick the day this debt was actually written off — it can be earlier than today.",
+    saveDate: "Save date",
+    stockedDate: "Date stocked",
     paymentDateHint:
       "Pick the day the money was actually paid — it can be earlier than the debt itself.",
     updateStockLabel: "Also update my current stock",
@@ -585,7 +590,7 @@ export const T = {
       },
       {
         q: "Can I add sales or expenses from an earlier date, like last April?",
-        a: "Yes. On every form (Sales, Credits, Expenses, Losses, Purchases) tap the Date field to open the calendar and pick the day. Future dates are not allowed. The date stays on your chosen day for the next entry, with a banner reminding you it is not today — tap Today to switch back. You can also fix the date of an existing entry with its Edit button in the list. For an entry older than a week, QuickDuka does not change your current stock by default; tick Also update my current stock if it should.",
+        a: "Yes. On every form (Sales, Credits, Expenses, Losses, Purchases) tap the Date field to open the calendar and pick the day. Future dates are not allowed. The date stays on your chosen day for the next entry, with a banner reminding you it is not today — tap Today to switch back. Recording a credit payment, a supplier payment or a bad-debt write-off also asks for the day it really happened (it can be earlier than the debt). You can also fix the date of an existing entry with its Edit button in the list. For an entry older than a week, QuickDuka does not change your current stock by default; tick Also update my current stock if it should.",
       },
     ],
 
@@ -952,6 +957,11 @@ export const T = {
     recordingFor: "Unarekodi kwa tarehe",
     notToday: "si leo",
     paymentDate: "Tarehe ya malipo",
+    writeOffDate: "Tarehe ilipoandikwa kama hasara",
+    writeOffDateHint:
+      "Chagua siku deni hili lilipoandikwa kama hasara kweli — inaweza kuwa kabla ya leo.",
+    saveDate: "Hifadhi tarehe",
+    stockedDate: "Tarehe ya kuweka dukani",
     paymentDateHint:
       "Chagua siku pesa zilipolipwa kweli — inaweza kuwa kabla ya deni lenyewe.",
     updateStockLabel: "Sasisha pia bidhaa zilizopo dukani",
@@ -1281,7 +1291,7 @@ export const T = {
       },
       {
         q: "Naweza kuongeza mauzo au gharama za tarehe ya awali, kama Aprili iliyopita?",
-        a: "Ndiyo. Kwenye kila fomu (Mauzo, Mikopo, Gharama, Hasara, Manunuzi) gonga sehemu ya Tarehe kufungua kalenda na uchague siku. Tarehe za baadaye haziruhusiwi. Tarehe inabaki kwenye siku uliyochagua kwa rekodi inayofuata, na kuna ujumbe unaokukumbusha kuwa si leo — gonga Leo kurudi. Unaweza pia kurekebisha tarehe ya rekodi iliyopo kwa kitufe chake cha Hariri kwenye orodha. Kwa rekodi za zaidi ya wiki moja, QuickDuka haibadilishi bidhaa zilizopo dukani kwa chaguo-msingi; weka tiki Sasisha pia bidhaa zilizopo dukani ikiwa inapaswa.",
+        a: "Ndiyo. Kwenye kila fomu (Mauzo, Mikopo, Gharama, Hasara, Manunuzi) gonga sehemu ya Tarehe kufungua kalenda na uchague siku. Tarehe za baadaye haziruhusiwi. Tarehe inabaki kwenye siku uliyochagua kwa rekodi inayofuata, na kuna ujumbe unaokukumbusha kuwa si leo — gonga Leo kurudi. Kurekodi malipo ya mkopo, malipo ya muuzaji au deni baya pia kunauliza siku ilipotokea kweli (inaweza kuwa kabla ya deni). Unaweza pia kurekebisha tarehe ya rekodi iliyopo kwa kitufe chake cha Hariri kwenye orodha. Kwa rekodi za zaidi ya wiki moja, QuickDuka haibadilishi bidhaa zilizopo dukani kwa chaguo-msingi; weka tiki Sasisha pia bidhaa zilizopo dukani ikiwa inapaswa.",
       },
     ],
 

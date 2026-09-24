@@ -59,6 +59,7 @@ export default function Credits({ ownerUid }) {
   const {
     items: losses,
     addItem: addLoss,
+    updateItem: updateLoss,
     deleteItem: deleteLoss,
   } = useCollection("losses", ownerUid ? { ownerUid } : undefined);
   const stock = useStock();
@@ -88,6 +89,9 @@ export default function Credits({ ownerUid }) {
   const [payNote, setPayNote] = useState("");
   const [payMethod, setPayMethod] = useState("cash");
   const [payDate, setPayDate] = useState(localToday);
+  // Day a debt was written off (asked for when writing off; editable later)
+  const [badDebtDate, setBadDebtDate] = useState(localToday);
+  const [closeDateEdit, setCloseDateEdit] = useState("");
   // Stock item picked for this credit (so it can be deducted on save) and its
   // per-unit price — kept apart from form.totalAmount so total = unit × qty
   // stays right as the quantity changes. Same idea as the Sales form.
@@ -314,7 +318,7 @@ export default function Credits({ ownerUid }) {
       let lossId = null;
       if (unpaid > 0) {
         const lossRef = await addLoss({
-          date: today(),
+          date: badDebtDate || today(),
           item:
             `${t.badDebtWrittenOff || "Bad debt written off"} — ${credit.customer}` +
             (credit.itemTaken ? ` (${credit.itemTaken})` : ""),
@@ -339,7 +343,7 @@ export default function Credits({ ownerUid }) {
 
       await updateItem(credit.id, {
         status: "bad_debt",
-        closedDate: today(),
+        closedDate: badDebtDate || today(),
         badDebtAmount: unpaid,
         lossId,
       });
@@ -450,6 +454,26 @@ export default function Credits({ ownerUid }) {
       }
       showToast(sale ? t.paymentUpdatedToast : t.salesEntryMissing, sale ? "success" : "error");
       setEditIdx(null);
+    } catch (err) {
+      console.error(err);
+      showToast(t.failedSave, "error");
+    }
+    setManageBusy(false);
+  };
+
+  // Correct the day a debt was written off (credit's closedDate + its Losses entry)
+  const saveWriteOffDate = async () => {
+    const credit = managed;
+    if (!credit || manageBusy || !closeDateEdit) return;
+    setManageBusy(true);
+    try {
+      const loss =
+        (credit.lossId && losses.find((l) => l.id === credit.lossId)) ||
+        losses.find((l) => l.fromCredit === credit.id) ||
+        null;
+      await updateItem(credit.id, { closedDate: closeDateEdit }, credit);
+      if (loss) await updateLoss(loss.id, { date: closeDateEdit }, loss);
+      showToast(t.paymentUpdatedToast);
     } catch (err) {
       console.error(err);
       showToast(t.failedSave, "error");
@@ -1202,7 +1226,10 @@ export default function Credits({ ownerUid }) {
                           color: "var(--red)",
                           borderColor: "var(--red)",
                         }}
-                        onClick={() => setBadDebtTarget(credit)}
+                        onClick={() => {
+                          setBadDebtDate(localToday());
+                          setBadDebtTarget(credit);
+                        }}
                       >
                         <FontAwesomeIcon icon={faThumbsDown} /> {t.badDebt}
                       </button>
@@ -1214,6 +1241,7 @@ export default function Credits({ ownerUid }) {
                       style={{ fontSize: 12, padding: "7px 12px" }}
                       onClick={() => {
                         setManageId(credit.id);
+                        setCloseDateEdit(credit.closedDate || localToday());
                         setEditIdx(null);
                         setConfirmIdx(null);
                       }}
@@ -1271,6 +1299,22 @@ export default function Credits({ ownerUid }) {
 
             {managed.status === "bad_debt" && (
               <div style={{ margin: "12px 0" }}>
+                <EntryDate
+                  id="edit-writeoff-date"
+                  label={t.writeOffDate}
+                  value={closeDateEdit}
+                  onChange={setCloseDateEdit}
+                  min={managed.dateIssued || undefined}
+                  plain
+                />
+                <button
+                  className="btn-secondary"
+                  style={{ fontSize: 12, padding: "6px 12px", margin: "6px 0 14px" }}
+                  onClick={saveWriteOffDate}
+                  disabled={manageBusy || closeDateEdit === managed.closedDate}
+                >
+                  {t.saveDate}
+                </button>
                 <p style={{ fontSize: 13, color: "var(--muted)", marginBottom: 10 }}>
                   {t.reopenDebtHint}
                 </p>
@@ -1439,35 +1483,53 @@ export default function Credits({ ownerUid }) {
         </div>
       )}
 
-      {/* Bad Debt confirm dialog */}
-      <AlertDialog
-        open={!!badDebtTarget}
-        danger
-        title={t.writeOff}
-        message={
-          badDebtTarget
-            ? (() => {
-                const unpaid = Math.max(
-                  0,
-                  (badDebtTarget.totalAmount || 0) -
-                    (badDebtTarget.paidAmount || 0),
-                );
-                const alreadyHad = (badDebtTarget.paidAmount || 0) > 0;
-                return (
-                  `KES ${unpaid.toLocaleString()} (${badDebtTarget.customer}) → ${t.losses || "Losses"}.` +
-                  (alreadyHad
-                    ? ` KES ${badDebtTarget.paidAmount.toLocaleString()} ${t.staysInSales || "already collected stays in Sales"}.`
-                    : "") +
-                  ` ${t.badDebtCanReopen}`
-                );
-              })()
-            : ""
-        }
-        confirmLabel={t.yesWriteOff}
-        cancelLabel={t.cancel}
-        onCancel={() => setBadDebtTarget(null)}
-        onConfirm={confirmBadDebt}
-      />
+      {/* Bad Debt: write off, with the day it actually happened */}
+      {badDebtTarget &&
+        (() => {
+          const unpaid = Math.max(
+            0,
+            (badDebtTarget.totalAmount || 0) - (badDebtTarget.paidAmount || 0),
+          );
+          const alreadyHad = (badDebtTarget.paidAmount || 0) > 0;
+          return (
+            <div className="modal-overlay" onClick={() => setBadDebtTarget(null)}>
+              <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+                <h3>⚠️ {t.writeOff}</h3>
+                <p style={{ fontSize: 13, margin: "8px 0 14px" }}>
+                  {`KES ${unpaid.toLocaleString()} (${badDebtTarget.customer}) → ${t.losses || "Losses"}.` +
+                    (alreadyHad
+                      ? ` KES ${badDebtTarget.paidAmount.toLocaleString()} ${t.staysInSales || "already collected stays in Sales"}.`
+                      : "") +
+                    ` ${t.badDebtCanReopen}`}
+                </p>
+                <EntryDate
+                  id="bad-debt-date"
+                  label={t.writeOffDate}
+                  value={badDebtDate}
+                  onChange={setBadDebtDate}
+                  min={badDebtTarget.dateIssued || undefined}
+                  plain
+                  hint={t.writeOffDateHint}
+                />
+                <div className="modal-actions">
+                  <button
+                    className="btn-secondary"
+                    onClick={() => setBadDebtTarget(null)}
+                  >
+                    {t.cancel}
+                  </button>
+                  <button
+                    className="btn-danger"
+                    onClick={confirmBadDebt}
+                    disabled={!badDebtDate}
+                  >
+                    {t.yesWriteOff}
+                  </button>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
 
       {/* Delete confirm dialog */}
       <AlertDialog

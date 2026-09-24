@@ -98,6 +98,7 @@ function StockList({ sub, ownerUid }) {
     unit: "",
     quantity: "",
     notes: "",
+    date: localToday(), // day the opening quantity was stocked (purchase date)
   };
   const [form, setForm] = useState(emptyForm);
   const [showForm, setShowForm] = useState(false);
@@ -155,7 +156,7 @@ function StockList({ sub, ownerUid }) {
       // item never shows up on the Purchases page.
       if (qty > 0) {
         await addPurchase({
-          date: new Date().toISOString().split("T")[0],
+          date: form.date || localToday(),
           item: stockLabel({ name: form.name.trim(), variant: form.variant.trim() }),
           supplier: "",
           phone: "",
@@ -221,7 +222,7 @@ function StockList({ sub, ownerUid }) {
 
       if (delta > 0) {
         await addPurchase({
-          date: new Date().toISOString().split("T")[0],
+          date: editForm.stockDate || localToday(),
           item: stockLabel({
             name: editForm.name.trim(),
             variant: editForm.variant?.trim() || "",
@@ -578,6 +579,15 @@ function StockList({ sub, ownerUid }) {
                 required
               />
             </div>
+            {Number(form.quantity) > 0 && (
+              <EntryDate
+                id="stock-date"
+                label={t.stockedDate}
+                value={form.date}
+                onChange={(d) => setForm((f) => ({ ...f, date: d }))}
+                plain
+              />
+            )}
             <div className="field-group full-width">
               <label htmlFor="stock-notes">{t.notes}</label>
               <input
@@ -791,6 +801,7 @@ function StockList({ sub, ownerUid }) {
                               unit: item.unit || "",
                               quantity: item.quantity ?? "",
                               notes: item.notes || "",
+                              stockDate: localToday(),
                             });
                           }}
                         >
@@ -1110,6 +1121,16 @@ function StockList({ sub, ownerUid }) {
                   required
                 />
               </div>
+              {editTarget &&
+                Number(editForm.quantity) > Number(editTarget.quantity || 0) && (
+                  <EntryDate
+                    id="edit-stock-date"
+                    label={t.stockedDate}
+                    value={editForm.stockDate || localToday()}
+                    onChange={(d) => setEditForm((f) => ({ ...f, stockDate: d }))}
+                    plain
+                  />
+                )}
               <div className="field-group">
                 <label htmlFor="edit-stock-notes">{t.notes}</label>
                 <input
