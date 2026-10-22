@@ -578,7 +578,7 @@ return (
           gap: 6,
         }}
       >
-        ⬇️ Download File (CSV)
+        Download File (CSV)
       </button>
     </div>
 
@@ -632,7 +632,7 @@ return (
         <div
           className="report-card"
           key={c.label}
-          style={{ borderLeft: `3px solid ${c.color}` }}
+          
         >
           <div className="rc-label">{c.label}</div>
           <div className="rc-value" style={{ color: c.color }}>
@@ -652,7 +652,7 @@ return (
             : period === "weekly"
               ? "Weekly Performance"
               : period === "yearly"
-                ? `${selectedYear} — Monthly Breakdown`
+                ? `${selectedYear}, Monthly Breakdown`
                 : t.monthlyComparison || "Monthly Comparison (6 months)"}
         </h3>
         <ResponsiveContainer width="100%" height={250}>
@@ -761,7 +761,7 @@ return (
       {/* Expense pie chart */}
       <div className="chart-card">
         <h3>
-          {t.expenseBreakdown || "Expense Breakdown"} — {periodLabel}
+          {t.expenseBreakdown || "Expense Breakdown"}: {periodLabel}
         </h3>
         {expenseByCat.length === 0 ? (
           <div className="empty-state">
@@ -801,7 +801,7 @@ return (
       {/* Payment method breakdown */}
       <div className="chart-card">
         <h3>
-          {t.paymentBreakdown || "Payments by Method"} — {periodLabel}
+          {t.paymentBreakdown || "Payments by Method"}: {periodLabel}
         </h3>
         {paymentByMethod.length === 0 ? (
           <div className="empty-state">No sales recorded for this period.</div>
@@ -838,7 +838,7 @@ return (
 
       {/* Top selling items */}
       <div className="chart-card">
-        <h3>Top Selling Items — {periodLabel}</h3>
+        <h3>Top Selling Items: {periodLabel}</h3>
         {topItems.length === 0 ? (
           <div className="empty-state">No sales recorded for this period.</div>
         ) : (
@@ -879,7 +879,7 @@ return (
       {/* Sales by location/branch — "which place sold better" */}
       {salesByLocation.length > 0 && (
         <div className="chart-card">
-          <h3>📍 Sales by Location — {periodLabel}</h3>
+          <h3>Sales by Location: {periodLabel}</h3>
           {bestLocation && salesByLocation.length > 1 && (
             <div
               style={{
@@ -892,7 +892,7 @@ return (
                 fontWeight: 600,
               }}
             >
-              🏆 Best performing: {bestLocation.name} — KES{" "}
+              Best performing: {bestLocation.name}: KES{" "}
               {bestLocation.value.toLocaleString()}
             </div>
           )}
@@ -938,9 +938,9 @@ return (
     <div className="profit-indicator">
       <div className={`profit-badge ${mProfit >= 0 ? "profit" : "loss"}`}>
         {mProfit >= 0
-          ? "✅ " + (t.profitable || "PROFITABLE")
-          : "⚠️ " + (t.loss || "LOSS")}{" "}
-        — {periodLabel}
+          ? (t.profitable || "PROFITABLE")
+          : (t.loss || "LOSS")}{" "}
+({periodLabel})
         <span>
           {" "}
           ·{" "}
@@ -960,7 +960,7 @@ return (
           marginBottom: 12,
         }}
       >
-        <h3 style={{ margin: 0 }}>All Transactions — {periodLabel}</h3>
+        <h3 style={{ margin: 0 }}>All Transactions: {periodLabel}</h3>
         <span style={{ fontSize: 12, color: "var(--muted, #9ca3af)" }}>
           {allTransactions.length} record
           {allTransactions.length !== 1 ? "s" : ""}
@@ -1027,7 +1027,7 @@ return (
                       whiteSpace: "nowrap",
                     }}
                   >
-                    {item.date || "—"}
+                    {item.date || ""}
                   </td>
                   <td
                     style={{
@@ -1039,7 +1039,7 @@ return (
                       whiteSpace: "nowrap",
                     }}
                   >
-                    {item.description || item.item || item.category || "—"}
+                    {item.description || item.item || item.category || ""}
                   </td>
                   <td
                     style={{
@@ -1050,7 +1050,7 @@ return (
                   >
                     {item.quantity != null && item.quantity !== ""
                       ? Number(item.quantity).toLocaleString()
-                      : "—"}
+                      : ""}
                   </td>
                   <td
                     style={{
@@ -1062,8 +1062,8 @@ return (
                     {item._type === "sale"
                       ? t.paymentMethods?.[item.paymentMethod] ||
                         item.paymentMethod ||
-                        "—"
-                      : "—"}
+                        ""
+                      : ""}
                   </td>
                   <td
                     style={{

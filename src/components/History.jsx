@@ -12,6 +12,7 @@ import { useCollection } from "../hooks/useCollection";
 import { Toast, useToast } from "./Toast";
 import AlertDialog from "./AlertDialog";
 import { useLang } from "../LangContext";
+import { Trash2 } from "lucide-react";
 
 const ACTION_COLORS = {
   CREATE: {
@@ -210,7 +211,7 @@ export default function History() {
             disabled={clearing}
             className="btn-danger"
           >
-            {clearing ? t.clearing : "🗑 " + t.clearHistory}
+            {clearing ? t.clearing : t.clearHistory}
           </button>
         </div>
       </div>
@@ -282,7 +283,7 @@ export default function History() {
                     onClick={() => deleteLog(log.id)}
                     title="Delete this entry"
                   >
-                    🗑
+                    <Trash2 size={16} strokeWidth={1.75} aria-hidden="true" />
                   </button>
                 </div>
               </div>

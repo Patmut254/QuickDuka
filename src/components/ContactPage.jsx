@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { FontAwesomeIcon } from "./Icon";
 import { faWhatsapp } from "@fortawesome/free-brands-svg-icons";
 import {
   faEnvelope, faHeadset, faClock, faMapMarkerAlt, faPaperPlane,

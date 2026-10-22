@@ -14,6 +14,8 @@ import EntryTable from "./EntryTable";
 import EntryDate, { StockUpdateToggle } from "./EntryDate";
 import { localToday, stockUpdateWanted } from "../dates";
 import { Toast, useToast } from "./Toast";
+import ItemPicker from "./ItemPicker";
+import { stockOptions } from "../stockOptions";
 
 const todayStr = localToday; // local date, not UTC
 
@@ -358,7 +360,7 @@ export default function Purchases({ ownerUid }) {
             (p) =>
               `${p.date}: KES ${Number(p.amount).toLocaleString()}` +
               (p.method ? ` (${t.paymentMethods?.[p.method] || p.method})` : "") +
-              (p.note ? ` — ${p.note}` : ""),
+              (p.note ? `: ${p.note}` : ""),
           )
           .join("\n");
         return (
@@ -401,7 +403,7 @@ export default function Purchases({ ownerUid }) {
         if (bal <= 0)
           return (
             <span style={{ fontSize: 12, color: "var(--green, #22c55e)" }}>
-              ✓ {t.settled}
+              {t.settled}
             </span>
           );
         return (
@@ -455,7 +457,7 @@ export default function Purchases({ ownerUid }) {
             setStatus("idle");
           }}
         >
-          {showForm ? `✕ ${t.cancel}` : `+ ${t.newPurchase}`}
+          {showForm ? `${t.cancel}` : `+ ${t.newPurchase}`}
         </button>
       </div>
 
@@ -472,7 +474,7 @@ export default function Purchases({ ownerUid }) {
             color: overdueCount > 0 ? "#ef4444" : "#b45309",
           }}
         >
-          ⏰ {t.supplierPaymentsDue}:{" "}
+          {t.supplierPaymentsDue}:{" "}
           {overdueCount > 0 && `${overdueCount} ${t.overdueLabel.toLowerCase()}`}
           {overdueCount > 0 && soonCount > 0 && " · "}
           {soonCount > 0 && `${soonCount} ${t.dueSoon.toLowerCase()}`}
@@ -481,7 +483,7 @@ export default function Purchases({ ownerUid }) {
 
       {showForm && (
         <form className="entry-form" onSubmit={handleSubmit}>
-          <h3>🛒 {t.recordPurchase}</h3>
+          <h3>{t.recordPurchase}</h3>
           <div className="form-grid">
             <EntryDate
               id="purchase-date"
@@ -498,31 +500,21 @@ export default function Purchases({ ownerUid }) {
                 onChange={setStockChoice}
               />
             )}
-            {stock.length > 0 && (
-              <div className="field-group">
-                <label>{t.pickStock}</label>
-                <select onChange={handleStockSelect} value={selectedStockId}>
-                  <option value="">{t.selectItem}</option>
-                  {stock.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {stockLabel(c)}
-                      {c.buyPrice != null
-                        ? ` — KES ${Number(c.buyPrice).toLocaleString()}${c.unit ? `/${c.unit}` : ""}`
-                        : ""}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
-            <div className="field-group">
-              <label>{t.item} *</label>
-              <input
-                placeholder={t.itemPh}
-                value={form.item}
-                onChange={(e) => setForm({ ...form, item: e.target.value })}
-                required
-              />
-            </div>
+            <ItemPicker
+              id="purchase-item"
+              label={t.item}
+              required
+              t={t}
+              customTag={t.newItemTag || "New, not in stock list"}
+              options={stockOptions(stock, { labelFn: stockLabel, priceKey: "buyPrice", t })}
+              selectedValue={selectedStockId}
+              text={form.item}
+              onPick={(v) => handleStockSelect({ target: { value: v } })}
+              onCustom={(txt) => {
+                handleStockSelect({ target: { value: "" } });
+                setForm((f) => ({ ...f, item: txt }));
+              }}
+            />
             <div className="field-group">
               <label>{t.supplier}</label>
               <input
@@ -698,7 +690,7 @@ export default function Purchases({ ownerUid }) {
                   <div style={{ fontSize: 12, color: "var(--muted)", margin: "10px 0" }}>
                     {payTarget.payments.map((p, i) => (
                       <div key={i}>
-                        KES {Number(p.amount).toLocaleString()} — {p.date}
+                        KES {Number(p.amount).toLocaleString()}: {p.date}
                         {p.method ? ` · ${t.paymentMethods?.[p.method] || p.method}` : ""}
                         {p.note ? ` (${p.note})` : ""}
                       </div>

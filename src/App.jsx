@@ -18,7 +18,7 @@ import {
 } from "firebase/firestore";
 import { useUserProfile } from "./hooks/useUserProfile";
 import { sendLoginSuccessEmail } from "./emailService";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { FontAwesomeIcon } from "./components/Icon";
 import {
   faChartLine,
   faMoneyBillTrendUp,
@@ -162,7 +162,7 @@ function OnlineStatus() {
         letterSpacing: ".2px",
       }}
     >
-      ⚡ Offline — your records are saved on this device and will sync when
+      Offline, your records are saved on this device and will sync when
       internet returns
     </div>
   );
@@ -446,7 +446,7 @@ function AppShell({ user, profile, theme, toggleTheme }) {
             onClick={toggleLang}
             title="Switch language / Badilisha lugha"
           >
-            {lang === "en" ? "🇰🇪 Swahili" : "🇬🇧 English"}
+            {lang === "en" ? "Swahili" : "English"}
           </button>
 
           <button className="logout-btn" onClick={() => signOut(auth)}>
@@ -504,10 +504,18 @@ function AppShell({ user, profile, theme, toggleTheme }) {
                 onClick={() => handleTabChange("profile")}
                 title={t.profile}
               >
-                <FontAwesomeIcon
-                  icon={faCircleUser}
-                  className="user-badge-icon-mobile"
-                />
+                {profile?.photoURL ? (
+                  <img
+                    src={profile.photoURL}
+                    alt=""
+                    className="user-badge-photo"
+                  />
+                ) : (
+                  <FontAwesomeIcon
+                    icon={faCircleUser}
+                    className="user-badge-icon-mobile"
+                  />
+                )}
                 <span className="user-badge-name">
                   {profile?.ownerName || profile?.businessName || user.email}
                 </span>
@@ -736,7 +744,7 @@ export default function App() {
                     fontSize: 13,
                   }}
                 >
-                  🔐 Admin Access
+                  Admin Access
                 </p>
               </div>
               <form onSubmit={handleLogin} className="login-form" noValidate>
@@ -998,7 +1006,7 @@ export default function App() {
                   }}
                   onClick={() => setView("referrer")}
                 >
-                  🤝 Register as a Referrer
+                  Register as a Referrer
                 </button>
               </>
             )}

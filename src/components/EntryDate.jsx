@@ -82,7 +82,7 @@ export default function EntryDate({
             padding: "4px 8px",
           }}
         >
-          📅 {t.recordingFor} {prettyDate(value)} — {t.notToday}
+          {t.recordingFor} {prettyDate(value)}: {t.notToday}
         </div>
       )}
     </div>

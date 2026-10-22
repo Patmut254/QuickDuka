@@ -2,6 +2,7 @@
 /* eslint-disable react-refresh/only-export-components */
 import { useEffect, useState, useRef } from "react";
 import { createPortal } from "react-dom";
+import { CircleCheck, Trash2, CircleX } from "lucide-react";
 
 export function useToast() {
   const [toast, setToast] = useState(null);
@@ -28,11 +29,12 @@ export function Toast({ toast }) {
 
   if (!show || !toast) return null;
 
-  const icons = { success: "✅", delete: "🗑️", error: "❌" };
+  const icons = { success: CircleCheck, delete: Trash2, error: CircleX };
+  const ToastIcon = icons[toast.type] || CircleCheck;
 
   return createPortal(
     <div className={"toast toast-" + (toast.type || "success")}>
-      <span className="toast-icon">{icons[toast.type] || "✅"}</span>
+      <span className="toast-icon"><ToastIcon size={17} strokeWidth={1.75} aria-hidden="true" /></span>
       <span>{toast.message}</span>
     </div>,
     document.body,

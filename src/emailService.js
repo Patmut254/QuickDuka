@@ -53,7 +53,7 @@ async function sendEmail(templateKey, params) {
   const templateId = TEMPLATES[templateKey];
   if (!SERVICE_ID || !PUBLIC_KEY || !templateId) {
     console.warn(
-      `[emailService] "${templateKey}" email skipped — EmailJS isn't configured yet (see src/emailService.js for setup steps).`,
+      `[emailService] "${templateKey}" email skipped, EmailJS isn't configured yet (see src/emailService.js for setup steps).`,
     );
     return { skipped: true };
   }
@@ -73,8 +73,8 @@ export function sendReferrerAcceptedEmail({ toEmail, toName }) {
   return sendEmail("referrerAccepted", {
     to_email: toEmail,
     to_name: toName || "there",
-    title: "Your referrer application was accepted 🎉",
-    message: `Hi ${toName || "there"}, great news — your QuickDuka referrer application has been approved. You can now start referring businesses and earning commission.`,
+    title: "Your referrer application was accepted",
+    message: `Hi ${toName || "there"}, great news, your QuickDuka referrer application has been approved. You can now start referring businesses and earning commission.`,
   });
 }
 
@@ -93,7 +93,7 @@ export function sendReferrerPaidEmail({ toEmail, toName, amount }) {
   return sendEmail("referrerPaid", {
     to_email: toEmail,
     to_name: toName || "there",
-    title: "You've been paid — QuickDuka referrals",
+    title: "You've been paid, QuickDuka referrals",
     message: `Hi ${toName || "there"}, KES ${Number(amount || 0).toLocaleString()} has just been paid out to you for your referrals. Thanks for partnering with QuickDuka!`,
   });
 }

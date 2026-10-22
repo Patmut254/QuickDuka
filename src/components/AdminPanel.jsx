@@ -35,7 +35,7 @@ import {
   sendAccountSuspendedEmail,
   sendAccountDeletedEmail,
 } from "../emailService";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { FontAwesomeIcon } from "./Icon";
 import {
   faUsers,
   faCircleCheck,
@@ -75,6 +75,7 @@ import { Toast, useToast } from "./Toast";
 import { kenyaCounties } from "../data/kenyaLocations";
 import { PLANS, PLAN_ORDER, getPlan } from "../subscription";
 import { PlanBadge } from "./FeatureGate";
+import SearchBar from "./SearchBar";
 
 const ADMIN_EMAIL = "anitapatrick025@gmail.com";
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "";
@@ -205,7 +206,7 @@ async function activateTrialAdmin(u, planId, months = 1) {
     plan: planId,
     months,
     newExpiry: Timestamp.fromDate(expiry),
-    note: `Trial/manual activation by admin — ${planId} plan, ${months} month(s)`,
+    note: `Trial/manual activation by admin: ${planId} plan, ${months} month(s)`,
     createdAt: serverTimestamp(),
   });
   return expiry;
@@ -282,7 +283,7 @@ function ChangePlanControl({ u, onChanged }) {
       >
         {PLAN_ORDER.map((id) => (
           <option key={id} value={id}>
-            {PLANS[id].name} — KES {PLANS[id].price}/mo
+            {PLANS[id].name}: KES {PLANS[id].price}/mo
           </option>
         ))}
       </select>
@@ -577,7 +578,7 @@ function LinkExistingUserModal({ onClose, onSuccess }) {
       );
     if (!/^[A-Za-z0-9]{20,40}$/.test(uid))
       return setErrMsg(
-        "That doesn't look like a valid Firebase UID — double-check you copied the whole thing.",
+        "That doesn't look like a valid Firebase UID, double-check you copied the whole thing.",
       );
     if (!form.businessName.trim())
       return setErrMsg("Business name is required.");
@@ -628,7 +629,7 @@ function LinkExistingUserModal({ onClose, onSuccess }) {
         type: "admin_extension",
         months,
         newExpiry: Timestamp.fromDate(expiry),
-        note: `Profile linked to existing Auth account by admin — ${months} month${months !== 1 ? "s" : ""}`,
+        note: `Profile linked to existing Auth account by admin: ${months} month${months !== 1 ? "s" : ""}`,
         createdAt: serverTimestamp(),
       });
 
@@ -680,7 +681,7 @@ function LinkExistingUserModal({ onClose, onSuccess }) {
           >
             For accounts already in Firebase Authentication that have no profile
             here yet. Copy the UID from Firebase Console → Authentication →
-            Users, paste it below — this does <strong>not</strong> create a new
+            Users, paste it below, this does <strong>not</strong> create a new
             login, it just fills in their missing profile.
           </p>
 
@@ -798,7 +799,7 @@ function LinkExistingUserModal({ onClose, onSuccess }) {
               >
                 {PLAN_ORDER.map((id) => (
                   <option key={id} value={id}>
-                    {PLANS[id].name} — KES {PLANS[id].price.toLocaleString()}/mo
+                    {PLANS[id].name}: KES {PLANS[id].price.toLocaleString()}/mo
                   </option>
                 ))}
               </select>
@@ -966,7 +967,7 @@ function AddUserModal({ onClose, onSuccess }) {
         type: "admin_extension",
         months,
         newExpiry: Timestamp.fromDate(expiry),
-        note: `Account created by admin — ${months} month${months !== 1 ? "s" : ""}`,
+        note: `Account created by admin: ${months} month${months !== 1 ? "s" : ""}`,
         createdAt: serverTimestamp(),
       });
 
@@ -1167,7 +1168,7 @@ function AddUserModal({ onClose, onSuccess }) {
                 >
                   {PLAN_ORDER.map((id) => (
                     <option key={id} value={id}>
-                      {PLANS[id].name} — KES {PLANS[id].price.toLocaleString()}
+                      {PLANS[id].name}: KES {PLANS[id].price.toLocaleString()}
                       /mo
                     </option>
                   ))}
@@ -1289,7 +1290,7 @@ function DeleteUserModal({ user, onClose, onDeleted }) {
       } catch (authErr) {
         console.error("Auth account deletion failed:", authErr);
         onDeleted?.(
-          `"${user.businessName || user.email}" data removed, but the Auth account couldn't be deleted (${authErr.message}). It's locked out either way — retry later to fully clean it up.`,
+          `"${user.businessName || user.email}" data removed, but the Auth account couldn't be deleted (${authErr.message}). It's locked out either way, retry later to fully clean it up.`,
         );
         onClose();
         return;
@@ -1409,6 +1410,7 @@ export default function AdminPanel() {
           setFetchError(null);
           const allUsers = snap.docs
             .map((d) => ({ id: d.id, ...d.data() }))
+            .filter((u) => u.role !== "admin" && u.email !== ADMIN_EMAIL)
             .sort((a, b) => {
               const aT =
                 a.createdAt?.toDate?.()?.getTime?.() ??
@@ -1428,6 +1430,7 @@ export default function AdminPanel() {
             const snap = await getDocs(collection(db, "users"));
             const allUsers = snap.docs
               .map((d) => ({ id: d.id, ...d.data() }))
+              .filter((u) => u.role !== "admin" && u.email !== ADMIN_EMAIL)
               .sort((a, b) => {
                 const aT = a.createdAt?.toDate?.()?.getTime?.() ?? 0;
                 const bT = b.createdAt?.toDate?.()?.getTime?.() ?? 0;
@@ -1435,7 +1438,7 @@ export default function AdminPanel() {
               });
             setUsers(allUsers);
             setFetchError(
-              "Live updates unavailable — showing snapshot. Check Firestore rules.",
+              "Live updates unavailable, showing snapshot. Check Firestore rules.",
             );
           } catch (fallbackErr) {
             console.error(
@@ -1549,15 +1552,15 @@ export default function AdminPanel() {
 
   const expiryLabel = (u) => {
     const d = u.subscriptionExpiry?.toDate?.();
-    if (!d) return "—";
+    if (!d) return "";
     const diff = Math.ceil((d - new Date()) / (1000 * 60 * 60 * 24));
     const str = d.toLocaleDateString("en-KE", {
       day: "2-digit",
       month: "short",
       year: "numeric",
     });
-    if (diff > 0 && diff <= 7) return `${str} ⚠️ (${diff}d left)`;
-    if (diff <= 0) return `${str} ❌`;
+    if (diff > 0 && diff <= 7) return `${str} (${diff}d left)`;
+    if (diff <= 0) return `${str}`;
     return str;
   };
 
@@ -1670,6 +1673,7 @@ export default function AdminPanel() {
                 const snap = await getDocs(collection(db, "users"));
                 const allUsers = snap.docs
                   .map((d) => ({ id: d.id, ...d.data() }))
+                  .filter((u) => u.role !== "admin" && u.email !== ADMIN_EMAIL)
                   .sort((a, b) => {
                     const aT = a.createdAt?.toDate?.()?.getTime?.() ?? 0;
                     const bT = b.createdAt?.toDate?.()?.getTime?.() ?? 0;
@@ -1683,7 +1687,7 @@ export default function AdminPanel() {
             }}
             title="Manually refresh user list"
           >
-            ↻ Refresh
+            Refresh
           </button>
           <button
             className="admin-add-btn"
@@ -1707,9 +1711,9 @@ export default function AdminPanel() {
                   : `Synced ${synced} users to Realtime Database`,
               );
             }}
-            title="Mirror every existing Firestore user profile into Realtime Database — safe to run repeatedly"
+            title="Mirror every existing Firestore user profile into Realtime Database, safe to run repeatedly"
           >
-            {rtdbSyncing ? "Syncing…" : "⇅ Sync to RTDB"}
+            {rtdbSyncing ? "Syncing…" : "Sync to RTDB"}
           </button>
           <button
             className="admin-add-btn"
@@ -1763,11 +1767,10 @@ export default function AdminPanel() {
           <div
             key={s.label}
             className="admin-stat-tile"
-            style={{ borderTop: `4px solid ${s.color}` }}
           >
             <div
               className="ast-icon"
-              style={{ color: s.color, background: `${s.color}18` }}
+              style={{ color: s.color }}
             >
               <FontAwesomeIcon icon={s.icon} />
             </div>
@@ -1835,18 +1838,14 @@ export default function AdminPanel() {
                 </button>
               ))}
             </div>
-            <div className="admin-search-wrap">
-              <FontAwesomeIcon
-                icon={faMagnifyingGlass}
-                className="admin-search-icon"
-              />
-              <input
-                className="admin-search-input"
-                placeholder="Search name, email, phone, county..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </div>
+            <SearchBar
+              id="admin-user-search"
+              className="admin-searchbar"
+              label="Search users"
+              placeholder="Search name, email, phone, county..."
+              value={search}
+              onChange={setSearch}
+            />
           </div>
 
           {loading ? (
@@ -1949,7 +1948,7 @@ export default function AdminPanel() {
                               <FontAwesomeIcon icon={faStore} />
                               <span>
                                 {u.shopNumber}
-                                {u.buildingName ? ` — ${u.buildingName}` : ""}
+                                {u.buildingName ? `: ${u.buildingName}` : ""}
                               </span>
                             </div>
                           )}
@@ -1987,7 +1986,7 @@ export default function AdminPanel() {
                               u={u}
                               onActivated={(planId, months) => {
                                 showToast(
-                                  `Trial activated: ${getPlan(planId).name} plan for ${months} month(s) — ${u.businessName || u.email}`,
+                                  `Trial activated: ${getPlan(planId).name} plan for ${months} month(s): ${u.businessName || u.email}`,
                                 );
                               }}
                             />
@@ -2098,7 +2097,7 @@ export default function AdminPanel() {
                                         color: "var(--text)",
                                       }}
                                     >
-                                      {s.ownerName || "—"}
+                                      {s.ownerName || ""}
                                     </div>
                                     <div
                                       style={{
@@ -2229,7 +2228,7 @@ function HistoryModal({ user, onClose }) {
         onClick={(e) => e.stopPropagation()}
       >
         <h3>
-          <FontAwesomeIcon icon={faHistory} /> History —{" "}
+          <FontAwesomeIcon icon={faHistory} /> History: {" "}
           {user.businessName || user.email}
         </h3>
         {loading ? (
@@ -2264,7 +2263,7 @@ function HistoryModal({ user, onClose }) {
                   year: "numeric",
                   hour: "2-digit",
                   minute: "2-digit",
-                }) || "—";
+                }) || "";
               const newExpiry = h.newExpiry
                 ?.toDate?.()
                 ?.toLocaleDateString("en-KE", {
@@ -2381,7 +2380,7 @@ function PlansEditor({ users, showToast }) {
         },
         { merge: true },
       );
-      showToast(`✅ Notes saved for ${planId}`);
+      showToast(`Notes saved for ${planId}`);
       setLocalEdits((prev) => {
         const n = { ...prev };
         delete n[planId];
@@ -2443,7 +2442,7 @@ function PlansEditor({ users, showToast }) {
               style={{
                 background: "var(--bg2)",
                 border: `2px solid ${color}30`,
-                borderRadius: 14,
+                borderRadius: "var(--radius)",
                 overflow: "hidden",
               }}
             >
@@ -2590,9 +2589,9 @@ function PlansEditor({ users, showToast }) {
                         }}
                       >
                         {v === true
-                          ? "✓"
+                          ? ""
                           : v === false
-                            ? "✗"
+                            ? ""
                             : v === null
                               ? "∞"
                               : v}
@@ -2669,7 +2668,7 @@ function PlansEditor({ users, showToast }) {
           padding: "14px 18px",
           background: "var(--bg2)",
           border: "1px solid var(--border)",
-          borderRadius: 12,
+          borderRadius: "var(--radius)",
           fontSize: 13,
         }}
       >
@@ -2856,7 +2855,7 @@ function AnalyticsTab({ users }) {
             textAlign: "center",
             padding: "40px",
             border: "1.5px dashed var(--border)",
-            borderRadius: 14,
+            borderRadius: "var(--radius)",
             color: "var(--muted)",
             fontSize: 13,
           }}
@@ -2870,7 +2869,7 @@ function AnalyticsTab({ users }) {
             style={{
               background: "var(--bg2)",
               border: "1px solid var(--border)",
-              borderRadius: 14,
+              borderRadius: "var(--radius)",
               padding: "20px",
               marginBottom: 16,
             }}
@@ -2965,7 +2964,7 @@ function AnalyticsTab({ users }) {
               style={{
                 background: "var(--bg2)",
                 border: "1px solid var(--border)",
-                borderRadius: 12,
+                borderRadius: "var(--radius)",
                 padding: "14px 16px",
                 fontSize: 12,
                 color: "var(--muted)",
@@ -2980,7 +2979,7 @@ function AnalyticsTab({ users }) {
                 .reverse()
                 .map(([p]) => PAGE_LABELS[p] || p)
                 .join(", ")}{" "}
-              — consider improving discoverability or removing if unused.
+              consider improving discoverability or removing if unused.
             </div>
           )}
 
@@ -2997,7 +2996,7 @@ function AnalyticsTab({ users }) {
                   marginTop: 16,
                   background: "var(--bg2)",
                   border: "1px solid var(--border)",
-                  borderRadius: 12,
+                  borderRadius: "var(--radius)",
                   padding: "14px 16px",
                 }}
               >
@@ -3127,7 +3126,7 @@ function AllPaymentsHistory({ users }) {
             year: "numeric",
             hour: "2-digit",
             minute: "2-digit",
-          }) || "—";
+          }) || "";
         const newExpiry = h.newExpiry?.toDate?.()?.toLocaleDateString("en-KE", {
           day: "2-digit",
           month: "short",
@@ -3700,7 +3699,7 @@ function CustomerTrackerTab({ users }) {
                                 <div
                                   key={month}
                                   className={`ctab-month-dot${paid ? (isFirst ? " paid-first" : " paid-renewal") : " unpaid"}`}
-                                  title={`Month ${month}${paid ? ` — ${isFirst ? "KES 50" : "KES 20"} to referrer` : " — not paid yet"}`}
+                                  title={`Month ${month}${paid ? `: ${isFirst ? "KES 50" : "KES 20"} to referrer` : ", not paid yet"}`}
                                 >
                                   {month}
                                 </div>
@@ -3782,7 +3781,7 @@ function ContactMessages() {
           <div className="admin-msg-head">
             <span className="admin-msg-from">
               <FontAwesomeIcon icon={faUser} />
-              {m.from_name || "Unknown"} — {m.from_email}
+              {m.from_name || "Unknown"}: {m.from_email}
               {m.phone && (
                 <>
                   {" "}
@@ -3798,7 +3797,7 @@ function ContactMessages() {
                 year: "numeric",
                 hour: "2-digit",
                 minute: "2-digit",
-              }) || "—"}
+              }) || ""}
             </span>
           </div>
           {m.subject && <div className="admin-msg-subject">{m.subject}</div>}

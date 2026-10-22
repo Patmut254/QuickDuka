@@ -16,7 +16,7 @@ import { Toast, useToast } from "./Toast";
 import AlertDialog from "./AlertDialog";
 import EntryDate, { StockUpdateToggle } from "./EntryDate";
 import { localToday, stockUpdateWanted } from "../dates";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { FontAwesomeIcon } from "./Icon";
 import {
   faPlus,
   faTimes,
@@ -32,6 +32,8 @@ import {
   faChartBar,
   faPen,
 } from "@fortawesome/free-solid-svg-icons";
+import ItemPicker from "./ItemPicker";
+import { stockOptions } from "../stockOptions";
 
 export default function Credits({ ownerUid }) {
   const { t } = useLang();
@@ -251,7 +253,7 @@ export default function Credits({ ownerUid }) {
       const saleRef = await addSale({
         date: payDate || today(),
         description:
-          `${t.creditPaymentDesc || "Credit payment"} — ${payingCredit.customer}` +
+          `${t.creditPaymentDesc || "Credit payment"}: ${payingCredit.customer}` +
           (payingCredit.itemTaken ? ` (${payingCredit.itemTaken})` : ""),
         customer: payingCredit.customer,
         phone: payingCredit.phone || "",
@@ -260,7 +262,7 @@ export default function Credits({ ownerUid }) {
         notes: (
           `${
             isFullyPaid
-              ? t.finalPaymentNote || "Final payment — debt cleared."
+              ? t.finalPaymentNote || "Final payment, debt cleared."
               : t.partialPaymentNote || "Partial payment."
           } ` +
           `${t.originallyIssued || "Originally issued"} ${payingCredit.dateIssued}. ` +
@@ -331,7 +333,7 @@ export default function Credits({ ownerUid }) {
         const lossRef = await addLoss({
           date: badDebtDate || today(),
           item:
-            `${t.badDebtWrittenOff || "Bad debt written off"} — ${credit.customer}` +
+            `${t.badDebtWrittenOff || "Bad debt written off"}: ${credit.customer}` +
             (credit.itemTaken ? ` (${credit.itemTaken})` : ""),
           category: t.badDebt || "Bad Debt",
           quantity: "",
@@ -559,11 +561,10 @@ export default function Credits({ ownerUid }) {
       <div className="credits-summary">
         <div
           className="summary-card"
-          style={{ borderTop: "3px solid var(--orange)" }}
         >
           <div
             className="card-icon"
-            style={{ background: "var(--orange-bg)", color: "var(--orange)" }}
+            style={{ color: "var(--orange)" }}
           >
             <FontAwesomeIcon icon={faHandHoldingDollar} />
           </div>
@@ -578,17 +579,16 @@ export default function Credits({ ownerUid }) {
 
         <div
           className="summary-card"
-          style={{ borderTop: "3px solid var(--red)" }}
         >
           <div
             className="card-icon"
-            style={{ background: "var(--red-bg)", color: "var(--red)" }}
+            style={{ color: "var(--red)" }}
           >
             <FontAwesomeIcon icon={faExclamationTriangle} />
           </div>
           <div>
             {/* ✅ FIX: Second card shows the COUNT of outstanding debts.
-                Previously both cards used t.unpaidDebts — copy-paste error. */}
+                Previously both cards used t.unpaidDebts, copy-paste error. */}
             <div className="card-label">{t.outstandingCount || t.unpaidDebts}</div>
             <div className="card-value red">{outstanding.length}</div>
           </div>
@@ -596,11 +596,10 @@ export default function Credits({ ownerUid }) {
 
         <div
           className="summary-card"
-          style={{ borderTop: "3px solid var(--green)" }}
         >
           <div
             className="card-icon"
-            style={{ background: "var(--green-bg)", color: "var(--green)" }}
+            style={{ color: "var(--green)" }}
           >
             <FontAwesomeIcon icon={faCheckCircle} />
           </div>
@@ -712,40 +711,19 @@ export default function Credits({ ownerUid }) {
                   onChange={(e) => setForm({ ...form, phone: e.target.value })}
                 />
               </div>
-              {stock.length > 0 && (
-                <div className="field-group">
-                  <label>{t.pickStock}</label>
-                  <select
-                    onChange={handleStockSelect}
-                    value={selectedStock?.id || ""}
-                  >
-                    <option value="">{t.selectItem}</option>
-                    {stock.map((c) => {
-                      const outOfStock =
-                        c.quantity != null && Number(c.quantity) <= 0;
-                      return (
-                        <option key={c.id} value={c.id} disabled={outOfStock}>
-                          {stockLabel(c)}
-                          {c.price != null
-                            ? ` — KES ${Number(c.price).toLocaleString()}${c.unit ? `/${c.unit}` : ""}`
-                            : ""}
-                          {outOfStock ? ` (${t.outOfStock || "Out of stock"})` : ""}
-                        </option>
-                      );
-                    })}
-                  </select>
-                </div>
-              )}
-              <div className="field-group">
-                <label>{t.itemTaken}</label>
-                <input
-                  placeholder={t.itemTakenPh}
-                  value={form.itemTaken}
-                  onChange={(e) =>
-                    setForm({ ...form, itemTaken: e.target.value })
-                  }
-                />
-              </div>
+              <ItemPicker
+                id="credit-item"
+                label={t.itemTaken}
+                t={t}
+                options={stockOptions(stock, { labelFn: stockLabel, t, disableOut: true })}
+                selectedValue={selectedStock?.id || ""}
+                text={form.itemTaken}
+                onPick={(v) => handleStockSelect({ target: { value: v } })}
+                onCustom={(txt) => {
+                  handleStockSelect({ target: { value: "" } });
+                  setForm((f) => ({ ...f, itemTaken: txt }));
+                }}
+              />
               <div className="field-group">
                 <label>
                   {t.creditQtyTaken || t.quantity}
@@ -815,10 +793,10 @@ export default function Credits({ ownerUid }) {
                       KES {roundMoney(amt / q).toLocaleString()} / unit × {q} ={" "}
                       KES {amt.toLocaleString()}
                       {lim &&
-                        ` · ${outside ? "⚠ " : ""}${t.allowedAmount}: ` +
+                        ` · ${t.allowedAmount}: ` +
                           (lim.fixed
                             ? `KES ${lim.minTotal.toLocaleString()}`
-                            : `KES ${lim.minTotal.toLocaleString()}–${lim.maxTotal.toLocaleString()}`)}
+                            : `KES ${lim.minTotal.toLocaleString()} to ${lim.maxTotal.toLocaleString()}`)}
                     </div>
                   );
                 })()}
@@ -1151,14 +1129,14 @@ export default function Credits({ ownerUid }) {
 
                     {(credit.paidAmount || 0) > 0 && (
                       <div className="credit-chip credit-chip-green">
-                        ✓ KES {credit.paidAmount.toLocaleString()}{" "}
+                        KES {credit.paidAmount.toLocaleString()}{" "}
                         {t.alreadyPaid.toLowerCase()}
                       </div>
                     )}
 
                     {isBadDebt && writtenOff > 0 && (
                       <div className="credit-chip credit-chip-red">
-                        ✗ KES {writtenOff.toLocaleString()}{" "}
+                        KES {writtenOff.toLocaleString()}{" "}
                         {t.writtenOff.toLowerCase()}
                       </div>
                     )}
@@ -1192,7 +1170,7 @@ export default function Credits({ ownerUid }) {
                     <span className="credit-ph-label">{t.payments}: </span>
                     {credit.payments.map((p, i) => (
                       <span key={i} className="credit-ph-item">
-                        KES {p.amount.toLocaleString()} — {p.date}
+                        KES {p.amount.toLocaleString()}: {p.date}
                         {p.method
                           ? ` · ${t.paymentMethods?.[p.method] || p.method}`
                           : ""}
@@ -1212,7 +1190,7 @@ export default function Credits({ ownerUid }) {
                       icon={faArrowRight}
                       style={{ marginRight: 6 }}
                     />
-                    {t.alreadyPaid} — {t.sales || "Sales"}{" "}
+                    {t.alreadyPaid}: {t.sales || "Sales"}{" "}
                     {credit.lastPaymentDate || ""}
                   </div>
                 )}
@@ -1321,7 +1299,7 @@ export default function Credits({ ownerUid }) {
         <div className="modal-overlay" onClick={closeManage}>
           <div className="modal-card" onClick={(e) => e.stopPropagation()}>
             <h3>
-              {t.editCreditTitle} — {managed.customer}
+              {t.editCreditTitle}: {managed.customer}
             </h3>
             <div className="credit-modal-meta">
               <div className="credit-modal-row">
@@ -1464,7 +1442,7 @@ export default function Credits({ ownerUid }) {
                       }}
                     >
                       <span>
-                        KES {Number(p.amount).toLocaleString()} — {p.date}
+                        KES {Number(p.amount).toLocaleString()}: {p.date}
                         {p.method
                           ? ` · ${t.paymentMethods?.[p.method] || p.method}`
                           : ""}
@@ -1543,7 +1521,7 @@ export default function Credits({ ownerUid }) {
           return (
             <div className="modal-overlay" onClick={() => setBadDebtTarget(null)}>
               <div className="modal-card" onClick={(e) => e.stopPropagation()}>
-                <h3>⚠️ {t.writeOff}</h3>
+                <h3>{t.writeOff}</h3>
                 <p style={{ fontSize: 13, margin: "8px 0 14px" }}>
                   {`KES ${unpaid.toLocaleString()} (${badDebtTarget.customer}) → ${t.losses || "Losses"}.` +
                     (alreadyHad
@@ -1587,7 +1565,7 @@ export default function Credits({ ownerUid }) {
         title={t.deleteRecord}
         message={
           deleteTarget
-            ? `"${deleteTarget.customer}" — ${t.cannotBeUndone || "This cannot be undone."}` +
+            ? `"${deleteTarget.customer}": ${t.cannotBeUndone || "This cannot be undone."}` +
               (returnsToStock(deleteTarget)
                 ? ` ${Number(deleteTarget.quantity).toLocaleString()} ${deleteTarget.itemTaken} → ${t.stock || "Stock"}.`
                 : "")

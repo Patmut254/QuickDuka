@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { auth } from "../firebase";
 import { signOut } from "firebase/auth";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { FontAwesomeIcon } from "./Icon";
 import {
   faPhone,
   faCheckCircle,
@@ -89,7 +89,7 @@ export default function SubscriptionWall({ profile }) {
     if (serverWaking) {
       setStkStatus("error");
       setStkMsg(
-        "Payment server is starting up — please wait a few seconds and try again.",
+        "Payment server is starting up, please wait a few seconds and try again.",
       );
       return;
     }
@@ -138,7 +138,7 @@ export default function SubscriptionWall({ profile }) {
       if (err.name === "AbortError") {
         setStkStatus("error");
         setStkMsg(
-          "Request timed out. The server took too long — please try again.",
+          "Request timed out. The server took too long, please try again.",
         );
       } else {
         setStkStatus("error");
@@ -181,12 +181,12 @@ export default function SubscriptionWall({ profile }) {
 
       if (res.ok && data.activated) {
         setCheckStatus("ok");
-        setCheckMsg("🎉 Payment confirmed! Opening your account...");
+        setCheckMsg("Payment confirmed! Opening your account...");
         await sendPaymentNotification(profile, selectedPlan);
         setTimeout(() => window.location.reload(), 1800);
       } else {
         setCheckStatus("pending");
-        setCheckMsg("Payment not confirmed yet — wait a moment and try again.");
+        setCheckMsg("Payment not confirmed yet, wait a moment and try again.");
         setTimeout(() => {
           setCheckStatus("idle");
           setCheckMsg("");
@@ -195,7 +195,7 @@ export default function SubscriptionWall({ profile }) {
     } catch (err) {
       const msg =
         err.name === "AbortError"
-          ? "Verification timed out — please try again."
+          ? "Verification timed out, please try again."
           : "Could not verify. Please try again.";
       setCheckStatus("error");
       setCheckMsg(msg);
@@ -233,7 +233,7 @@ export default function SubscriptionWall({ profile }) {
       }
     } catch {
       // Notification failure must never block account activation
-      console.warn("Payment notification skipped — will retry next session.");
+      console.warn("Payment notification skipped, will retry next session.");
     }
   };
 
@@ -247,7 +247,7 @@ export default function SubscriptionWall({ profile }) {
     ? `Your 1-month free trial is over, ${profile?.ownerName || ""}. Subscribe below to keep using QuickDuka.`
     : isExpired
       ? "Your subscription has expired. Renew below to continue."
-      : `Welcome, ${profile?.ownerName || ""}! Your account is ready — choose a plan to get started.`;
+      : `Welcome, ${profile?.ownerName || ""}! Your account is ready, choose a plan to get started.`;
 
   return (
     <div className="sub-wall">
@@ -273,7 +273,7 @@ export default function SubscriptionWall({ profile }) {
         )}
         {!serverWaking && serverReady === false && MPESA_BACKEND_URL && (
           <div className="sub-server-offline">
-            ⚠️ Payment server is currently offline. Please WhatsApp us for help.
+            Payment server is currently offline. Please WhatsApp us for help.
           </div>
         )}
 
@@ -485,7 +485,7 @@ export default function SubscriptionWall({ profile }) {
             {selectedPlan.price.toLocaleString()} via M-Pesa
           </div>
           <p className="sub-stk-hint">
-            Enter your M-Pesa number. You&apos;ll get a pop-up on your phone —
+            Enter your M-Pesa number. You&apos;ll get a pop-up on your phone,
             enter your PIN to pay.
           </p>
 
@@ -518,7 +518,7 @@ export default function SubscriptionWall({ profile }) {
               ) : stkStatus === "sending" ? (
                 "Sending..."
               ) : stkStatus === "sent" ? (
-                "Sent ✓"
+                "Sent"
               ) : (
                 "Pay Now"
               )}
@@ -565,8 +565,8 @@ export default function SubscriptionWall({ profile }) {
               {checkStatus === "checking"
                 ? "Checking payment..."
                 : checkStatus === "ok"
-                  ? "Confirmed ✓"
-                  : "I've Paid — Verify Now"}
+                  ? "Confirmed"
+                  : "I've Paid, Verify Now"}
             </button>
             {checkMsg && (
               <div
@@ -598,10 +598,10 @@ export default function SubscriptionWall({ profile }) {
             Account: <strong>{profile?.phone || profile?.email}</strong>
           </span>
           <span>
-            Business: <strong>{profile?.businessName || "—"}</strong>
+            Business: <strong>{profile?.businessName || ""}</strong>
           </span>
           <span style={{ marginTop: 4, fontSize: 11, color: "var(--muted)" }}>
-            📅 Billed monthly. Your account locks on expiry — renew anytime.
+            Billed monthly. Your account locks on expiry, renew anytime.
           </span>
         </div>
 

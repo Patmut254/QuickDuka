@@ -1,4 +1,5 @@
 import { Component } from "react";
+import { TriangleAlert } from "lucide-react";
 
 /**
  * ErrorBoundary
@@ -40,12 +41,12 @@ export default class ErrorBoundary extends Component {
             maxWidth: 440,
             margin: "60px auto",
             background: "var(--card, #fff)",
-            borderRadius: 14,
+            borderRadius: "var(--radius)",
             boxShadow: "0 2px 16px rgba(0,0,0,0.08)",
             border: "1px solid var(--border, #e5e7eb)",
           }}
         >
-          <div style={{ fontSize: 40, marginBottom: 12 }}>⚠️</div>
+          <div style={{ marginBottom: 12, color: "var(--orange, #f59e0b)" }}><TriangleAlert size={40} strokeWidth={1.5} aria-hidden="true" /></div>
           <h2
             style={{
               margin: "0 0 8px",
@@ -73,7 +74,7 @@ export default class ErrorBoundary extends Component {
               color: "var(--muted, #aaa)",
             }}
           >
-            The rest of your app is still working — only this section crashed.
+            The rest of your app is still working, only this section crashed.
           </p>
           <button
             onClick={this.handleReset}

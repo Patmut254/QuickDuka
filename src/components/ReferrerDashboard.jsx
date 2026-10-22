@@ -22,7 +22,7 @@ import {
   // getDocs,
 } from "firebase/firestore";
 // import { useLang } from "../LangContext";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { FontAwesomeIcon } from "./Icon";
 // import { useLang } from "../LangContext";
 import {
   faHandshake,
@@ -117,9 +117,9 @@ export default function ReferrerDashboard({ referrerName, referrerId }) {
   ];
 
   const formatDate = (val) => {
-    if (!val) return "—";
+    if (!val) return "";
     const d = val?.toDate?.() ?? (val instanceof Date ? val : new Date(val));
-    return isNaN(d) ? "—" : d.toLocaleDateString("sw-KE", { day: "numeric", month: "short", year: "numeric" });
+    return isNaN(d) ? "" : d.toLocaleDateString("sw-KE", { day: "numeric", month: "short", year: "numeric" });
   };
 
   return (
@@ -128,7 +128,7 @@ export default function ReferrerDashboard({ referrerName, referrerId }) {
       <div style={{
         background: "var(--card)",
         border: "1px solid var(--border)",
-        borderRadius: 12,
+        borderRadius: "var(--radius)",
         padding: "20px 22px",
         marginBottom: 18,
         display: "flex",
@@ -232,13 +232,13 @@ export default function ReferrerDashboard({ referrerName, referrerId }) {
             marginBottom: 14,
           }}>
             <h3 style={{ fontWeight: 700, fontSize: 15, marginBottom: 12 }}>
-              💡 {t.howPaymentsWork}
+              {t.howPaymentsWork}
             </h3>
             <div style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.8 }}>
-              <div>🎁 <strong>Mwezi 1:</strong> Bure kwa kila mteja / Month 1: Free for every customer</div>
-              <div>💰 <strong>Mwezi 2:</strong> KES 50 kwa kila mteja anayenunua / Month 2: KES 50 per paying customer</div>
-              <div>📅 <strong>Miezi 3–7:</strong> KES 20/mwezi kwa kila mteja / Months 3–7: KES 20/month per customer</div>
-              <div>🏆 <strong>Upeo kwa mteja 1:</strong> KES 150 kwa miezi 6 / Max per customer: KES 150 over 6 months</div>
+              <div><strong>Mwezi 1:</strong> Bure kwa kila mteja / Month 1: Free for every customer</div>
+              <div><strong>Mwezi 2:</strong> KES 50 kwa kila mteja anayenunua / Month 2: KES 50 per paying customer</div>
+              <div><strong>Miezi 3 hadi 7:</strong> KES 20/mwezi kwa kila mteja / Months 3 to 7: KES 20/month per customer</div>
+              <div><strong>Upeo kwa mteja 1:</strong> KES 150 kwa miezi 6 / Max per customer: KES 150 over 6 months</div>
             </div>
           </div>
 
@@ -268,7 +268,7 @@ export default function ReferrerDashboard({ referrerName, referrerId }) {
                     </div>
                     <div style={{ fontSize: 12, color: "var(--muted)" }}>
                       {formatDate(p.createdAt)}
-                      {p.note ? ` — ${p.note}` : ""}
+                      {p.note ? `: ${p.note}` : ""}
                     </div>
                   </div>
                   <div style={{
@@ -279,7 +279,7 @@ export default function ReferrerDashboard({ referrerName, referrerId }) {
                     fontSize: 12,
                     fontWeight: 700,
                   }}>
-                    Imelipwa ✓
+                    Imelipwa
                   </div>
                 </div>
               ))}
@@ -338,12 +338,12 @@ export default function ReferrerDashboard({ referrerName, referrerId }) {
                   }}>
                     <div>
                       <div style={{ fontWeight: 700, fontSize: 14, color: "var(--text)" }}>
-                        {u.businessName || u.ownerName || "—"}
+                        {u.businessName || u.ownerName || ""}
                       </div>
                       <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 2 }}>
                         {u.phone && <><FontAwesomeIcon icon={faPhone} style={{ marginRight: 4 }} />{u.phone} · </>}
                         <FontAwesomeIcon icon={faCalendar} style={{ marginRight: 4 }} />
-                        {t.joined}: {joined ? formatDate(joined) : "—"}
+                        {t.joined}: {joined ? formatDate(joined) : ""}
                       </div>
                     </div>
                     <div style={{
@@ -435,7 +435,7 @@ export default function ReferrerDashboard({ referrerName, referrerId }) {
                     <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 2 }}>
                       <FontAwesomeIcon icon={faCalendar} style={{ marginRight: 4 }} />
                       {formatDate(p.createdAt)}
-                      {p.note ? ` — ${p.note}` : ""}
+                      {p.note ? `: ${p.note}` : ""}
                     </div>
                   </div>
                   <div style={{

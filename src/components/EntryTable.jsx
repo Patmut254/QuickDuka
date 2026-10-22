@@ -2,6 +2,8 @@
 import { useState } from "react";
 import AlertDialog from "./AlertDialog";
 import { useLang } from "../LangContext";
+import { Pencil, Trash2 } from "lucide-react";
+import SearchBar from "./SearchBar";
 
 export default function EntryTable({
   items,
@@ -126,17 +128,12 @@ export default function EntryTable({
       />
 
       <div className="table-toolbar">
-        <label htmlFor="table-search" className="sr-only">
-          {t.search}
-        </label>
-        <input
+        <SearchBar
           id="table-search"
-          name="table-search"
-          className="search-input"
-          autoComplete="off"
-          placeholder={"🔍 " + (t.search || "Search")}
+          label={t.search || "Search"}
+          placeholder={t.search || "Search"}
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={setSearch}
         />
         <span className="table-count">
           {filtered.length} {t.records || "records"}
@@ -226,7 +223,7 @@ export default function EntryTable({
                           onClick={saveEdit}
                           disabled={saving}
                         >
-                          {saving ? (t.saving || "Saving…") : (t.save || "Save") + " ✓"}
+                          {saving ? (t.saving || "Saving…") : (t.save || "Save")}
                         </button>
                         <button
                           className="btn-cancel-sm"
@@ -243,14 +240,14 @@ export default function EntryTable({
                           onClick={() => startEdit(item)}
                           title={t.edit || "Edit"}
                         >
-                          ✏️
+                          <Pencil size={16} strokeWidth={1.75} aria-hidden="true" />
                         </button>
                         <button
                           className="delete-btn"
                           onClick={() => setDeleteTarget({ id: item.id, item })}
                           title={t.delete || "Delete"}
                         >
-                          🗑
+                          <Trash2 size={16} strokeWidth={1.75} aria-hidden="true" />
                         </button>
                       </div>
                     )}

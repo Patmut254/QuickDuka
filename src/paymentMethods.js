@@ -8,7 +8,7 @@ export const PAYMENT_METHODS = [
   "cash",
   "mpesa", // generic M-Pesa (legacy / unspecified)
   "till", // Safaricom Till Number (Lipa na M-Pesa / Buy Goods)
-  "paybill", // Paybill — bank or business paybill
+  "paybill", // Paybill, bank or business paybill
   "pochi", // M-Pesa Pochi la Biashara
   "send_money", // M-Pesa Send Money (person to person)
   "airtel",

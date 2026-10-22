@@ -69,8 +69,17 @@ export function useUserProfile() {
 
       // ADMIN: bypass profile check entirely
       if (user.email === ADMIN_EMAIL) {
+        // Load any details/photo the admin saved on the Profile page, but
+        // never block sign-in on it.
+        let saved = {};
+        try {
+          const adminSnap = await getDoc(doc(db, "users", user.uid));
+          if (adminSnap.exists()) saved = adminSnap.data();
+        } catch {
+          /* offline or missing: fall back to the basic admin profile */
+        }
         if (!terminatedRef.current) {
-          setProfile({ id: user.uid, email: user.email, role: "admin" });
+          setProfile({ ...saved, id: user.uid, email: user.email, role: "admin" });
           setLoading(false);
         }
         return;
@@ -166,6 +175,15 @@ export function useUserProfile() {
     };
   }, []);
 
+  // The Profile page fires this after a successful save (details or photo)
+  // so the header, top bar and sidebar update without a reload.
+  useEffect(() => {
+    const onUpdate = (e) =>
+      setProfile((p) => (p ? { ...p, ...(e.detail || {}) } : p));
+    window.addEventListener("qd-profile-updated", onUpdate);
+    return () => window.removeEventListener("qd-profile-updated", onUpdate);
+  }, []);
+
   return { profile, loading, notFound };
 }
 
@@ -258,7 +276,7 @@ export async function createUserProfile(uid, data) {
     deleted: false,
   };
 
-  await setDoc(ref, profileData, { merge: false }); // full write — no partial merging on new accounts
+  await setDoc(ref, profileData, { merge: false }); // full write, no partial merging on new accounts
 
   // Mirror the same profile into Realtime Database under users/{uid}.
   // Best-effort: if this fails, the Firestore write (the source of truth

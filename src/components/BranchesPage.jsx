@@ -27,7 +27,7 @@ import {
   where,
 } from "firebase/firestore";
 import { auth } from "../firebase";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { FontAwesomeIcon } from "./Icon";
 import {
   faCodeBranch,
   faPlus,
@@ -87,7 +87,7 @@ function BranchForm({ ownerUid, onAdded, onCancel }) {
         style={{
           background: "var(--bg2)",
           border: "1.5px solid var(--border)",
-          borderRadius: 14,
+          borderRadius: "var(--radius)",
           padding: "24px 20px",
           marginBottom: 20,
           textAlign: "center",
@@ -109,7 +109,7 @@ function BranchForm({ ownerUid, onAdded, onCancel }) {
       style={{
         background: "var(--bg2)",
         border: "1.5px solid var(--border)",
-        borderRadius: 14,
+        borderRadius: "var(--radius)",
         padding: "20px 20px 18px",
         marginBottom: 20,
       }}
@@ -249,7 +249,7 @@ function BranchCard({ branch, ownerUid, staffList, onToggle, onDelete }) {
       style={{
         background: "var(--bg2)",
         border: "1.5px solid var(--border)",
-        borderRadius: 14,
+        borderRadius: "var(--radius)",
         padding: "16px 18px",
         opacity: branch.active ? 1 : 0.6,
         transition: "opacity .2s",
@@ -578,7 +578,7 @@ export default function BranchesPage({ sub }) {
               textAlign: "center",
               padding: "40px 20px",
               border: "1.5px dashed var(--border)",
-              borderRadius: 14,
+              borderRadius: "var(--radius)",
               background: "var(--bg2)",
               color: "var(--muted)",
               fontSize: 13,

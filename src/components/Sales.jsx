@@ -17,6 +17,8 @@ import { localToday, stockUpdateWanted } from "../dates";
 import { useLang } from "../LangContext";
 import EntryTable from "./EntryTable";
 import { Toast, useToast } from "./Toast";
+import ItemPicker from "./ItemPicker";
+import { stockOptions } from "../stockOptions";
 
 export default function Sales({ ownerUid, sub }) {
   const { t } = useLang();
@@ -292,8 +294,8 @@ export default function Sales({ ownerUid, sub }) {
           label: "Location",
           readOnly: true,
           format: (v) => v
-            ? <span style={{ fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 20, background: "#3b82f615", color: "#3b82f6" }}>📍 {v}</span>
-            : <span style={{ fontSize: 11, color: "var(--muted)" }}>—</span>,
+            ? <span style={{ fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 20, background: "#3b82f615", color: "#3b82f6" }}>{v}</span>
+            : <span style={{ fontSize: 11, color: "var(--muted)" }}></span>,
         }]
       : []),
     // staffName is display-only — mark readOnly so EntryTable skips it in edit mode
@@ -329,13 +331,13 @@ export default function Sales({ ownerUid, sub }) {
             }
           }}
         >
-          {showForm ? `✕ ${t.cancel}` : `+ ${t.newSale}`}
+          {showForm ? `${t.cancel}` : `+ ${t.newSale}`}
         </button>
       </div>
 
       {showForm && (
         <form className="entry-form" onSubmit={handleSubmit}>
-          <h3>📦 {t.recordSale}</h3>
+          <h3>{t.recordSale}</h3>
           <div className="form-grid">
             <EntryDate
               id="sale-date"
@@ -354,7 +356,7 @@ export default function Sales({ ownerUid, sub }) {
             )}
             {canUseBranches && branches.length > 0 && (
               <div className="field-group">
-                <label htmlFor="sale-branch">📍 Location / Branch</label>
+                <label htmlFor="sale-branch">Location / Branch</label>
                 <select
                   id="sale-branch"
                   name="sale-branch"
@@ -363,7 +365,7 @@ export default function Sales({ ownerUid, sub }) {
                     setForm({ ...form, branchId: e.target.value })
                   }
                 >
-                  <option value="">— No specific branch —</option>
+                  <option value="">No specific branch</option>
                   {branches.map((b) => (
                     <option key={b.id} value={b.id}>
                       {b.name}
@@ -373,45 +375,20 @@ export default function Sales({ ownerUid, sub }) {
                 </select>
               </div>
             )}
-            {stock.length > 0 && (
-              <div className="field-group">
-                <label htmlFor="sale-stock">{t.pickStock}</label>
-                <select
-                  id="sale-stock"
-                  name="sale-stock"
-                  onChange={handleStockSelect}
-                  value={selectedStock?.id || ""}
-                >
-                  <option value="">{t.selectItem}</option>
-                  {stock.map((c) => {
-                    const outOfStock = c.quantity != null && Number(c.quantity) <= 0;
-                    return (
-                      <option key={c.id} value={c.id} disabled={outOfStock}>
-                        {stockLabel(c)}
-                        {c.price != null
-                          ? ` — KES ${Number(c.price).toLocaleString()}${c.unit ? `/${c.unit}` : ""}`
-                          : ""}
-                        {outOfStock ? ` (${t.outOfStock || "Out of stock"})` : ""}
-                      </option>
-                    );
-                  })}
-                </select>
-              </div>
-            )}
-            <div className="field-group">
-              <label htmlFor="sale-description">{t.itemSold} *</label>
-              <input
-                id="sale-description"
-                name="sale-description"
-                autoComplete="off"
-                placeholder={t.itemSoldPh}
-                value={form.description}
-                onChange={(e) =>
-                  setForm({ ...form, description: e.target.value })
-                }
-                required
-              />
-            </div>
+            <ItemPicker
+              id="sale-item"
+              label={t.itemSold}
+              required
+              t={t}
+              options={stockOptions(stock, { labelFn: stockLabel, t, disableOut: true })}
+              selectedValue={selectedStock?.id || ""}
+              text={form.description}
+              onPick={(v) => handleStockSelect({ target: { value: v } })}
+              onCustom={(txt) => {
+                handleStockSelect({ target: { value: "" } });
+                setForm((f) => ({ ...f, description: txt }));
+              }}
+            />
             <div className="field-group">
               <label htmlFor="sale-customer">{t.customer}</label>
               <input
@@ -463,7 +440,7 @@ export default function Sales({ ownerUid, sub }) {
                 {selectedStock?.priceMode === "range" && (
                   <span style={{ fontWeight: 400, color: "var(--muted)" }}>
                     {" "}
-                    ({t.priceRange}: KES {Number(selectedStock.minPrice).toLocaleString()}–
+                    ({t.priceRange}: KES {Number(selectedStock.minPrice).toLocaleString()} to 
                     {Number(selectedStock.maxPrice).toLocaleString()})
                   </span>
                 )}
@@ -510,10 +487,10 @@ export default function Sales({ ownerUid, sub }) {
                     KES {roundMoney(perUnit).toLocaleString()} / unit × {qty || 1} ={" "}
                     KES {amt.toLocaleString()}
                     {lim &&
-                      ` · ${outside ? "⚠ " : ""}${t.allowedAmount}: ` +
+                      ` · ${t.allowedAmount}: ` +
                         (lim.fixed
                           ? `KES ${lim.minTotal.toLocaleString()}`
-                          : `KES ${lim.minTotal.toLocaleString()}–${lim.maxTotal.toLocaleString()}`)}
+                          : `KES ${lim.minTotal.toLocaleString()} to ${lim.maxTotal.toLocaleString()}`)}
                   </div>
                 );
               })()}

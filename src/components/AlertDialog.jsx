@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { createPortal } from "react-dom";
+import { TriangleAlert, Info } from "lucide-react";
 
 export default function AlertDialog({ open, title, message, confirmLabel = "Confirm", cancelLabel = "Cancel", onConfirm, onCancel, danger = false }) {
   // Prevent body scroll when open
@@ -18,7 +19,7 @@ export default function AlertDialog({ open, title, message, confirmLabel = "Conf
     >
       <div className="alert-box">
         <div className="alert-icon">
-          {danger ? "⚠️" : "ℹ️"}
+          {danger ? <TriangleAlert size={26} strokeWidth={1.75} aria-hidden="true" /> : <Info size={26} strokeWidth={1.75} aria-hidden="true" />}
         </div>
         <div className="alert-title">{title}</div>
         <div className="alert-message">{message}</div>

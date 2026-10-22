@@ -29,7 +29,7 @@ import {
   signOut as fbSignOut,
 } from "firebase/auth";
 import { auth, getSecondaryApp } from "../firebase";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { FontAwesomeIcon } from "./Icon";
 import {
   faUserPlus,
   faUsers,
@@ -169,7 +169,7 @@ function StaffForm({
         style={{
           background: "var(--bg2)",
           border: "1.5px solid var(--border)",
-          borderRadius: 14,
+          borderRadius: "var(--radius)",
           padding: "24px 20px",
           marginBottom: 20,
           textAlign: "center",
@@ -207,7 +207,7 @@ function StaffForm({
       style={{
         background: "var(--bg2)",
         border: "1.5px solid var(--border)",
-        borderRadius: 14,
+        borderRadius: "var(--radius)",
         padding: "20px 20px 18px",
         marginBottom: 20,
       }}
@@ -292,7 +292,7 @@ function StaffForm({
               value={branchId}
               onChange={(e) => setBranchId(e.target.value)}
             >
-              <option value="">— No branch assigned —</option>
+              <option value="">No branch assigned</option>
               {branches
                 .filter((b) => b.active)
                 .map((b) => (
@@ -391,7 +391,7 @@ function StaffCard({ member, onToggle, onDelete }) {
       style={{
         background: "var(--bg2)",
         border: "1.5px solid var(--border)",
-        borderRadius: 12,
+        borderRadius: "var(--radius)",
         padding: "14px 16px",
         display: "flex",
         alignItems: "center",
@@ -674,7 +674,7 @@ export default function StaffPage({ sub, profile, isAdmin = false }) {
             style={{
               background: "var(--accent)0a",
               border: "1.5px solid var(--accent)30",
-              borderRadius: 12,
+              borderRadius: "var(--radius)",
               padding: "14px 16px",
               marginBottom: 20,
               fontSize: 12,
@@ -740,7 +740,7 @@ export default function StaffPage({ sub, profile, isAdmin = false }) {
               textAlign: "center",
               padding: "40px 20px",
               border: "1.5px dashed var(--border)",
-              borderRadius: 14,
+              borderRadius: "var(--radius)",
               background: "var(--bg2)",
               color: "var(--muted)",
               fontSize: 13,

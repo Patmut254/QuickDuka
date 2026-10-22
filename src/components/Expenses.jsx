@@ -6,6 +6,8 @@ import EntryTable from "./EntryTable";
 import { Toast, useToast } from "./Toast";
 import EntryDate from "./EntryDate";
 import { localToday } from "../dates";
+import SearchSelect from "./SearchSelect";
+import { stockOptions } from "../stockOptions";
 
 export default function Expenses({ ownerUid }) {
   const { t } = useLang();
@@ -124,13 +126,13 @@ export default function Expenses({ ownerUid }) {
             setStatus("idle");
           }}
         >
-          {showForm ? `✕ ${t.cancel}` : `+ ${t.newExpense}`}
+          {showForm ? `${t.cancel}` : `+ ${t.newExpense}`}
         </button>
       </div>
 
       {showForm && (
         <form className="entry-form" onSubmit={handleSubmit}>
-          <h3>💸 {t.recordExpense}</h3>
+          <h3>{t.recordExpense}</h3>
           <div className="form-grid">
             <EntryDate
               id="exp-date"
@@ -173,22 +175,14 @@ export default function Expenses({ ownerUid }) {
             {stock.length > 0 && (
               <div className="field-group">
                 <label htmlFor="exp-stock">{t.pickStock}</label>
-                <select
+                <SearchSelect
                   id="exp-stock"
-                  name="exp-stock"
-                  onChange={handleStockSelect}
                   value={form.description}
-                >
-                  <option value="">{t.selectItem}</option>
-                  {stock.map((c) => (
-                    <option key={c.id} value={c.name}>
-                      {c.name}
-                      {c.price != null
-                        ? ` — KES ${Number(c.price).toLocaleString()}${c.unit ? `/${c.unit}` : ""}`
-                        : ""}
-                    </option>
-                  ))}
-                </select>
+                  onChange={handleStockSelect}
+                  options={stockOptions(stock, { valueKey: "name", t })}
+                  placeholder={t.searchItems || "Search items"}
+                  emptyText={t.noItemsSearch || "No matching items"}
+                />
               </div>
             )}
             <div className="field-group">

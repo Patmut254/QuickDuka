@@ -19,7 +19,7 @@ import {
   endRegistration,
 } from "../hooks/useUserProfile";
 import { kenyaCounties } from "../data/kenyaLocations";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { FontAwesomeIcon } from "./Icon";
 import {
   faPhone,
   faEnvelope,
@@ -53,7 +53,7 @@ function TrialBadge({ plan }) {
       <div>
         <div className="trial-badge-title">1 Month Free Trial</div>
         <div className="trial-badge-sub">
-          Then KES {p ? p.price : 100}/month — cancel anytime
+          Then KES {p ? p.price : 100}/month, cancel anytime
         </div>
       </div>
     </div>
@@ -369,7 +369,7 @@ export default function Register({ onBack }) {
             className="login-logo-img"
             style={{ height: 58 }}
           />
-          <p>Create your free account — 1 month free, then pay monthly.</p>
+          <p>Create your free account: 1 month free, then pay monthly.</p>
         </div>
 
         {stepBar}
@@ -599,7 +599,7 @@ export default function Register({ onBack }) {
                 </span>
               ) : phone.trim() && hasPhone ? (
                 <span className="field-hint" style={{ color: "#16a34a" }}>
-                  ✓ {normPhone}
+                  {normPhone}
                 </span>
               ) : (
                 <span className="field-hint">

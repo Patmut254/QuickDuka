@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { publicDb } from "../firebase";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { FontAwesomeIcon } from "./Icon";
 import {
   faUser,
   faPhone,
@@ -96,7 +96,7 @@ export default function ReferrerRegister({ onBack }) {
             <h2 className="ref-success-title">Application Submitted!</h2>
             <p className="ref-success-sub">
               Thank you, <strong>{form.fullName}</strong>. We'll review your
-              application and reach out within 1–7 business days.
+              application and reach out within 1 to 7 business days.
             </p>
             <div className="ref-earnings-summary">
               <div className="ref-earnings-row">
@@ -106,7 +106,7 @@ export default function ReferrerRegister({ onBack }) {
                 <span className="ref-earn-val">KES 50</span>
               </div>
               <div className="ref-earnings-row">
-                <span className="ref-earn-label">Months 3–7 per customer</span>
+                <span className="ref-earn-label">Months 3 to 7 per customer</span>
                 <span className="ref-earn-val">
                   KES 20<span className="ref-earn-sub">/mo</span>
                 </span>
@@ -164,7 +164,7 @@ export default function ReferrerRegister({ onBack }) {
           <div className="ref-earn-strip-divider" />
           <div className="ref-earn-strip-item">
             <span className="ref-earn-strip-val">KES 20</span>
-            <span className="ref-earn-strip-lbl">Months 3–7</span>
+            <span className="ref-earn-strip-lbl">Months 3 to 7</span>
           </div>
           <div className="ref-earn-strip-divider" />
           <div className="ref-earn-strip-item">
@@ -349,9 +349,9 @@ export default function ReferrerRegister({ onBack }) {
             </label>
             <div className="ref-radio-row">
               {[
-                { val: "yes", emoji: "✅", label: "Yes, I'm in!" },
-                { val: "no", emoji: "❌", label: "Not interested" },
-              ].map(({ val, emoji, label }) => (
+                { val: "yes", label: "Yes, I'm in!" },
+                { val: "no", label: "Not interested" },
+              ].map(({ val, label }) => (
                 <label
                   key={val}
                   className={`ref-radio-option${form.willingToEarn === val ? " selected" : ""}`}
@@ -365,7 +365,7 @@ export default function ReferrerRegister({ onBack }) {
                     style={{ display: "none" }}
                   />
                   <span>
-                    {emoji} {label}
+                    {label}
                   </span>
                 </label>
               ))}

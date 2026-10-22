@@ -19,7 +19,7 @@
  *   inline       bool?    — if true, renders a small inline locked badge instead of a full block
  */
 import { useState } from "react";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { FontAwesomeIcon } from "./Icon";
 import { faLock, faArrowUp } from "@fortawesome/free-solid-svg-icons";
 
 export default function FeatureGate({
@@ -82,7 +82,6 @@ export default function FeatureGate({
               padding: "7px 10px",
               borderRadius: 8,
               fontSize: 11,
-              whiteSpace: "nowrap",
               maxWidth: 240,
               whiteSpace: "normal",
               lineHeight: 1.4,
@@ -105,7 +104,7 @@ export default function FeatureGate({
         alignItems: "center",
         gap: 10,
         padding: "20px 16px",
-        borderRadius: 12,
+        borderRadius: "var(--radius)",
         border: "1.5px dashed var(--border)",
         background: "var(--bg2)",
         textAlign: "center",
@@ -136,7 +135,7 @@ export default function FeatureGate({
             marginBottom: 4,
           }}
         >
-          {lockedLabel ? `${lockedLabel} — Upgrade Required` : "Feature Locked"}
+          {lockedLabel ? `${lockedLabel}, Upgrade Required` : "Feature Locked"}
         </div>
         <div
           style={{
@@ -166,7 +165,7 @@ export default function FeatureGate({
           }}
         >
           <FontAwesomeIcon icon={faArrowUp} style={{ fontSize: 10 }} />
-          Upgrade to {upgradePlan.name} — KES{" "}
+          Upgrade to {upgradePlan.name}: KES{" "}
           {upgradePlan.price.toLocaleString()}/mo
         </div>
       )}

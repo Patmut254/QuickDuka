@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable react-hooks/preserve-manual-memoization */
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { FontAwesomeIcon } from "./Icon";
 import {
   faMoneyBillTrendUp,
   faCartPlus,
@@ -160,7 +160,7 @@ export default function Dashboard({
   const creditRows = credits.slice(0, 3).map((c) => ({
     ...c,
     type: "credit",
-    description: c.itemTaken ? `${c.customer} — ${c.itemTaken}` : c.customer,
+    description: c.itemTaken ? `${c.customer}: ${c.itemTaken}` : c.customer,
     amount: Number(c.paidAmount) || 0,
     date: c.lastPaymentDate || c.dateIssued || c.date,
   }));
@@ -195,7 +195,6 @@ export default function Dashboard({
               (c.label === t.netProfitLabel ? " hide-mobile" : "")
             }
             key={c.label}
-            style={{ borderTop: `4px solid ${c.color}` }}
           >
             <div className="card-icon">
               <FontAwesomeIcon icon={c.icon} />
@@ -231,7 +230,7 @@ export default function Dashboard({
             }}
           >
             <strong>
-              ⏰ {t.supplierPaymentsDue} — KES {supplierOwedTotal.toLocaleString()}
+              {t.supplierPaymentsDue}: KES {supplierOwedTotal.toLocaleString()}
             </strong>
             <button
               className="link-btn"

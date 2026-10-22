@@ -36,7 +36,7 @@ import { signOut } from "firebase/auth";
 import { auth, getSecondaryApp } from "../firebase";
 import { useCollection } from "../hooks/useCollection";
 import { Toast, useToast } from "./Toast";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { FontAwesomeIcon } from "./Icon";
 import {
   faMoneyBillTrendUp,
   faRightFromBracket,
@@ -158,7 +158,7 @@ function MiniStaffForm({
           padding: "16px",
           textAlign: "center",
           background: "var(--bg2)",
-          borderRadius: 12,
+          borderRadius: "var(--radius)",
           marginBottom: 12,
         }}
       >
@@ -177,7 +177,7 @@ function MiniStaffForm({
       style={{
         background: "var(--bg2)",
         border: "1.5px solid var(--border)",
-        borderRadius: 12,
+        borderRadius: "var(--radius)",
         padding: "16px",
         marginBottom: 14,
       }}
@@ -546,7 +546,7 @@ export default function StaffShell({ user, profile }) {
         { ownerUid, staffName, branchId, branchName },
       );
       setStatus("saved");
-      showToast("✅ Sale recorded!");
+      showToast("Sale recorded!");
       setTimeout(() => {
         setStatus("idle");
         setForm(emptyForm);
@@ -760,7 +760,7 @@ export default function StaffShell({ user, profile }) {
               style={{
                 background: "var(--accent)0d",
                 border: "1.5px solid var(--accent)30",
-                borderRadius: 14,
+                borderRadius: "var(--radius)",
                 padding: "16px 20px",
                 marginBottom: 20,
                 display: "flex",
@@ -776,7 +776,7 @@ export default function StaffShell({ user, profile }) {
                     marginBottom: 4,
                   }}
                 >
-                  Today's Sales{branchName ? ` — ${branchName}` : ""}
+                  Today's Sales{branchName ? `: ${branchName}` : ""}
                 </div>
                 <div
                   style={{
@@ -885,7 +885,7 @@ export default function StaffShell({ user, profile }) {
                   {status === "saving"
                     ? "Saving..."
                     : status === "saved"
-                      ? "✅ Saved!"
+                      ? "Saved!"
                       : "Save Sale"}
                 </button>
               </form>
@@ -922,7 +922,7 @@ export default function StaffShell({ user, profile }) {
                     padding: "24px",
                     textAlign: "center",
                     border: "1.5px dashed var(--border)",
-                    borderRadius: 12,
+                    borderRadius: "var(--radius)",
                     background: "var(--bg2)",
                   }}
                 >

@@ -31,7 +31,7 @@ export const T = {
     // Common
     save: "Save",
     saving: "Saving...",
-    saved: "✅ Saved!",
+    saved: "Saved!",
     cancel: "Cancel",
     edit: "Edit",
     delete: "Delete",
@@ -46,10 +46,10 @@ export const T = {
     phone: "Phone",
     actions: "Actions",
     records: "records",
-    restore: "↩ Restore",
+    restore: "Restore",
     confirmRestore: "Yes, Restore",
     pickStock: "Pick from Stock",
-    selectItem: "— Select item —",
+    selectItem: "Select item",
 
     // Sales
     totalSales: "Total Sales",
@@ -160,12 +160,12 @@ export const T = {
     totalCredit: "Total credit",
     alreadyPaid: "Already paid",
     remaining: "Remaining",
-    paymentFlowNote: "Every payment — partial or full — goes straight to Sales",
+    paymentFlowNote: "Every payment, partial or full, goes straight to Sales",
     amountPaid: "Amount Being Paid (KES)",
     paymentNote: "Payment Note (optional)",
     paymentNotePh: "e.g. M-Pesa, Cash...",
     confirmPayment: "Confirm Payment",
-    clearDebt: "✓ This clears the full debt — moves to Sales",
+    clearDebt: "This clears the full debt, moves to Sales",
     partialPay: (actual, after) =>
       `KES ${actual} → Sales · KES ${after} still outstanding`,
     badDebt: "Bad Debt",
@@ -177,14 +177,14 @@ export const T = {
     overdueLabel: "OVERDUE",
     noPayments: "No payments recorded",
     creditPaymentDesc: "Credit payment",
-    finalPaymentNote: "Final payment — debt cleared.",
+    finalPaymentNote: "Final payment, debt cleared.",
     partialPaymentNote: "Partial payment.",
     originallyIssued: "Originally issued",
     writtenOffToLosses: "written off to Losses",
     staysInSales: "already collected stays in Sales",
     badDebtWrittenOff: "Bad debt written off",
     badDebtNoUnpaid:
-      "Marked as bad debt (nothing to write off — already fully collected).",
+      "Marked as bad debt (nothing to write off, already fully collected).",
     cannotBeUndone: "This cannot be undone.",
 
     // Stock
@@ -192,7 +192,7 @@ export const T = {
     addItem: "Add Item",
     addToStock: "Add to Stock",
     stockHint:
-      "Your product and item list — bookkeeping style. Record what you paid for it, what you'll sell it for, and how many you have, so you always know exactly what's in stock.",
+      "Your product list in bookkeeping style. Record what you paid for each item, what you will sell it for, and how many you have. Qty in Store shows how many are left in your shop right now.",
     itemName: "Item / Product Name",
     itemNamePh: "e.g. Sukuma wiki, Cake, Bread...",
     variant: "Variant (Color / Size / Volume)",
@@ -210,6 +210,36 @@ export const T = {
     minPrice: "Min Selling Price (KES per item)",
     maxPrice: "Max Selling Price (KES per item)",
     qtyInStock: "In stock",
+    qtyInStore: "Qty in Store",
+    outstandingCount: "Open Debts (count)",
+    qtySold: "Qty Sold",
+    qtyInStoreShort: "in store",
+    notInStock: "Not in stock",
+    fromStock: "From stock",
+    change: "Change",
+    clear: "Clear",
+    noItemChosen: "No item chosen yet. Search or pick from the list below.",
+    searchOrType: "Search stock or type a new item",
+    typeToAdd: "No stock items yet. Type the item name above.",
+    use: "Use",
+    typedManually: "Typed manually",
+    newItemTag: "New, not in stock list",
+    uploadPhoto: "Upload photo",
+    changePhoto: "Change photo",
+    removePhoto: "Remove",
+    photoHint: "JPG or PNG. A square photo or shop logo works best.",
+    photoSaved: "Profile photo updated.",
+    photoRemoved: "Profile photo removed.",
+    photoSaveFailed: "Could not save the photo. Please try again.",
+    photoNotImage: "Please choose an image file (JPG or PNG).",
+    photoTooBig: "That image is larger than 10 MB. Please choose a smaller one.",
+    photoUnreadable: "Could not read this image. Try a JPG or PNG photo.",
+    businessDetailsHint: "How your business appears on receipts and reports.",
+    shopLocationHint: "Helps customers and our support team find your shop.",
+    emailLocked: "Your login email cannot be changed here.",
+    pickCountyFirst: "Pick a county first",
+    saveHint: "Remember to save after making changes.",
+    savedWillSync: "Saved on this device. It will sync when your internet is back.",
     stockValue: "Stock value",
     purchased: "Purchased",
     sold: "Sold",
@@ -222,7 +252,7 @@ export const T = {
     totalActualProfit: "Actual Profit (so far)",
     restock: "Restock",
     restockQty: "Quantity to add",
-    restockCost: "Cost Paid (KES) — optional, defaults to purchase price",
+    restockCost: "Cost Paid (KES), optional, defaults to purchase price",
     outOfStock: "Out of stock",
     paymentMethod: "Payment Method",
     paymentMethods: {
@@ -263,11 +293,11 @@ export const T = {
     allowedAmount: "Allowed",
     writeOffDate: "Date written off",
     writeOffDateHint:
-      "Pick the day this debt was actually written off — it can be earlier than today.",
+      "Pick the day this debt was actually written off, it can be earlier than today.",
     saveDate: "Save date",
     stockedDate: "Date stocked",
     paymentDateHint:
-      "Pick the day the money was actually paid — it can be earlier than the debt itself.",
+      "Pick the day the money was actually paid, it can be earlier than the debt itself.",
     updateStockLabel: "Also update my current stock",
     updateStockHint:
       "Tick this if the goods really leave (or arrive in) your stock now. Leave it unticked for older entries that your stock count already reflects.",
@@ -286,11 +316,11 @@ export const T = {
     yes: "Yes",
     no: "No",
     closeLabel: "Close",
-    debtReopenedToast: "Debt reopened — the balance is owed again.",
+    debtReopenedToast: "Debt reopened, the balance is owed again.",
     paymentRemovedToast: "Payment removed from this credit and from Sales.",
     paymentUpdatedToast: "Payment updated.",
     salesEntryMissing:
-      "Credit updated, but the matching Sales entry wasn't found — please check Sales.",
+      "Credit updated, but the matching Sales entry wasn't found, please check Sales.",
     badDebtCanReopen: "You can reopen it later if the customer decides to pay.",
     paymentStatus: "Payment",
     paidInFull: "Paid in full",
@@ -369,7 +399,7 @@ export const T = {
     previousChats: "Previous Chats",
     newChat: "New Chat",
     deleteChats: "Delete Chats",
-    aiGreeting: "Hello! 👋",
+    aiGreeting: "Hello!",
     aiAskAnything: "Ask me anything about your business.",
     thinking: "Thinking...",
     aiPlaceholder: "Ask about your sales, debts, profit...",
@@ -421,8 +451,8 @@ export const T = {
     whatsappDesc: "Prefer a faster reply? Message us directly on WhatsApp.",
     whatsappLabel: "Quick responses, tap to chat.",
     supportHours: "Support Hours",
-    supportHoursDetail1: "Monday – Friday: 8:00 AM – 8:00 PM EAT",
-    supportHoursDetail2: "Saturday: 9:00 AM – 5:00 PM EAT",
+    supportHoursDetail1: "Monday to Friday: 8:00 AM to 8:00 PM EAT",
+    supportHoursDetail2: "Saturday: 9:00 AM to 5:00 PM EAT",
     supportHoursDetail3: "Sunday: Closed (responses on Monday)",
     aboutQuickDuka: "About QuickDuka",
     aboutDesc1:
@@ -451,19 +481,19 @@ export const T = {
     howToSteps: [
       {
         title: "Dashboard",
-        desc: "Your dashboard is the first thing you see when you log in. It shows your sales, purchases, expenses, losses and profit for the current month at a glance. Recent activity lists your latest sales, purchases, expenses and credits — a credit shows at KES 0 when you give it and grows as the customer pays. If you owe suppliers for stock bought on credit, a reminder panel shows what is due. You also see a 6-month performance chart.",
+        desc: "Your dashboard is the first thing you see when you log in. It shows your sales, purchases, expenses, losses and profit for the current month at a glance. Recent activity lists your latest sales, purchases, expenses and credits, a credit shows at KES 0 when you give it and grows as the customer pays. If you owe suppliers for stock bought on credit, a reminder panel shows what is due. You also see a 6-month performance chart.",
       },
       {
         title: "Recording Sales",
-        desc: "Go to Sales and tap New Sale. The date defaults to today — tap the date to open the calendar and pick an earlier day if you are adding an old sale. Pick the item from your stock list. If you sell one product in different sizes (for example Water 0.375 L and Water 0.5 L), pick the size you sold. Enter the quantity (decimals like 0.5 are fine), the customer name and phone (both optional), and how they paid: Cash, M-Pesa, M-Pesa Till, Paybill (bank or business), Pochi la Biashara, Send Money, Airtel Money or Card. The amount fills in from your price list. Type the amount the customer actually pays — it can be lower or higher than the list price, but only within the price range set for that item in Stock (or exactly the fixed price). The quantity is taken out of your stock automatically.",
+        desc: "Go to Sales and tap New Sale. The date defaults to today, tap the date to open the calendar and pick an earlier day if you are adding an old sale. Pick the item from your stock list. If you sell one product in different sizes (for example Water 0.375 L and Water 0.5 L), pick the size you sold. Enter the quantity (decimals like 0.5 are fine), the customer name and phone (both optional), and how they paid: Cash, M-Pesa, M-Pesa Till, Paybill (bank or business), Pochi la Biashara, Send Money, Airtel Money or Card. The amount fills in from your price list. Type the amount the customer actually pays, it can be lower or higher than the list price, but only within the price range set for that item in Stock (or exactly the fixed price). The quantity is taken out of your stock automatically.",
       },
       {
         title: "Tracking Debts with Credits",
-        desc: "When a customer takes goods on credit, go to Credits and tap New Credit. Pick the item from your stock and enter the quantity — like a sale, it leaves your stock straight away. Then enter the customer's name, phone, total amount and a due date. When they pay, tap Pay on their card, enter the amount and choose how they paid. Each payment is added to Sales as you receive it, and the balance updates. If you delete a credit before they have paid anything, the goods go back into your stock. If someone never pays, mark them as Bad Debt and the unpaid amount is written off as a loss. Made a mistake, or the customer decides to pay later? Tap Edit on the credit to remove or correct a payment, or to reopen a written-off debt.",
+        desc: "When a customer takes goods on credit, go to Credits and tap New Credit. Pick the item from your stock and enter the quantity, like a sale, it leaves your stock straight away. Then enter the customer's name, phone, total amount and a due date. When they pay, tap Pay on their card, enter the amount and choose how they paid. Each payment is added to Sales as you receive it, and the balance updates. If you delete a credit before they have paid anything, the goods go back into your stock. If someone never pays, mark them as Bad Debt and the unpaid amount is written off as a loss. Made a mistake, or the customer decides to pay later? Tap Edit on the credit to remove or correct a payment, or to reopen a written-off debt.",
       },
       {
         title: "Recording Purchases",
-        desc: "Purchases now live inside the Stock/Purchases page. Open Stock/Purchases, switch to the Purchase history tab and tap New Purchase. Pick the item from your stock (or type a new one and it is added to your stock automatically), then enter the supplier, quantity and total cost. The quantity is added to your stock. You can also use the Restock button on the Stock tab when new goods arrive — it records the purchase for you.",
+        desc: "Purchases now live inside the Stock/Purchases page. Open Stock/Purchases, switch to the Purchase history tab and tap New Purchase. Pick the item from your stock (or type a new one and it is added to your stock automatically), then enter the supplier, quantity and total cost. The quantity is added to your stock. You can also use the Restock button on the Stock tab when new goods arrive, it records the purchase for you.",
       },
       {
         title: "Buying Stock on Credit",
@@ -479,7 +509,7 @@ export const T = {
       },
       {
         title: "Stock Catalogue and Sizes",
-        desc: "Use Stock/Purchases to keep a list of everything you sell, with buying and selling prices and how many you have left. If you sell the same product in different sizes — for example Water 0.375 L and Water 0.5 L — add each size as its own item using the Variant field, so each has its own price and stock count. Quantities can be decimals (like 0.5 or 0.375). Sales and credits pick from this list and reduce your stock automatically. Tap Restock when new goods arrive.",
+        desc: "Use Stock/Purchases to keep a list of everything you sell, with buying and selling prices and how many you have left. If you sell the same product in different sizes, for example Water 0.375 L and Water 0.5 L, add each size as its own item using the Variant field, so each has its own price and stock count. Quantities can be decimals (like 0.5 or 0.375). Sales and credits pick from this list and reduce your stock automatically. Tap Restock when new goods arrive.",
       },
       {
         title: "Reports",
@@ -497,31 +527,31 @@ export const T = {
     faqList: [
       {
         q: "What plans does QuickDuka offer?",
-        a: `QuickDuka has three plans:\n\n🟢 Starter — KES 100/mo\nOne shop, owner only. Perfect for a solo trader who wants to track sales, expenses and profit.\n\n🔵 Growth — KES 250/mo\nOne shop with unlimited staff accounts. Your team each get their own login while you manage everything as the owner.\n\n🟣 Business — KES 700/mo\nMultiple branches, a central admin dashboard, and combined reports across all your shops.\n\nAll plans include a free 1-month trial. No card needed — pay via M-Pesa.`,
+        a: `QuickDuka has three plans:\n\nStarter: KES 100/mo\nOne shop, owner only. Perfect for a solo trader who wants to track sales, expenses and profit.\n\nGrowth: KES 250/mo\nOne shop with unlimited staff accounts. Your team each get their own login while you manage everything as the owner.\n\nBusiness: KES 700/mo\nMultiple branches, a central admin dashboard, and combined reports across all your shops.\n\nAll plans include a free 1-month trial. No card needed, pay via M-Pesa.`,
       },
       {
         q: "How much does QuickDuka cost?",
-        a: `There are three pricing tiers:\n\n🟢 Starter — KES 100/mo: One shop, owner only.\n🔵 Growth — KES 250/mo: One shop + unlimited staff accounts.\n🟣 Business — KES 700/mo: Multiple branches + central admin + combined reports.\n\nAll plans start with a free 1-month trial. You pay via M-Pesa STK push — no card required.`,
+        a: `There are three pricing tiers:\n\nStarter: KES 100/mo, One shop, owner only.\nGrowth: KES 250/mo, One shop + unlimited staff accounts.\nBusiness: KES 700/mo, Multiple branches + central admin + combined reports.\n\nAll plans start with a free 1-month trial. You pay via M-Pesa STK push, no card required.`,
       },
       {
         q: "How do I pay for my subscription?",
-        a: `On the payment screen, select your plan, enter your M-Pesa number and tap Pay Now. You will get a pop-up on your phone to enter your M-Pesa PIN, then tap Verify Payment.\n\n🟢 Starter: KES 100/mo\n🔵 Growth: KES 250/mo\n🟣 Business: KES 700/mo\n\nIf you have trouble, use the manual option and WhatsApp us your M-Pesa confirmation SMS.`,
+        a: `On the payment screen, select your plan, enter your M-Pesa number and tap Pay Now. You will get a pop-up on your phone to enter your M-Pesa PIN, then tap Verify Payment.\n\nStarter: KES 100/mo\nGrowth: KES 250/mo\nBusiness: KES 700/mo\n\nIf you have trouble, use the manual option and WhatsApp us your M-Pesa confirmation SMS.`,
       },
       {
         q: "Can I add staff to my account?",
-        a: `It depends on your plan:\n\n🟢 Starter (KES 100/mo): Owner account only — no extra staff logins.\n🔵 Growth (KES 250/mo): Unlimited staff accounts. Each team member gets their own login linked to your account.\n🟣 Business (KES 700/mo): Unlimited staff across multiple branches.\n\nUpgrade anytime from your profile.`,
+        a: `It depends on your plan:\n\nStarter (KES 100/mo): Owner account only, no extra staff logins.\nGrowth (KES 250/mo): Unlimited staff accounts. Each team member gets their own login linked to your account.\nBusiness (KES 700/mo): Unlimited staff across multiple branches.\n\nUpgrade anytime from your profile.`,
       },
       {
         q: "Can I manage multiple shops or branches?",
-        a: `Multiple branches are available on the Business plan only:\n\n🟢 Starter (KES 100/mo): One shop, one owner.\n🔵 Growth (KES 250/mo): One shop with a team.\n🟣 Business (KES 700/mo): Unlimited branches, central admin dashboard, and combined reporting across all shops.\n\nUpgrade to Business from your profile to unlock multi-branch management.`,
+        a: `Multiple branches are available on the Business plan only:\n\nStarter (KES 100/mo): One shop, one owner.\nGrowth (KES 250/mo): One shop with a team.\nBusiness (KES 700/mo): Unlimited branches, central admin dashboard, and combined reporting across all shops.\n\nUpgrade to Business from your profile to unlock multi-branch management.`,
       },
       {
         q: "Is there a free trial?",
-        a: `Yes — every new account gets a free 1-month trial with full access to all features.\n\nAfter the trial, choose the plan that fits your business:\n\n🟢 Starter — KES 100/mo: Solo owner, one shop.\n🔵 Growth — KES 250/mo: One shop + staff accounts.\n🟣 Business — KES 700/mo: Multiple branches + admin tools.\n\nNo card needed. Pay via M-Pesa when your trial ends.`,
+        a: `Yes, every new account gets a free 1-month trial with full access to all features.\n\nAfter the trial, choose the plan that fits your business:\n\nStarter: KES 100/mo, Solo owner, one shop.\nGrowth: KES 250/mo, One shop + staff accounts.\nBusiness: KES 700/mo, Multiple branches + admin tools.\n\nNo card needed. Pay via M-Pesa when your trial ends.`,
       },
       {
         q: "What happens when my subscription expires?",
-        a: `Your account is locked until you renew — but your data is never deleted. You get a 2-day grace period after expiry.\n\nRenew by paying for your plan via M-Pesa:\n\n🟢 Starter — KES 100/mo\n🔵 Growth — KES 250/mo\n🟣 Business — KES 700/mo\n\nYou can also upgrade to a higher plan at renewal.`,
+        a: `Your account is locked until you renew, but your data is never deleted. You get a 2-day grace period after expiry.\n\nRenew by paying for your plan via M-Pesa:\n\nStarter: KES 100/mo\nGrowth: KES 250/mo\nBusiness: KES 700/mo\n\nYou can also upgrade to a higher plan at renewal.`,
       },
       {
         q: "Can I log in with my phone number?",
@@ -533,7 +563,7 @@ export const T = {
       },
       {
         q: "How do I track who owes me money?",
-        a: "Use the Credits section. Pick the item from your stock and enter the quantity (it leaves your stock straight away), plus the customer's name, phone and amount. Record each payment as it comes in — partial payments are fine, and each one is added to Sales. The Dashboard shows the credit at KES 0 and it grows as the customer pays.",
+        a: "Use the Credits section. Pick the item from your stock and enter the quantity (it leaves your stock straight away), plus the customer's name, phone and amount. Record each payment as it comes in, partial payments are fine, and each one is added to Sales. The Dashboard shows the credit at KES 0 and it grows as the customer pays.",
       },
       {
         q: "Can I follow up on buyers or suppliers?",
@@ -557,11 +587,11 @@ export const T = {
       },
       {
         q: "How do I record stock I bought on credit or with a loan?",
-        a: "Go to Stock/Purchases → Purchase history → New Purchase (or tap Restock on an item). Set Payment to Not fully paid (on credit), enter what you have paid so far and the date you promised to pay the rest. The balance you owe is tracked for you. When you pay the supplier, tap Pay next to the balance and enter the amount — part payments are fine.",
+        a: "Go to Stock/Purchases → Purchase history → New Purchase (or tap Restock on an item). Set Payment to Not fully paid (on credit), enter what you have paid so far and the date you promised to pay the rest. The balance you owe is tracked for you. When you pay the supplier, tap Pay next to the balance and enter the amount, part payments are fine.",
       },
       {
         q: "Will I be reminded when a supplier payment is due?",
-        a: "Yes. Unpaid supplier balances show on your Dashboard with the promised date. They are marked DUE SOON when the date is within 3 days and OVERDUE after it. Reminders show when you open the app — QuickDuka does not send SMS or WhatsApp reminders.",
+        a: "Yes. Unpaid supplier balances show on your Dashboard with the promised date. They are marked DUE SOON when the date is within 3 days and OVERDUE after it. Reminders show when you open the app, QuickDuka does not send SMS or WhatsApp reminders.",
       },
       {
         q: "Where did the Purchases page go?",
@@ -569,7 +599,7 @@ export const T = {
       },
       {
         q: "How do I sell the same product in different sizes, like 0.375 L and 0.5 L water?",
-        a: "In Stock/Purchases, add each size as its own item and put the size in the Variant field (for example Water — 0.375 L, and Water — 0.5 L). Each size gets its own price and stock count. When selling, pick the exact size from the list.",
+        a: "In Stock/Purchases, add each size as its own item and put the size in the Variant field (for example Water: 0.375 L, and Water: 0.5 L). Each size gets its own price and stock count. When selling, pick the exact size from the list.",
       },
       {
         q: "Can I sell or buy in fractions like 0.5 kg?",
@@ -589,15 +619,15 @@ export const T = {
       },
       {
         q: "I marked a debt paid by mistake, or a customer I wrote off now wants to pay. What do I do?",
-        a: "Open Credits, find the credit and tap Edit. To fix a wrong payment, remove it or change its amount or payment method — the matching entry in Sales updates too, and the balance comes back. For a written-off debt, tap Reopen debt: the write-off is removed from Losses and you can record payments again.",
+        a: "Open Credits, find the credit and tap Edit. To fix a wrong payment, remove it or change its amount or payment method, the matching entry in Sales updates too, and the balance comes back. For a written-off debt, tap Reopen debt: the write-off is removed from Losses and you can record payments again.",
       },
       {
         q: "Can I add sales or expenses from an earlier date, like last April?",
-        a: "Yes. On every form (Sales, Credits, Expenses, Losses, Purchases) tap the Date field to open the calendar and pick the day. Future dates are not allowed. The date stays on your chosen day for the next entry, with a banner reminding you it is not today — tap Today to switch back. Recording a credit payment, a supplier payment or a bad-debt write-off also asks for the day it really happened (it can be earlier than the debt). You can also fix the date of an existing entry with its Edit button in the list. For an entry older than a week, QuickDuka does not change your current stock by default; tick Also update my current stock if it should.",
+        a: "Yes. On every form (Sales, Credits, Expenses, Losses, Purchases) tap the Date field to open the calendar and pick the day. Future dates are not allowed. The date stays on your chosen day for the next entry, with a banner reminding you it is not today, tap Today to switch back. Recording a credit payment, a supplier payment or a bad-debt write-off also asks for the day it really happened (it can be earlier than the debt). You can also fix the date of an existing entry with its Edit button in the list. For an entry older than a week, QuickDuka does not change your current stock by default; tick Also update my current stock if it should.",
       },
       {
         q: "Why does it say my amount is outside the allowed price?",
-        a: "Every item in Stock has a selling price: either a range (a minimum and a maximum per unit) or one fixed price. Sales and credits must stay inside it — the allowed total for the quantity you entered is shown under the amount field. Type an amount within that range. To sell at other prices, change the item's price in Stock first.",
+        a: "Every item in Stock has a selling price: either a range (a minimum and a maximum per unit) or one fixed price. Sales and credits must stay inside it, the allowed total for the quantity you entered is shown under the amount field. Type an amount within that range. To sell at other prices, change the item's price in Stock first.",
       },
     ],
 
@@ -612,7 +642,7 @@ export const T = {
     collectItem3:
       "Business records you enter: sales, purchases, expenses, credits, and stock items",
     collectItem4:
-      "Subscription and payment status (not your M-Pesa PIN — we never see that)",
+      "Subscription and payment status (not your M-Pesa PIN, we never see that)",
     howWeUseData: "How We Use Your Data",
     useDataIntro: "Your data is used exclusively to:",
     useItem1:
@@ -650,7 +680,7 @@ export const T = {
     newToApp: "New to QuickDuka?",
     startTrial: "Start Free 1-Month Trial",
     earnReferring: "Earn by referring businesses?",
-    registerReferrer: "🤝 Register as a Referrer",
+    registerReferrer: "Register as a Referrer",
     alreadyAccount: "Already have an account? Sign in",
     resetPassword: "Reset Password",
     resetSubtitle:
@@ -698,13 +728,13 @@ export const T = {
     noReferralsYet: "No referrals yet.",
     inactiveWarning: (n) =>
       `${n} customer(s) are not paying or have gone inactive.`,
-    statusPaying: "✅ Paying",
-    statusTrial: "🎁 Trial",
-    statusNotPaying: "⚠️ Not Paying",
-    statusUnknown: "❓ Unknown",
+    statusPaying: "Paying",
+    statusTrial: "Trial",
+    statusNotPaying: "Not Paying",
+    statusUnknown: "Unknown",
     joined: "Joined",
     totalAllTime: "Total All-Time",
-    paid: "✓ Paid",
+    paid: "Paid",
   },
 
   sw: {
@@ -736,7 +766,7 @@ export const T = {
     // Common
     save: "Hifadhi",
     saving: "Inahifadhi...",
-    saved: "✅ Imehifadhiwa!",
+    saved: "Imehifadhiwa!",
     cancel: "Funga",
     edit: "Hariri",
     delete: "Futa",
@@ -751,10 +781,10 @@ export const T = {
     phone: "Simu",
     actions: "Vitendo",
     records: "rekodi",
-    restore: "↩ Rudisha",
+    restore: "Rudisha",
     confirmRestore: "Ndio, Rudisha",
     pickStock: "Chagua kutoka Katalogi",
-    selectItem: "— Chagua bidhaa —",
+    selectItem: "Chagua bidhaa",
 
     // Sales
     totalSales: "Jumla ya Mauzo",
@@ -866,12 +896,12 @@ export const T = {
     alreadyPaid: "Ashalipwa",
     remaining: "Iliyobaki",
     paymentFlowNote:
-      "Kila malipo — sehemu au yote — yanaenda moja kwa moja kwenye Mauzo",
+      "Kila malipo, sehemu au yote, yanaenda moja kwa moja kwenye Mauzo",
     amountPaid: "Kiasi Kinacholipwa (KES)",
     paymentNote: "Maelezo ya Malipo (hiari)",
     paymentNotePh: "mfano: M-Pesa, Taslimu...",
     confirmPayment: "Thibitisha Malipo",
-    clearDebt: "✓ Deni limeisha — inahamia Mauzo",
+    clearDebt: "Deni limeisha, inahamia Mauzo",
     partialPay: (actual, after) =>
       `KES ${actual} → Mauzo · KES ${after} bado inadaiwa`,
     badDebt: "Deni Baya",
@@ -883,14 +913,14 @@ export const T = {
     overdueLabel: "IMECHELEWA",
     noPayments: "Hakuna malipo yaliyorekodiwa",
     creditPaymentDesc: "Malipo ya mkopo",
-    finalPaymentNote: "Malipo ya mwisho — deni limeisha.",
+    finalPaymentNote: "Malipo ya mwisho, deni limeisha.",
     partialPaymentNote: "Malipo ya sehemu.",
     originallyIssued: "Ilitolewa tarehe",
     writtenOffToLosses: "imeandikwa kwenye Hasara",
     staysInSales: "iliyokusanywa inabaki Mauzo",
     badDebtWrittenOff: "Deni baya limeandikwa",
     badDebtNoUnpaid:
-      "Imeandikwa kama deni baya (hakuna kilichobaki — kimekusanywa chote).",
+      "Imeandikwa kama deni baya (hakuna kilichobaki, kimekusanywa chote).",
     cannotBeUndone: "Haiwezi kurudishwa.",
 
     // Stock
@@ -898,7 +928,7 @@ export const T = {
     addItem: "Ongeza Bidhaa",
     addToStock: "Ongeza kwa Katalogi",
     stockHint:
-      "Orodha ya bidhaa zako — mfumo wa kuhifadhi kumbukumbu. Andika ulichonunua kwa bei gani, utauza kwa bei gani, na idadi uliyonayo, ili ujue hasa kilichopo dukani.",
+      "Orodha ya bidhaa zako kwa mfumo wa kumbukumbu. Andika ulichonunua kwa bei gani, utauza kwa bei gani, na idadi uliyonayo. Idadi Dukani inaonyesha bidhaa zilizobaki dukani sasa hivi.",
     itemName: "Jina la Bidhaa",
     itemNamePh: "mfano: Sukuma wiki, Mkate, Simu...",
     variant: "Aina (Rangi / Ukubwa / Kiasi)",
@@ -916,6 +946,36 @@ export const T = {
     minPrice: "Bei ya Chini ya Kuuza (KES kwa kimoja)",
     maxPrice: "Bei ya Juu ya Kuuza (KES kwa kimoja)",
     qtyInStock: "Zilizopo",
+    qtyInStore: "Idadi Dukani",
+    outstandingCount: "Madeni Yaliyo Wazi (idadi)",
+    qtySold: "Idadi Zilizouzwa",
+    qtyInStoreShort: "dukani",
+    notInStock: "Haipo dukani",
+    fromStock: "Kutoka dukani",
+    change: "Badilisha",
+    clear: "Futa",
+    noItemChosen: "Hujachagua bidhaa bado. Tafuta au chagua kwenye orodha hapa chini.",
+    searchOrType: "Tafuta bidhaa au andika bidhaa mpya",
+    typeToAdd: "Hakuna bidhaa dukani bado. Andika jina la bidhaa hapo juu.",
+    use: "Tumia",
+    typedManually: "Imeandikwa kwa mkono",
+    newItemTag: "Mpya, haipo kwenye orodha",
+    uploadPhoto: "Weka picha",
+    changePhoto: "Badilisha picha",
+    removePhoto: "Ondoa",
+    photoHint: "JPG au PNG. Picha ya mraba au nembo ya duka ni bora.",
+    photoSaved: "Picha ya wasifu imesasishwa.",
+    photoRemoved: "Picha ya wasifu imeondolewa.",
+    photoSaveFailed: "Imeshindwa kuhifadhi picha. Tafadhali jaribu tena.",
+    photoNotImage: "Tafadhali chagua faili ya picha (JPG au PNG).",
+    photoTooBig: "Picha hiyo ni kubwa kuliko MB 10. Tafadhali chagua ndogo zaidi.",
+    photoUnreadable: "Imeshindwa kusoma picha hii. Jaribu picha ya JPG au PNG.",
+    businessDetailsHint: "Jinsi biashara yako inavyoonekana kwenye risiti na ripoti.",
+    shopLocationHint: "Inasaidia wateja na timu yetu ya msaada kupata duka lako.",
+    emailLocked: "Barua pepe ya kuingia haiwezi kubadilishwa hapa.",
+    pickCountyFirst: "Chagua kaunti kwanza",
+    saveHint: "Kumbuka kuhifadhi baada ya kubadilisha.",
+    savedWillSync: "Imehifadhiwa kwenye kifaa hiki. Itasawazishwa mtandao ukirudi.",
     stockValue: "Thamani ya Bidhaa",
     purchased: "Zilizonunuliwa",
     sold: "Zilizouzwa",
@@ -928,7 +988,7 @@ export const T = {
     totalActualProfit: "Faida Halisi (hadi sasa)",
     restock: "Ongeza Bidhaa Dukani",
     restockQty: "Idadi ya kuongeza",
-    restockCost: "Gharama Iliyolipwa (KES) — hiari, itatumia bei ya ununuzi",
+    restockCost: "Gharama Iliyolipwa (KES), hiari, itatumia bei ya ununuzi",
     outOfStock: "Haipo dukani",
     paymentMethod: "Njia ya Malipo",
     paymentMethods: {
@@ -969,11 +1029,11 @@ export const T = {
     allowedAmount: "Kinaruhusiwa",
     writeOffDate: "Tarehe ilipoandikwa kama hasara",
     writeOffDateHint:
-      "Chagua siku deni hili lilipoandikwa kama hasara kweli — inaweza kuwa kabla ya leo.",
+      "Chagua siku deni hili lilipoandikwa kama hasara kweli, inaweza kuwa kabla ya leo.",
     saveDate: "Hifadhi tarehe",
     stockedDate: "Tarehe ya kuweka dukani",
     paymentDateHint:
-      "Chagua siku pesa zilipolipwa kweli — inaweza kuwa kabla ya deni lenyewe.",
+      "Chagua siku pesa zilipolipwa kweli, inaweza kuwa kabla ya deni lenyewe.",
     updateStockLabel: "Sasisha pia bidhaa zilizopo dukani",
     updateStockHint:
       "Weka tiki ikiwa bidhaa zinatoka (au zinaingia) dukani sasa. Usiweke tiki kwa rekodi za zamani ambazo tayari zimo kwenye idadi yako ya dukani.",
@@ -992,11 +1052,11 @@ export const T = {
     yes: "Ndiyo",
     no: "Hapana",
     closeLabel: "Funga",
-    debtReopenedToast: "Deni limefunguliwa tena — salio linadaiwa tena.",
+    debtReopenedToast: "Deni limefunguliwa tena, salio linadaiwa tena.",
     paymentRemovedToast: "Malipo yameondolewa kwenye mkopo huu na kwenye Mauzo.",
     paymentUpdatedToast: "Malipo yamesasishwa.",
     salesEntryMissing:
-      "Mkopo umesasishwa, lakini rekodi husika kwenye Mauzo haikupatikana — tafadhali angalia Mauzo.",
+      "Mkopo umesasishwa, lakini rekodi husika kwenye Mauzo haikupatikana, tafadhali angalia Mauzo.",
     badDebtCanReopen: "Unaweza kulifungua tena mteja akiamua kulipa.",
     paymentStatus: "Malipo",
     paidInFull: "Nimelipa yote",
@@ -1076,7 +1136,7 @@ export const T = {
     previousChats: "Mazungumzo ya Awali",
     newChat: "Mazungumzo Mapya",
     deleteChats: "Futa Mazungumzo",
-    aiGreeting: "Habari! 👋",
+    aiGreeting: "Habari!",
     aiAskAnything: "Niulize chochote kuhusu biashara yako.",
     thinking: "Inafikiri...",
     aiPlaceholder: "Uliza kuhusu mauzo, madeni, faida...",
@@ -1129,8 +1189,8 @@ export const T = {
       "Unataka jibu la haraka? Tutumie ujumbe moja kwa moja kwenye WhatsApp.",
     whatsappLabel: "Majibu ya haraka, bonyeza kuanzisha mazungumzo.",
     supportHours: "Masaa ya Msaada",
-    supportHoursDetail1: "Jumatatu – Ijumaa: 8:00 AM – 8:00 PM EAT",
-    supportHoursDetail2: "Jumamosi: 9:00 AM – 5:00 PM EAT",
+    supportHoursDetail1: "Jumatatu hadi Ijumaa: 8:00 AM hadi 8:00 PM EAT",
+    supportHoursDetail2: "Jumamosi: 9:00 AM hadi 5:00 PM EAT",
     supportHoursDetail3: "Jumapili: Imefungwa (majibu Jumatatu)",
     aboutQuickDuka: "Kuhusu QuickDuka",
     aboutDesc1:
@@ -1159,23 +1219,23 @@ export const T = {
     howToSteps: [
       {
         title: "Dashibodi",
-        desc: "Dashibodi ndiyo jambo la kwanza unaona unapoingia. Inaonyesha mauzo, manunuzi, gharama, hasara na faida yako kwa mwezi huu kwa haraka. Shughuli za hivi karibuni zinaorodhesha mauzo, manunuzi, gharama na mikopo yako ya karibuni — mkopo unaonekana kama KES 0 unapoutoa na huongezeka mteja anapolipa. Ikiwa unadaiwa na wauzaji kwa hisa ulizochukua kwa deni, kikumbusho kinaonyesha kinachosubiri kulipwa. Pia unaona chati ya utendaji wa miezi 6.",
+        desc: "Dashibodi ndiyo jambo la kwanza unaona unapoingia. Inaonyesha mauzo, manunuzi, gharama, hasara na faida yako kwa mwezi huu kwa haraka. Shughuli za hivi karibuni zinaorodhesha mauzo, manunuzi, gharama na mikopo yako ya karibuni, mkopo unaonekana kama KES 0 unapoutoa na huongezeka mteja anapolipa. Ikiwa unadaiwa na wauzaji kwa hisa ulizochukua kwa deni, kikumbusho kinaonyesha kinachosubiri kulipwa. Pia unaona chati ya utendaji wa miezi 6.",
       },
       {
         title: "Kurekodi Mauzo",
-        desc: "Nenda Mauzo na gonga Mauzo Mapya. Tarehe huwa ya leo — gonga tarehe kufungua kalenda na uchague siku ya awali ukiongeza mauzo ya zamani. Chagua bidhaa kutoka kwenye orodha yako ya bidhaa. Ukiuza bidhaa moja kwa ukubwa tofauti (mfano Maji 0.375 L na Maji 0.5 L), chagua ukubwa uliouza. Weka kiasi (desimali kama 0.5 zinaruhusiwa), jina na simu ya mteja (hiari), kisha chagua njia ya malipo: Fedha Taslimu, M-Pesa, Till ya M-Pesa, Paybill (Benki / Biashara), Pochi la Biashara, Tuma Pesa, Airtel Money au Kadi. Kiasi kinajazwa kutoka kwenye orodha yako ya bei. Andika kiasi anacholipa mteja kweli — kinaweza kuwa chini au juu ya bei ya orodha, lakini ndani ya kiwango cha bei kilichowekwa kwa bidhaa hiyo kwenye Bidhaa tu (au bei maalum kamili). Bidhaa inapunguzwa dukani moja kwa moja.",
+        desc: "Nenda Mauzo na gonga Mauzo Mapya. Tarehe huwa ya leo, gonga tarehe kufungua kalenda na uchague siku ya awali ukiongeza mauzo ya zamani. Chagua bidhaa kutoka kwenye orodha yako ya bidhaa. Ukiuza bidhaa moja kwa ukubwa tofauti (mfano Maji 0.375 L na Maji 0.5 L), chagua ukubwa uliouza. Weka kiasi (desimali kama 0.5 zinaruhusiwa), jina na simu ya mteja (hiari), kisha chagua njia ya malipo: Fedha Taslimu, M-Pesa, Till ya M-Pesa, Paybill (Benki / Biashara), Pochi la Biashara, Tuma Pesa, Airtel Money au Kadi. Kiasi kinajazwa kutoka kwenye orodha yako ya bei. Andika kiasi anacholipa mteja kweli, kinaweza kuwa chini au juu ya bei ya orodha, lakini ndani ya kiwango cha bei kilichowekwa kwa bidhaa hiyo kwenye Bidhaa tu (au bei maalum kamili). Bidhaa inapunguzwa dukani moja kwa moja.",
       },
       {
         title: "Kufuatilia Madeni kwa Mikopo",
-        desc: "Mteja anapochukua bidhaa kwa mkopo, nenda Mikopo na gonga Mkopo Mpya. Chagua bidhaa kutoka dukani na weka kiasi — kama mauzo, bidhaa hupunguzwa dukani papo hapo. Kisha weka jina la mteja, simu, jumla ya kiasi na tarehe ya mwisho. Mteja anapolipa, gonga Lipa kwenye kadi yake, weka kiasi na uchague njia ya malipo. Kila malipo huingia kwenye Mauzo unapoyapokea, na salio husasishwa. Ukifuta mkopo kabla hajalipa chochote, bidhaa hurudi dukani. Mtu asipolipa kabisa, mwashirie kama Deni Baya na kiasi ambacho hakijalipwa kinaandikwa kama hasara. Umekosea, au mteja ameamua kulipa baadaye? Gonga Hariri kwenye mkopo kuondoa au kurekebisha malipo, au kufungua tena deni lililoandikwa kama hasara.",
+        desc: "Mteja anapochukua bidhaa kwa mkopo, nenda Mikopo na gonga Mkopo Mpya. Chagua bidhaa kutoka dukani na weka kiasi, kama mauzo, bidhaa hupunguzwa dukani papo hapo. Kisha weka jina la mteja, simu, jumla ya kiasi na tarehe ya mwisho. Mteja anapolipa, gonga Lipa kwenye kadi yake, weka kiasi na uchague njia ya malipo. Kila malipo huingia kwenye Mauzo unapoyapokea, na salio husasishwa. Ukifuta mkopo kabla hajalipa chochote, bidhaa hurudi dukani. Mtu asipolipa kabisa, mwashirie kama Deni Baya na kiasi ambacho hakijalipwa kinaandikwa kama hasara. Umekosea, au mteja ameamua kulipa baadaye? Gonga Hariri kwenye mkopo kuondoa au kurekebisha malipo, au kufungua tena deni lililoandikwa kama hasara.",
       },
       {
         title: "Kurekodi Manunuzi",
-        desc: "Manunuzi sasa yako ndani ya ukurasa wa Bidhaa/Manunuzi. Fungua Bidhaa/Manunuzi, nenda kwenye kichupo cha Historia ya manunuzi na gonga Ununuzi Mpya. Chagua bidhaa kutoka dukani (au andika mpya na itaongezwa dukani moja kwa moja), kisha weka muuzaji, kiasi na jumla ya gharama. Kiasi kinaongezwa dukani. Unaweza pia kutumia kitufe cha Ongeza Bidhaa Dukani kwenye kichupo cha Bidhaa bidhaa mpya zinapofika — kinarekodi ununuzi kwa ajili yako.",
+        desc: "Manunuzi sasa yako ndani ya ukurasa wa Bidhaa/Manunuzi. Fungua Bidhaa/Manunuzi, nenda kwenye kichupo cha Historia ya manunuzi na gonga Ununuzi Mpya. Chagua bidhaa kutoka dukani (au andika mpya na itaongezwa dukani moja kwa moja), kisha weka muuzaji, kiasi na jumla ya gharama. Kiasi kinaongezwa dukani. Unaweza pia kutumia kitufe cha Ongeza Bidhaa Dukani kwenye kichupo cha Bidhaa bidhaa mpya zinapofika, kinarekodi ununuzi kwa ajili yako.",
       },
       {
         title: "Kununua Hisa kwa Deni",
-        desc: "Umechukua hisa kwa deni au mkopo? Unaporekodi ununuzi au kuongeza bidhaa dukani, weka Malipo kuwa Sijamaliza kulipa (deni). Weka ulichokwisha lipa hadi sasa (0 ikiwa hujalipa chochote) na tarehe uliyoahidi kulipa kilichobaki. Programu hufuatilia unachodaiwa kwa kila ununuzi. Madeni yanaonekana kwenye Dashibodi pamoja na tarehe ya kulipa — INAKARIBIA ikiwa imebaki siku 3 au chini, na IMECHELEWA baada ya tarehe hiyo. Unapomlipa muuzaji, fungua Bidhaa/Manunuzi, nenda Historia ya manunuzi na gonga Lipa karibu na deni. Unaweza kulipa kwa awamu, kuchagua njia ya malipo na kuweka tarehe mpya ya kilichobaki. Gharama kamili huhesabiwa kwenye faida tangu siku uliponunua hisa. Vikumbusho huonekana unapofungua programu.",
+        desc: "Umechukua hisa kwa deni au mkopo? Unaporekodi ununuzi au kuongeza bidhaa dukani, weka Malipo kuwa Sijamaliza kulipa (deni). Weka ulichokwisha lipa hadi sasa (0 ikiwa hujalipa chochote) na tarehe uliyoahidi kulipa kilichobaki. Programu hufuatilia unachodaiwa kwa kila ununuzi. Madeni yanaonekana kwenye Dashibodi pamoja na tarehe ya kulipa, INAKARIBIA ikiwa imebaki siku 3 au chini, na IMECHELEWA baada ya tarehe hiyo. Unapomlipa muuzaji, fungua Bidhaa/Manunuzi, nenda Historia ya manunuzi na gonga Lipa karibu na deni. Unaweza kulipa kwa awamu, kuchagua njia ya malipo na kuweka tarehe mpya ya kilichobaki. Gharama kamili huhesabiwa kwenye faida tangu siku uliponunua hisa. Vikumbusho huonekana unapofungua programu.",
       },
       {
         title: "Kurekodi Gharama",
@@ -1187,7 +1247,7 @@ export const T = {
       },
       {
         title: "Katalogi ya Bidhaa na Ukubwa",
-        desc: "Tumia Bidhaa/Manunuzi kuweka orodha ya kila kitu unachouza, pamoja na bei za kununua na kuuza na idadi iliyobaki. Ukiuza bidhaa ile ile kwa ukubwa tofauti — mfano Maji 0.375 L na Maji 0.5 L — ongeza kila ukubwa kama bidhaa yake kwa kutumia sehemu ya Aina (Rangi / Ukubwa / Kiasi), ili kila mmoja awe na bei yake na idadi yake. Kiasi kinaweza kuwa na desimali (mfano 0.5 au 0.375). Mauzo na mikopo huchagua kutoka orodha hii na kupunguza bidhaa dukani moja kwa moja. Gonga Ongeza Bidhaa Dukani bidhaa mpya zinapofika.",
+        desc: "Tumia Bidhaa/Manunuzi kuweka orodha ya kila kitu unachouza, pamoja na bei za kununua na kuuza na idadi iliyobaki. Ukiuza bidhaa ile ile kwa ukubwa tofauti, mfano Maji 0.375 L na Maji 0.5 L, ongeza kila ukubwa kama bidhaa yake kwa kutumia sehemu ya Aina (Rangi / Ukubwa / Kiasi), ili kila mmoja awe na bei yake na idadi yake. Kiasi kinaweza kuwa na desimali (mfano 0.5 au 0.375). Mauzo na mikopo huchagua kutoka orodha hii na kupunguza bidhaa dukani moja kwa moja. Gonga Ongeza Bidhaa Dukani bidhaa mpya zinapofika.",
       },
       {
         title: "Ripoti",
@@ -1205,31 +1265,31 @@ export const T = {
     faqList: [
       {
         q: "QuickDuka ina mipango gani?",
-        a: `QuickDuka ina mipango mitatu:\n\n🟢 Starter — KES 100/mwezi\nDuka moja, mmiliki peke yake. Inafaa kwa mfanyabiashara wa peke yake anayetaka kufuatilia mauzo, gharama na faida.\n\n🔵 Growth — KES 250/mwezi\nDuka moja na akaunti nyingi za wafanyakazi. Timu yako kila mmoja anaingia kwa nambari yake huku ukisimamia kila kitu kama mmiliki.\n\n🟣 Business — KES 700/mwezi\nMatawi mengi, dashibodi ya msimamizi mkuu, na ripoti za pamoja za maduka yako yote.\n\nMipango yote inaanza na jaribio la bure la mwezi 1. Hakuna kadi — lipa kupitia M-Pesa.`,
+        a: `QuickDuka ina mipango mitatu:\n\nStarter: KES 100/mwezi\nDuka moja, mmiliki peke yake. Inafaa kwa mfanyabiashara wa peke yake anayetaka kufuatilia mauzo, gharama na faida.\n\nGrowth: KES 250/mwezi\nDuka moja na akaunti nyingi za wafanyakazi. Timu yako kila mmoja anaingia kwa nambari yake huku ukisimamia kila kitu kama mmiliki.\n\nBusiness: KES 700/mwezi\nMatawi mengi, dashibodi ya msimamizi mkuu, na ripoti za pamoja za maduka yako yote.\n\nMipango yote inaanza na jaribio la bure la mwezi 1. Hakuna kadi, lipa kupitia M-Pesa.`,
       },
       {
         q: "QuickDuka inagharimu kiasi gani?",
-        a: `Kuna viwango vitatu vya bei:\n\n🟢 Starter — KES 100/mwezi: Duka moja, mmiliki peke yake.\n🔵 Growth — KES 250/mwezi: Duka moja + akaunti nyingi za wafanyakazi.\n🟣 Business — KES 700/mwezi: Matawi mengi + msimamizi mkuu + ripoti za pamoja.\n\nMipango yote inaanza na jaribio la bure la mwezi 1. Unalipa kupitia M-Pesa STK push — hakuna kadi inayohitajika.`,
+        a: `Kuna viwango vitatu vya bei:\n\nStarter: KES 100/mwezi, Duka moja, mmiliki peke yake.\nGrowth: KES 250/mwezi, Duka moja + akaunti nyingi za wafanyakazi.\nBusiness: KES 700/mwezi, Matawi mengi + msimamizi mkuu + ripoti za pamoja.\n\nMipango yote inaanza na jaribio la bure la mwezi 1. Unalipa kupitia M-Pesa STK push, hakuna kadi inayohitajika.`,
       },
       {
         q: "Ninawezaje kulipa usajili wangu?",
-        a: `Kwenye skrini ya malipo, chagua mpango wako, weka nambari yako ya M-Pesa na gonga Lipa Sasa. Utapata pop-up kwenye simu yako kuingiza PIN yako ya M-Pesa, kisha gonga Thibitisha Malipo.\n\n🟢 Starter: KES 100/mwezi\n🔵 Growth: KES 250/mwezi\n🟣 Business: KES 700/mwezi\n\nUkipata shida, tumia chaguo la mkono na tutumie SMS yako ya uthibitisho wa M-Pesa kwenye WhatsApp.`,
+        a: `Kwenye skrini ya malipo, chagua mpango wako, weka nambari yako ya M-Pesa na gonga Lipa Sasa. Utapata pop-up kwenye simu yako kuingiza PIN yako ya M-Pesa, kisha gonga Thibitisha Malipo.\n\nStarter: KES 100/mwezi\nGrowth: KES 250/mwezi\nBusiness: KES 700/mwezi\n\nUkipata shida, tumia chaguo la mkono na tutumie SMS yako ya uthibitisho wa M-Pesa kwenye WhatsApp.`,
       },
       {
         q: "Ninaweza kuongeza wafanyakazi kwenye akaunti yangu?",
-        a: `Inategemea mpango wako:\n\n🟢 Starter (KES 100/mwezi): Akaunti ya mmiliki peke yake — hakuna kuingia kwa wafanyakazi wengine.\n🔵 Growth (KES 250/mwezi): Akaunti nyingi za wafanyakazi. Kila mwanachama wa timu anapata kuingia kwake mwenyewe.\n🟣 Business (KES 700/mwezi): Wafanyakazi wasio na kikomo katika matawi mengi.\n\nBoresha mpango wako wakati wowote kutoka kwenye wasifu wako.`,
+        a: `Inategemea mpango wako:\n\nStarter (KES 100/mwezi): Akaunti ya mmiliki peke yake, hakuna kuingia kwa wafanyakazi wengine.\nGrowth (KES 250/mwezi): Akaunti nyingi za wafanyakazi. Kila mwanachama wa timu anapata kuingia kwake mwenyewe.\nBusiness (KES 700/mwezi): Wafanyakazi wasio na kikomo katika matawi mengi.\n\nBoresha mpango wako wakati wowote kutoka kwenye wasifu wako.`,
       },
       {
         q: "Ninaweza kusimamia matawi mengi?",
-        a: `Matawi mengi yanapatikana kwenye mpango wa Business peke yake:\n\n🟢 Starter (KES 100/mwezi): Duka moja, mmiliki mmoja.\n🔵 Growth (KES 250/mwezi): Duka moja na timu.\n🟣 Business (KES 700/mwezi): Matawi yasiyo na kikomo, dashibodi ya msimamizi mkuu, na ripoti za pamoja za maduka yote.\n\nBoresha hadi Business kutoka kwenye wasifu wako kufungua usimamizi wa matawi mengi.`,
+        a: `Matawi mengi yanapatikana kwenye mpango wa Business peke yake:\n\nStarter (KES 100/mwezi): Duka moja, mmiliki mmoja.\nGrowth (KES 250/mwezi): Duka moja na timu.\nBusiness (KES 700/mwezi): Matawi yasiyo na kikomo, dashibodi ya msimamizi mkuu, na ripoti za pamoja za maduka yote.\n\nBoresha hadi Business kutoka kwenye wasifu wako kufungua usimamizi wa matawi mengi.`,
       },
       {
         q: "Je, kuna jaribio la bure?",
-        a: `Ndiyo — kila akaunti mpya inapata jaribio la bure la mwezi 1 na ufikiaji kamili wa vipengele vyote.\n\nBaada ya jaribio, chagua mpango unaofaa biashara yako:\n\n🟢 Starter — KES 100/mwezi: Mmiliki mmoja, duka moja.\n🔵 Growth — KES 250/mwezi: Duka moja + akaunti za wafanyakazi.\n🟣 Business — KES 700/mwezi: Matawi mengi + zana za msimamizi.\n\nHakuna kadi. Lipa kupitia M-Pesa jaribio lako linapoisha.`,
+        a: `Ndiyo, kila akaunti mpya inapata jaribio la bure la mwezi 1 na ufikiaji kamili wa vipengele vyote.\n\nBaada ya jaribio, chagua mpango unaofaa biashara yako:\n\nStarter: KES 100/mwezi, Mmiliki mmoja, duka moja.\nGrowth: KES 250/mwezi, Duka moja + akaunti za wafanyakazi.\nBusiness: KES 700/mwezi, Matawi mengi + zana za msimamizi.\n\nHakuna kadi. Lipa kupitia M-Pesa jaribio lako linapoisha.`,
       },
       {
         q: "Nini kinatokea usajili wangu ukiisha?",
-        a: `Akaunti yako inafungwa hadi urenew — lakini data yako haifutwi kamwe. Unapata kipindi cha neema cha siku 2 baada ya kuisha.\n\nRenew kwa kulipa kwa mpango wako kupitia M-Pesa:\n\n🟢 Starter — KES 100/mwezi\n🔵 Growth — KES 250/mwezi\n🟣 Business — KES 700/mwezi\n\nUnaweza pia kuboresha hadi mpango wa juu wakati wa kurenew.`,
+        a: `Akaunti yako inafungwa hadi urenew, lakini data yako haifutwi kamwe. Unapata kipindi cha neema cha siku 2 baada ya kuisha.\n\nRenew kwa kulipa kwa mpango wako kupitia M-Pesa:\n\nStarter: KES 100/mwezi\nGrowth: KES 250/mwezi\nBusiness: KES 700/mwezi\n\nUnaweza pia kuboresha hadi mpango wa juu wakati wa kurenew.`,
       },
       {
         q: "Ninaweza kuingia kwa nambari yangu ya simu?",
@@ -1241,7 +1301,7 @@ export const T = {
       },
       {
         q: "Ninawezaje kufuatilia wanaonidaiwa pesa?",
-        a: "Tumia sehemu ya Mikopo. Chagua bidhaa kutoka dukani na weka kiasi (kinapungua dukani papo hapo), pamoja na jina la mteja, simu na kiasi cha deni. Rekodi kila malipo yanapoingia — malipo ya sehemu yanakubalika, na kila moja huongezwa kwenye Mauzo. Dashibodi inaonyesha mkopo kama KES 0 na huongezeka mteja anapolipa.",
+        a: "Tumia sehemu ya Mikopo. Chagua bidhaa kutoka dukani na weka kiasi (kinapungua dukani papo hapo), pamoja na jina la mteja, simu na kiasi cha deni. Rekodi kila malipo yanapoingia, malipo ya sehemu yanakubalika, na kila moja huongezwa kwenye Mauzo. Dashibodi inaonyesha mkopo kama KES 0 na huongezeka mteja anapolipa.",
       },
       {
         q: "Ninaweza kufuatilia wanunuzi au wasambazaji?",
@@ -1265,11 +1325,11 @@ export const T = {
       },
       {
         q: "Ninawezaje kurekodi hisa nilizochukua kwa deni au mkopo?",
-        a: "Nenda Bidhaa/Manunuzi → Historia ya manunuzi → Ununuzi Mpya (au gonga Ongeza Bidhaa Dukani kwenye bidhaa). Weka Malipo kuwa Sijamaliza kulipa (deni), weka ulichokwisha lipa na tarehe uliyoahidi kulipa kilichobaki. Deni unalodaiwa hufuatiliwa kwa ajili yako. Unapomlipa muuzaji, gonga Lipa karibu na deni na weka kiasi — malipo ya sehemu yanakubalika.",
+        a: "Nenda Bidhaa/Manunuzi → Historia ya manunuzi → Ununuzi Mpya (au gonga Ongeza Bidhaa Dukani kwenye bidhaa). Weka Malipo kuwa Sijamaliza kulipa (deni), weka ulichokwisha lipa na tarehe uliyoahidi kulipa kilichobaki. Deni unalodaiwa hufuatiliwa kwa ajili yako. Unapomlipa muuzaji, gonga Lipa karibu na deni na weka kiasi, malipo ya sehemu yanakubalika.",
       },
       {
         q: "Nitakumbushwa malipo ya muuzaji yanapofika?",
-        a: "Ndiyo. Madeni ya wauzaji ambayo hayajalipwa yanaonekana kwenye Dashibodi pamoja na tarehe uliyoahidi. Yanaandikwa INAKARIBIA tarehe ikiwa ndani ya siku 3, na IMECHELEWA baada ya tarehe. Vikumbusho vinaonekana unapofungua programu — QuickDuka haitumi vikumbusho kwa SMS au WhatsApp.",
+        a: "Ndiyo. Madeni ya wauzaji ambayo hayajalipwa yanaonekana kwenye Dashibodi pamoja na tarehe uliyoahidi. Yanaandikwa INAKARIBIA tarehe ikiwa ndani ya siku 3, na IMECHELEWA baada ya tarehe. Vikumbusho vinaonekana unapofungua programu, QuickDuka haitumi vikumbusho kwa SMS au WhatsApp.",
       },
       {
         q: "Ukurasa wa Manunuzi umeenda wapi?",
@@ -1277,7 +1337,7 @@ export const T = {
       },
       {
         q: "Ninawezaje kuuza bidhaa ile ile kwa ukubwa tofauti, kama maji 0.375 L na 0.5 L?",
-        a: "Kwenye Bidhaa/Manunuzi, ongeza kila ukubwa kama bidhaa yake na weka ukubwa kwenye sehemu ya Aina (mfano Maji — 0.375 L, na Maji — 0.5 L). Kila ukubwa una bei yake na idadi yake. Unapouza, chagua ukubwa kamili kutoka kwenye orodha.",
+        a: "Kwenye Bidhaa/Manunuzi, ongeza kila ukubwa kama bidhaa yake na weka ukubwa kwenye sehemu ya Aina (mfano Maji: 0.375 L, na Maji: 0.5 L). Kila ukubwa una bei yake na idadi yake. Unapouza, chagua ukubwa kamili kutoka kwenye orodha.",
       },
       {
         q: "Naweza kuuza au kununua kwa sehemu kama kilo 0.5?",
@@ -1297,15 +1357,15 @@ export const T = {
       },
       {
         q: "Nimeweka deni kuwa limelipwa kimakosa, au mteja niliyemwandika kama deni baya sasa anataka kulipa. Nifanye nini?",
-        a: "Fungua Mikopo, tafuta mkopo na ugonge Hariri. Kurekebisha malipo yaliyokosewa, yaondoe au ubadilishe kiasi au njia ya malipo — rekodi husika kwenye Mauzo pia husasishwa, na salio linarudi. Kwa deni lililoandikwa kama hasara, gonga Fungua deni tena: kiasi hicho kinaondolewa kwenye Hasara na unaweza kurekodi malipo tena.",
+        a: "Fungua Mikopo, tafuta mkopo na ugonge Hariri. Kurekebisha malipo yaliyokosewa, yaondoe au ubadilishe kiasi au njia ya malipo, rekodi husika kwenye Mauzo pia husasishwa, na salio linarudi. Kwa deni lililoandikwa kama hasara, gonga Fungua deni tena: kiasi hicho kinaondolewa kwenye Hasara na unaweza kurekodi malipo tena.",
       },
       {
         q: "Naweza kuongeza mauzo au gharama za tarehe ya awali, kama Aprili iliyopita?",
-        a: "Ndiyo. Kwenye kila fomu (Mauzo, Mikopo, Gharama, Hasara, Manunuzi) gonga sehemu ya Tarehe kufungua kalenda na uchague siku. Tarehe za baadaye haziruhusiwi. Tarehe inabaki kwenye siku uliyochagua kwa rekodi inayofuata, na kuna ujumbe unaokukumbusha kuwa si leo — gonga Leo kurudi. Kurekodi malipo ya mkopo, malipo ya muuzaji au deni baya pia kunauliza siku ilipotokea kweli (inaweza kuwa kabla ya deni). Unaweza pia kurekebisha tarehe ya rekodi iliyopo kwa kitufe chake cha Hariri kwenye orodha. Kwa rekodi za zaidi ya wiki moja, QuickDuka haibadilishi bidhaa zilizopo dukani kwa chaguo-msingi; weka tiki Sasisha pia bidhaa zilizopo dukani ikiwa inapaswa.",
+        a: "Ndiyo. Kwenye kila fomu (Mauzo, Mikopo, Gharama, Hasara, Manunuzi) gonga sehemu ya Tarehe kufungua kalenda na uchague siku. Tarehe za baadaye haziruhusiwi. Tarehe inabaki kwenye siku uliyochagua kwa rekodi inayofuata, na kuna ujumbe unaokukumbusha kuwa si leo, gonga Leo kurudi. Kurekodi malipo ya mkopo, malipo ya muuzaji au deni baya pia kunauliza siku ilipotokea kweli (inaweza kuwa kabla ya deni). Unaweza pia kurekebisha tarehe ya rekodi iliyopo kwa kitufe chake cha Hariri kwenye orodha. Kwa rekodi za zaidi ya wiki moja, QuickDuka haibadilishi bidhaa zilizopo dukani kwa chaguo-msingi; weka tiki Sasisha pia bidhaa zilizopo dukani ikiwa inapaswa.",
       },
       {
         q: "Kwa nini inasema kiasi changu kiko nje ya bei inayoruhusiwa?",
-        a: "Kila bidhaa kwenye Bidhaa ina bei ya kuuza: ama kiwango (kiwango cha chini na cha juu kwa kila kimoja) au bei moja maalum. Mauzo na mikopo lazima vibaki ndani yake — jumla inayoruhusiwa kwa kiasi ulichoweka inaonyeshwa chini ya sehemu ya kiasi. Andika kiasi ndani ya kiwango hicho. Ili kuuza kwa bei nyingine, badilisha kwanza bei ya bidhaa kwenye Bidhaa.",
+        a: "Kila bidhaa kwenye Bidhaa ina bei ya kuuza: ama kiwango (kiwango cha chini na cha juu kwa kila kimoja) au bei moja maalum. Mauzo na mikopo lazima vibaki ndani yake, jumla inayoruhusiwa kwa kiasi ulichoweka inaonyeshwa chini ya sehemu ya kiasi. Andika kiasi ndani ya kiwango hicho. Ili kuuza kwa bei nyingine, badilisha kwanza bei ya bidhaa kwenye Bidhaa.",
       },
     ],
 
@@ -1321,7 +1381,7 @@ export const T = {
     collectItem3:
       "Rekodi za biashara unazoweka: mauzo, manunuzi, gharama, mikopo, na bidhaa za hisa",
     collectItem4:
-      "Hali ya usajili na malipo (si PIN yako ya M-Pesa — hatuioni kamwe)",
+      "Hali ya usajili na malipo (si PIN yako ya M-Pesa, hatuioni kamwe)",
     howWeUseData: "Jinsi Tunavyotumia Data Yako",
     useDataIntro: "Data yako inatumika peke yake kwa:",
     useItem1:
@@ -1360,7 +1420,7 @@ export const T = {
     newToApp: "Mpya kwenye QuickDuka?",
     startTrial: "Anza Mwezi 1 wa Bure",
     earnReferring: "Pata pesa kwa kushauri wengine?",
-    registerReferrer: "🤝 Jiandikishe kama Mratibu",
+    registerReferrer: "Jiandikishe kama Mratibu",
     alreadyAccount: "Nina akaunti tayari? Ingia",
     resetPassword: "Weka upya Nenosiri",
     resetSubtitle:
@@ -1408,13 +1468,13 @@ export const T = {
     noReferralsYet: "Bado haujapeleka mteja yeyote.",
     inactiveWarning: (n) =>
       `${n} mteja/wateja hawalipi au wamekimbia. Unaweza kuwapigia simu.`,
-    statusPaying: "✅ Amelipa",
-    statusTrial: "🎁 Jaribio",
-    statusNotPaying: "⚠️ Hajalipa",
-    statusUnknown: "❓ Haijulikani",
+    statusPaying: "Amelipa",
+    statusTrial: "Jaribio",
+    statusNotPaying: "Hajalipa",
+    statusUnknown: "Haijulikani",
     joined: "Alijiunga",
     totalAllTime: "Jumla Yote",
-    paid: "✓ Imelipwa",
+    paid: "Imelipwa",
   },
 };
 

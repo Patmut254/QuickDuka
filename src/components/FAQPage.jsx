@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { FontAwesomeIcon } from "./Icon";
 import {
   faQuestionCircle,
   faChevronDown,
@@ -130,7 +130,7 @@ export default function FAQPage() {
         <div>
           <div
             className="info-card"
-            style={{ marginBottom: 14, borderLeft: "4px solid var(--green)" }}
+            style={{ marginBottom: 14 }}
           >
             <h2 style={{ marginBottom: 8 }}>
               <FontAwesomeIcon
@@ -160,16 +160,13 @@ export default function FAQPage() {
                 key={i}
                 className="info-card"
                 style={{
-                  borderLeft: `4px solid ${STEP_COLORS[i] || "var(--green)"}`,
                 }}
               >
                 <h2>
                   <span
                     style={{
-                      width: 32,
-                      height: 32,
-                      borderRadius: 8,
-                      background: (STEP_COLORS[i] || "var(--green)") + "22",
+                      width: 24,
+                      height: 24,
                       color: STEP_COLORS[i] || "var(--green)",
                       display: "inline-flex",
                       alignItems: "center",

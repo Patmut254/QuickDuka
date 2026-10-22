@@ -14,6 +14,8 @@ import FeatureGate from "./FeatureGate";
 import Purchases from "./Purchases";
 import EntryDate from "./EntryDate";
 import { localToday } from "../dates";
+import { Plus, Pencil, Trash2, Info } from "lucide-react";
+import SearchBar from "./SearchBar";
 
 // Stock/Purchases — one nav entry, two views. "Stock" is the item list;
 // "Purchases" is the purchase ledger (with supplier balances). The separate
@@ -335,7 +337,7 @@ function StockList({ sub, ownerUid }) {
   const sellPriceLabel = (item) => {
     if (item.priceMode === "range") {
       return item.minPrice != null && item.maxPrice != null
-        ? `KES ${Number(item.minPrice).toLocaleString()}–${Number(
+        ? `KES ${Number(item.minPrice).toLocaleString()} to ${Number(
             item.maxPrice,
           ).toLocaleString()}${item.unit ? ` / ${item.unit}` : ""}`
         : t.priceVaries;
@@ -441,11 +443,14 @@ function StockList({ sub, ownerUid }) {
             setStatus("idle");
           }}
         >
-          {showForm ? "✕ " + t.cancel : "+ " + t.addItem}
+          {showForm ? t.cancel : "+ " + t.addItem}
         </button>
       </div>
 
-      <div className="stock-hint">📦 {t.stockHint}</div>
+      <div className="stock-hint">
+        <Info className="stock-hint-icon" size={17} strokeWidth={1.75} aria-hidden="true" />
+        <span>{t.stockHint}</span>
+      </div>
 
       {showForm && (
         <form className="entry-form" onSubmit={handleSubmit}>
@@ -616,22 +621,14 @@ function StockList({ sub, ownerUid }) {
 
       {/* Search */}
       {items.length > 4 && (
-        <div
-          className="field-group"
-          style={{ maxWidth: 300, marginBottom: 16 }}
-        >
-          <label htmlFor="stock-search" className="sr-only">
-            {t.searchItems}
-          </label>
-          <input
-            id="stock-search"
-            name="stock-search"
-            autoComplete="off"
-            placeholder={"🔍 " + t.searchItems}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </div>
+        <SearchBar
+          id="stock-search"
+          className="search-bar-standalone"
+          label={t.searchItems}
+          placeholder={t.searchItems}
+          value={search}
+          onChange={setSearch}
+        />
       )}
 
       {/* Table listing — bookkeeping view: in, out, and what's left */}
@@ -649,9 +646,8 @@ function StockList({ sub, ownerUid }) {
                 <th>{t.itemName}</th>
                 <th>{t.buyPrice}</th>
                 <th>{t.price}</th>
-                <th style={{ textAlign: "right" }}>{t.purchased}</th>
-                <th style={{ textAlign: "right" }}>{t.sold}</th>
-                <th style={{ textAlign: "right" }}>{t.qtyInStock}</th>
+                <th style={{ textAlign: "right" }}>{t.qtyInStore || "Qty in Store"}</th>
+                <th style={{ textAlign: "right" }}>{t.qtySold || t.sold}</th>
                 <th style={{ textAlign: "right" }}>{t.stockValue}</th>
                 <th style={{ textAlign: "right" }}>{t.totalBought}</th>
                 <th style={{ textAlign: "right" }} title={t.expectedProfitHint}>
@@ -699,15 +695,9 @@ function StockList({ sub, ownerUid }) {
                     <td>
                       {item.buyPrice != null
                         ? `KES ${Number(item.buyPrice).toLocaleString()}${item.unit ? ` / ${item.unit}` : ""}`
-                        : "—"}
+                        : ""}
                     </td>
                     <td>{sellPriceLabel(item)}</td>
-                    <td style={{ textAlign: "right" }}>
-                      {Number(item.totalPurchased || 0).toLocaleString()}
-                    </td>
-                    <td style={{ textAlign: "right" }}>
-                      {Number(item.totalSold || 0).toLocaleString()}
-                    </td>
                     <td
                       style={{
                         textAlign: "right",
@@ -730,9 +720,12 @@ function StockList({ sub, ownerUid }) {
                       )}
                     </td>
                     <td style={{ textAlign: "right" }}>
+                      {Number(item.totalSold || 0).toLocaleString()}
+                    </td>
+                    <td style={{ textAlign: "right" }}>
                       {stockVal != null
                         ? `KES ${stockVal.toLocaleString()}`
-                        : "—"}
+                        : ""}
                     </td>
                     <td style={{ textAlign: "right" }}>
                       KES {Number(item.totalPurchaseValue || 0).toLocaleString()}
@@ -750,7 +743,7 @@ function StockList({ sub, ownerUid }) {
                     >
                       {expected != null
                         ? `KES ${expected.toLocaleString()}`
-                        : "—"}
+                        : ""}
                     </td>
                     <td
                       style={{
@@ -763,7 +756,7 @@ function StockList({ sub, ownerUid }) {
                             : "inherit",
                       }}
                     >
-                      {actual != null ? `KES ${actual.toLocaleString()}` : "—"}
+                      {actual != null ? `KES ${actual.toLocaleString()}` : ""}
                     </td>
                     <td>
                       <div className="action-btns">
@@ -783,7 +776,7 @@ function StockList({ sub, ownerUid }) {
     });
                           }}
                         >
-                          ➕
+                          <Plus size={16} strokeWidth={1.75} aria-hidden="true" />
                         </button>
                         <button
                           className="edit-btn"
@@ -805,14 +798,14 @@ function StockList({ sub, ownerUid }) {
                             });
                           }}
                         >
-                          ✏️
+                          <Pencil size={16} strokeWidth={1.75} aria-hidden="true" />
                         </button>
                         <button
                           className="delete-btn"
                           title={t.delete}
                           onClick={() => setDeleteTarget(item)}
                         >
-                          🗑
+                          <Trash2 size={16} strokeWidth={1.75} aria-hidden="true" />
                         </button>
                       </div>
                     </td>
@@ -833,7 +826,7 @@ function StockList({ sub, ownerUid }) {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="alert-title">
-              📥 {t.restock} — {stockLabel(restockTarget)}
+              {t.restock}: {stockLabel(restockTarget)}
             </div>
             <form
               onSubmit={handleRestock}
@@ -991,7 +984,7 @@ function StockList({ sub, ownerUid }) {
             style={{ maxWidth: 420 }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="alert-title">✏️ Hariri Bidhaa / Edit Item</div>
+            <div className="alert-title">{t.editItem || "Edit Item"}</div>
             <form
               onSubmit={handleEdit}
               className="login-form"

@@ -14,7 +14,7 @@ import {
 } from "firebase/firestore";
 import { useCollection } from "../hooks/useCollection";
 import { useLang } from "../LangContext";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { FontAwesomeIcon } from "./Icon";
 import {
   faRobot,
   faTimes,
@@ -251,15 +251,15 @@ export default function AIAssistant({ ownerUid }) {
 
   const HOW_TO_USE_ANSWER = `Here's a quick guide to QuickDuka:
 
-📊 **Dashboard** — Monthly totals and 6-month chart at a glance.
-💰 **Sales** — Record every sale here.
-🤝 **Credits** — Track customers who owe you money.
-🛒 **Purchases** — Log what you buy for the business.
-🧾 **Expenses** — Rent, electricity, transport, salaries, etc.
-⚠️ **Losses** — Stolen, expired, or damaged stock.
-📦 **Stock** — Your product catalogue with prices.
-📈 **Reports** — Daily, monthly, yearly summaries + CSV download.
-🕐 **History** — Full audit trail; restore deleted records anytime.
+**Dashboard**: Monthly totals and 6-month chart at a glance.
+**Sales**: Record every sale here.
+**Credits**: Track customers who owe you money.
+**Purchases**: Log what you buy for the business.
+**Expenses**: Rent, electricity, transport, salaries, etc.
+**Losses**: Stolen, expired, or damaged stock.
+**Stock**: Your product catalogue with prices.
+**Reports**: Daily, monthly, yearly summaries + CSV download.
+**History**: Full audit trail; restore deleted records anytime.
 
 Ask me anything about your numbers!`;
 
@@ -282,10 +282,10 @@ Ask me anything about your numbers!`;
         setConversations(convs);
       },
       (error) => {
-        console.error("❌ aiChats snapshot error:", error.message);
+        console.error("aiChats snapshot error:", error.message);
         if (error.message?.includes("index")) {
           console.warn(
-            "👉 You need to create a Firestore composite index.\n" +
+            "You need to create a Firestore composite index.\n" +
             "   Go to Firebase Console → Firestore → Indexes → Add index:\n" +
             "   Collection: aiChats\n" +
             "   Fields: ownerUid (Ascending), updatedAt (Descending)\n" +
@@ -380,7 +380,7 @@ Ask me anything about your numbers!`;
           setActiveChatId(newDoc.id);
         }
       } catch (e) {
-        console.error("❌ Save messages error:", e.message);
+        console.error("Save messages error:", e.message);
       }
     },
     [ownerUid],
@@ -404,9 +404,9 @@ Ask me anything about your numbers!`;
 
     if (isGreeting) {
       const greetingReplies = [
-        "Hello 👋 You're speaking to QuickDuka Assistant. How can I help with your business today?",
-        "Hi 👋 You're speaking to QuickDuka Assistant. Need help checking your sales, profits, or debts?",
-        "Hey 👋 You're speaking to QuickDuka Assistant. What would you like to know about your business?",
+        "Hello! You're speaking to QuickDuka Assistant. How can I help with your business today?",
+        "Hi! You're speaking to QuickDuka Assistant. Need help checking your sales, profits, or debts?",
+        "Hey! You're speaking to QuickDuka Assistant. What would you like to know about your business?",
       ];
 
       const randomReply =
@@ -454,7 +454,7 @@ Ask me anything about your numbers!`;
       });
 
       const newLocal = `
-You are QuickDuka Assistant — a smart and friendly business assistant for small businesses in Kenya.
+You are QuickDuka Assistant, a smart and friendly business assistant for small businesses in Kenya.
 
 PERSONALITY:
 - Friendly
@@ -481,7 +481,7 @@ RULES:
 GOOD RESPONSE EXAMPLES:
 
 User: hello
-Assistant: Hello 👋 How can I help with your business today?
+Assistant: Hello! How can I help with your business today?
 
 User: sales this month
 Assistant: Your sales this month are KES 720. Honey is currently your top-selling item.
@@ -538,7 +538,7 @@ ${JSON.stringify(context, null, 2)}
       setMessages(updatedMessages);
       await _saveMessages(updatedMessages);
     } catch (err) {
-      console.error("❌ Groq error:", err.message);
+      console.error("Groq error:", err.message);
       const errMessages = [
         ...newMessages,
         {
@@ -674,7 +674,7 @@ ${JSON.stringify(context, null, 2)}
                 {messages.length === 0 ? (
                   <div className="ai-welcome">
                     <div className="ai-welcome-text">
-                      <strong>Hello! 👋</strong>
+                      <strong>Hello!</strong>
                       <br />
                       Ask me anything about your business.
                     </div>

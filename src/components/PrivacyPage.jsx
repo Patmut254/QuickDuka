@@ -1,4 +1,4 @@
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { FontAwesomeIcon } from "./Icon";
 import { faShieldHalved, faDatabase, faCookieBite, faUserShield, faEnvelope } from "@fortawesome/free-solid-svg-icons";
 import { useLang } from "../LangContext";
 

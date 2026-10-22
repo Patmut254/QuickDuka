@@ -6,6 +6,8 @@ import EntryTable from "./EntryTable";
 import { Toast, useToast } from "./Toast";
 import EntryDate from "./EntryDate";
 import { localToday } from "../dates";
+import ItemPicker from "./ItemPicker";
+import { stockOptions } from "../stockOptions";
 
 export default function Losses({ ownerUid }) {
   const { t } = useLang();
@@ -100,7 +102,7 @@ export default function Losses({ ownerUid }) {
             setStatus("idle");
           }}
         >
-          {showForm ? `✕ ${t.cancel}` : `+ ${t.newLoss}`}
+          {showForm ? `${t.cancel}` : `+ ${t.newLoss}`}
         </button>
       </div>
 
@@ -143,38 +145,24 @@ export default function Losses({ ownerUid }) {
 
       {showForm && (
         <form className="entry-form" onSubmit={handleSubmit}>
-          <h3>⚠️ {t.recordLoss}</h3>
+          <h3>{t.recordLoss}</h3>
           <div className="form-grid">
             <EntryDate
               id="loss-date"
               value={form.date}
               onChange={(d) => setForm({ ...form, date: d })}
             />
-            {stock.length > 0 && (
-              <div className="field-group">
-                <label>{t.pickStock}</label>
-                <select onChange={handleStockSelect} value={form.item}>
-                  <option value="">{t.selectItem}</option>
-                  {stock.map((c) => (
-                    <option key={c.id} value={c.name}>
-                      {c.name}
-                      {c.price != null
-                        ? ` — KES ${Number(c.price).toLocaleString()}${c.unit ? `/${c.unit}` : ""}`
-                        : ""}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
-            <div className="field-group">
-              <label>{t.lostItem} *</label>
-              <input
-                placeholder={t.lostItemPh}
-                value={form.item}
-                onChange={(e) => setForm({ ...form, item: e.target.value })}
-                required
-              />
-            </div>
+            <ItemPicker
+              id="loss-item"
+              label={t.lostItem}
+              required
+              t={t}
+              options={stockOptions(stock, { valueKey: "name", t })}
+              selectedValue={stock.some((c) => c.name === form.item) ? form.item : ""}
+              text={form.item}
+              onPick={(v) => handleStockSelect({ target: { value: v } })}
+              onCustom={(txt) => handleStockSelect({ target: { value: txt } })}
+            />
             <div className="field-group">
               <label>{t.lossCategory} *</label>
               <select
