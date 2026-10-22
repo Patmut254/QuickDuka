@@ -195,6 +195,7 @@ export default function Dashboard({
               (c.label === t.netProfitLabel ? " hide-mobile" : "")
             }
             key={c.label}
+            style={{ "--tint": c.color }}
           >
             <div className="card-icon">
               <FontAwesomeIcon icon={c.icon} />

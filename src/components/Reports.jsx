@@ -630,9 +630,9 @@ return (
         },
       ].map((c) => (
         <div
-          className="report-card"
+          className="report-card tinted"
           key={c.label}
-          
+          style={{ "--tint": c.color }}
         >
           <div className="rc-label">{c.label}</div>
           <div className="rc-value" style={{ color: c.color }}>

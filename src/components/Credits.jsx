@@ -561,6 +561,7 @@ export default function Credits({ ownerUid }) {
       <div className="credits-summary">
         <div
           className="summary-card"
+          style={{ "--tint": "var(--orange)" }}
         >
           <div
             className="card-icon"
@@ -579,6 +580,7 @@ export default function Credits({ ownerUid }) {
 
         <div
           className="summary-card"
+          style={{ "--tint": "var(--red)" }}
         >
           <div
             className="card-icon"
@@ -596,6 +598,7 @@ export default function Credits({ ownerUid }) {
 
         <div
           className="summary-card"
+          style={{ "--tint": "var(--green)" }}
         >
           <div
             className="card-icon"

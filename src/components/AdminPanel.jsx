@@ -1767,6 +1767,7 @@ export default function AdminPanel() {
           <div
             key={s.label}
             className="admin-stat-tile"
+            style={{ "--tint": s.color }}
           >
             <div
               className="ast-icon"

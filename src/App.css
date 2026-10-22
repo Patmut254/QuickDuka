@@ -10,7 +10,7 @@
 
 /* LIGHT THEME  */
 :root {
-  --bg: #f4f6f4;
+  --bg: #ffffff;
   --bg2: #ffffff;
   --bg3: #eef2ee;
   --border: #dde6dd;
@@ -8046,3 +8046,102 @@ textarea {
   border-color: var(--border) !important;
 }
 .credits-stat-icon { opacity: 1; }
+
+/* ================================================================
+   COLOUR WASHES: soft tints to bring the pages to life
+   Each card tints itself with its own colour via --tint.
+   ================================================================ */
+.summary-card,
+.admin-stat-tile,
+.report-card.tinted {
+  --tint: var(--accent);
+  background: color-mix(in srgb, var(--tint) 9%, var(--bg2)) !important;
+  border-color: color-mix(in srgb, var(--tint) 28%, var(--border)) !important;
+}
+.summary-card:hover,
+.admin-stat-tile:hover,
+.report-card.tinted:hover {
+  border-color: color-mix(in srgb, var(--tint) 50%, var(--border)) !important;
+}
+.summary-card .card-icon,
+.admin-stat-tile .ast-icon { color: var(--tint); }
+[data-theme="dark"] .summary-card,
+[data-theme="dark"] .admin-stat-tile,
+[data-theme="dark"] .report-card.tinted {
+  background: color-mix(in srgb, var(--tint) 12%, #141414) !important;
+  border-color: color-mix(in srgb, var(--tint) 30%, #2a2a2a) !important;
+}
+
+/* Credits stat row: matching soft tints */
+.credits-stat-green { background: color-mix(in srgb, var(--green) 7%, var(--bg2)) !important; border-color: color-mix(in srgb, var(--green) 22%, var(--border)) !important; }
+.credits-stat-red { background: color-mix(in srgb, var(--red) 7%, var(--bg2)) !important; border-color: color-mix(in srgb, var(--red) 22%, var(--border)) !important; }
+
+/* Page header bars (totals + Add button on Sales, Stock, Losses...) */
+.module-header {
+  background: color-mix(in srgb, var(--accent) 7%, var(--bg2)) !important;
+  border-color: color-mix(in srgb, var(--accent) 22%, var(--border)) !important;
+}
+[data-theme="dark"] .module-header {
+  background: color-mix(in srgb, var(--accent) 10%, #141414) !important;
+}
+
+/* Table header row + toolbar */
+.data-table th {
+  background: color-mix(in srgb, var(--accent) 8%, var(--bg2));
+}
+.table-toolbar {
+  background: color-mix(in srgb, var(--accent) 5%, var(--bg2));
+}
+[data-theme="dark"] .data-table th,
+[data-theme="dark"] .table-toolbar {
+  background: color-mix(in srgb, var(--accent) 8%, #161616);
+}
+
+/* Profile header */
+.pf-hero {
+  background: linear-gradient(
+    120deg,
+    color-mix(in srgb, var(--accent) 14%, var(--bg2)) 0%,
+    var(--bg2) 75%
+  );
+  border-color: color-mix(in srgb, var(--accent) 25%, var(--border));
+}
+.pf-card-head {
+  margin: -22px -24px 18px;
+  padding: 18px 24px 16px;
+  background: color-mix(in srgb, var(--accent) 6%, var(--bg2));
+  border-radius: var(--radius) var(--radius) 0 0;
+}
+@media (max-width: 700px) {
+  .pf-card-head { margin: -18px -16px 16px; padding: 16px; }
+}
+
+/* Info and help cards get a light top wash on their heading */
+.info-card h2 { color: var(--text); }
+.stock-hint {
+  background: color-mix(in srgb, var(--accent) 6%, var(--bg2)) !important;
+  border-color: color-mix(in srgb, var(--accent) 22%, var(--border)) !important;
+}
+.admin-revenue-tile { border-radius: var(--radius); }
+
+
+/* ================================================================
+   WHITE PAGE BACKGROUND (light mode): white cards keep a crisp edge
+   and a whisper of shadow so they still read as cards.
+   ================================================================ */
+:root:not([data-theme="dark"]) .info-card,
+:root:not([data-theme="dark"]) .entry-form,
+:root:not([data-theme="dark"]) .entry-table-wrap,
+:root:not([data-theme="dark"]) .recent-section,
+:root:not([data-theme="dark"]) .chart-section,
+:root:not([data-theme="dark"]) .chart-card,
+:root:not([data-theme="dark"]) .pf-card,
+:root:not([data-theme="dark"]) .admin-table-wrap {
+  border-color: #e3e9e3;
+  box-shadow: 0 1px 2px rgba(16, 40, 24, 0.04), 0 4px 14px rgba(16, 40, 24, 0.04);
+}
+:root:not([data-theme="dark"]) .summary-card,
+:root:not([data-theme="dark"]) .admin-stat-tile,
+:root:not([data-theme="dark"]) .report-card.tinted {
+  background: color-mix(in srgb, var(--tint) 11%, #ffffff) !important;
+}
