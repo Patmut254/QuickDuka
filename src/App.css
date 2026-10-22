@@ -8145,3 +8145,26 @@ textarea {
 :root:not([data-theme="dark"]) .report-card.tinted {
   background: color-mix(in srgb, var(--tint) 11%, #ffffff) !important;
 }
+
+/* Profile page fills the content area like the other pages */
+.pf-page,
+.profile-page { max-width: none; width: 100%; }
+
+@media (min-width: 1280px) {
+  .pf-form {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+    align-items: start;
+  }
+  .pf-form > .pf-error,
+  .pf-form > .pf-save-bar { grid-column: 1 / -1; }
+  .pf-form > .pf-card { height: 100%; }
+}
+
+/* Sidebar: no dark outline after clicking; keyboard focus stays visible */
+.nav-item:focus { outline: none; }
+.nav-item:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (min-width: 1280px) {
+  .pf-form > .pf-card:first-child .pf-grid { grid-template-columns: 1fr; }
+}
