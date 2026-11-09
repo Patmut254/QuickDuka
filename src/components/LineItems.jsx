@@ -75,7 +75,7 @@ export default function LineItems({
                     setLines((ls) => ls.filter((l) => l.key !== line.key))
                   }
                 >
-                  ✕ {t.remove || "Remove"}
+                  {t.remove || "Remove"}
                 </button>
               </div>
             )}
@@ -120,22 +120,10 @@ export default function LineItems({
                     }));
                   }}
                 />
-                {s?.quantity != null && (
-                  <div className="line-item-hint">
-                    {t.qtyInStock}: {Number(s.quantity).toLocaleString()}
-                  </div>
-                )}
               </div>
               <div className="field-group">
                 <label htmlFor={`${pre}-amount`}>
                   {amountLabel}
-                  {s?.priceMode === "range" && (
-                    <span style={{ fontWeight: 400, color: "var(--muted)" }}>
-                      {" "}
-                      ({t.priceRange}: KES {Number(s.minPrice).toLocaleString()}{" "}
-                      to {Number(s.maxPrice).toLocaleString()})
-                    </span>
-                  )}
                 </label>
                 <input
                   id={`${pre}-amount`}
@@ -162,20 +150,17 @@ export default function LineItems({
                     }));
                   }}
                 />
-                {(lim || (line.unitPrice != null && qty > 1)) && (
+                {(outside || (lim && !lim.fixed)) && (
                   <div
                     className="line-item-hint"
                     style={
                       outside ? { color: "#dc2626", fontWeight: 600 } : undefined
                     }
                   >
-                    KES {roundMoney(qty > 0 ? amt / qty : 0).toLocaleString()} /
-                    unit × {qty || 1} = KES {amt.toLocaleString()}
-                    {lim &&
-                      ` · ${t.allowedAmount}: ` +
-                        (lim.fixed
-                          ? `KES ${lim.minTotal.toLocaleString()}`
-                          : `KES ${lim.minTotal.toLocaleString()} to ${lim.maxTotal.toLocaleString()}`)}
+                    {t.allowedAmount}:{" "}
+                    {lim.fixed
+                      ? `KES ${lim.minTotal.toLocaleString()}`
+                      : `KES ${lim.minTotal.toLocaleString()} to ${lim.maxTotal.toLocaleString()}`}
                   </div>
                 )}
               </div>
@@ -186,7 +171,7 @@ export default function LineItems({
 
       <button
         type="button"
-        className="btn-secondary line-item-add"
+        className="line-item-add"
         onClick={() => setLines((ls) => [...ls, newLine()])}
       >
         + {t.addAnotherItem || "Add another item"}
@@ -195,7 +180,9 @@ export default function LineItems({
       <div className="line-items-total">
         <span>
           {totalLabel}
-          {many ? ` (${filledLines(lines).length} ${t.itemsWord || "items"})` : ""}
+          {filledLines(lines).length > 1
+            ? ` · ${filledLines(lines).length} ${t.itemsWord || "items"}`
+            : ""}
         </span>
         <strong>KES {total.toLocaleString()}</strong>
       </div>
