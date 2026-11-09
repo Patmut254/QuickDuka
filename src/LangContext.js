@@ -61,7 +61,9 @@ export const T = {
     customerPh: "Customer name",
     saveSale: "Save Sale",
     // multi-item sales / credits
-    addAnotherItem: "Add another item",
+    addItems: "Add items (search or tap)",
+    addItemsTo: "Add items to",
+    cartEmpty: "Tap an item above to add it. Tap it again to add one more.",
     saleTotal: "Sale total",
     creditTotal: "Credit total",
     creditTotals: "Credit totals",
@@ -808,7 +810,9 @@ export const T = {
     customerPh: "Jina la mteja",
     saveSale: "Hifadhi Mauzo",
     // multi-item sales / credits
-    addAnotherItem: "Ongeza bidhaa nyingine",
+    addItems: "Ongeza bidhaa (tafuta au gusa)",
+    addItemsTo: "Ongeza bidhaa kwa",
+    cartEmpty: "Gusa bidhaa hapo juu kuiongeza. Gusa tena kuongeza moja zaidi.",
     saleTotal: "Jumla ya mauzo",
     creditTotal: "Jumla ya mkopo",
     creditTotals: "Jumla ya mikopo",

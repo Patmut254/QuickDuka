@@ -12,6 +12,44 @@ export const newLine = () => ({
   unitPrice: null, // per-unit price, so total = unit × qty as qty changes
 });
 
+// Default selling price per unit for a stock item (top of a price range)
+export const stockUnitPrice = (s) =>
+  !s
+    ? null
+    : s.priceMode === "range" && s.maxPrice != null
+      ? Number(s.maxPrice)
+      : s.price != null
+        ? Number(s.price)
+        : null;
+
+// Add a picked stock item to the cart — or bump its quantity if it's
+// already there.
+export function addStockToLines(lines, s) {
+  const up = stockUnitPrice(s);
+  const existing = lines.find((l) => l.stockId === s.id);
+  if (existing) {
+    return lines.map((l) => {
+      if (l !== existing) return l;
+      const q = roundQty((parseFloat(l.quantity) || 0) + 1);
+      return {
+        ...l,
+        quantity: String(q),
+        amount: l.unitPrice != null ? String(roundMoney(l.unitPrice * q)) : l.amount,
+      };
+    });
+  }
+  return [
+    ...lines,
+    {
+      ...newLine(),
+      stockId: s.id,
+      text: stockLabel(s),
+      unitPrice: up,
+      amount: up != null ? String(roundMoney(up)) : "",
+    },
+  ];
+}
+
 // The stock item a line refers to (picked from the list, or typed exactly)
 export const lineStock = (line, stock) =>
   (line.stockId && stock.find((s) => s.id === line.stockId)) ||

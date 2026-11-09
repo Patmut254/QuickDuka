@@ -16,7 +16,6 @@ import EntryTable from "./EntryTable";
 import { Toast, useToast } from "./Toast";
 import LineItems from "./LineItems";
 import {
-  newLine,
   lineStock,
   lineQty,
   filledLines,
@@ -70,14 +69,41 @@ export default function Sales({ ownerUid, sub }) {
     notes: "",
   };
   const [form, setForm] = useState(emptyForm);
-  const [lines, setLines] = useState(() => [newLine()]);
+  const [lines, setLines] = useState([]);
   const [status, setStatus] = useState("idle");
   const [showForm, setShowForm] = useState(false);
+  // When set, the form is adding items to this existing sale (same customer,
+  // date and payment) instead of starting a new one.
+  const [addTo, setAddTo] = useState(null);
+
+  const newGroupId = () =>
+    `g${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
+  // All rows that belong to the same customer purchase
+  const groupRows = (row) =>
+    row?.saleGroup ? items.filter((i) => i.saleGroup === row.saleGroup) : row ? [row] : [];
 
   const resetForm = (date = lastDate) => {
     setForm({ ...emptyForm, date });
-    setLines([newLine()]);
+    setLines([]);
     setStockChoice(null);
+    setAddTo(null);
+  };
+
+  const startAddTo = (row) => {
+    setAddTo(row);
+    setForm({
+      date: row.date || localToday(),
+      customer: row.customer || "",
+      phone: row.phone || "",
+      paymentMethod: row.paymentMethod || "cash",
+      branchId: row.branchId || "",
+      notes: row.notes || "",
+    });
+    setLines([]);
+    setStockChoice(null);
+    setStatus("idle");
+    setShowForm(true);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const handleSubmit = async (e) => {
@@ -102,10 +128,15 @@ export default function Sales({ ownerUid, sub }) {
       const { branchId: _branchId, ...shared } = form;
       // Every item is its own Sales row (so reports per item keep working),
       // tied together by saleGroup so they read as one customer's purchase.
-      const saleGroup =
-        used.length > 1
-          ? `g${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`
-          : null;
+      // Adding to an existing sale joins its group (and gives a single
+      // older sale a group id so the rows stay linked).
+      let saleGroup = null;
+      if (addTo) {
+        saleGroup = addTo.saleGroup || newGroupId();
+        if (!addTo.saleGroup) updateItem(addTo.id, { saleGroup }, addTo);
+      } else if (used.length > 1) {
+        saleGroup = newGroupId();
+      }
 
       await Promise.all(
         used.map((line) => {
@@ -118,9 +149,7 @@ export default function Sales({ ownerUid, sub }) {
               description: line.text.trim(),
               quantity: qty,
               amount: parseFloat(line.amount),
-              ...(saleGroup
-                ? { saleGroup, saleGroupSize: used.length }
-                : {}),
+              ...(saleGroup ? { saleGroup } : {}),
             },
             chosenBranch
               ? { branchId: chosenBranch.id, branchName: chosenBranch.name }
@@ -172,16 +201,19 @@ export default function Sales({ ownerUid, sub }) {
       key: "description",
       label: t.itemSold,
       // Items bought together in one multi-item sale get a small tag
-      format: (v, row) => (
-        <>
-          {v || "-"}
-          {row?.saleGroupSize > 1 && (
-            <span className="sale-group-tag">
-              {row.saleGroupSize} {t.itemsWord || "items"}
-            </span>
-          )}
-        </>
-      ),
+      format: (v, row) => {
+        const n = row?.saleGroup ? groupRows(row).length : 1;
+        return (
+          <>
+            {v || "-"}
+            {n > 1 && (
+              <span className="sale-group-tag">
+                1 of {n} {t.itemsWord || "items"}
+              </span>
+            )}
+          </>
+        );
+      },
     },
     { key: "customer", label: t.customer },
     {
@@ -281,7 +313,11 @@ export default function Sales({ ownerUid, sub }) {
 
       {showForm && (
         <form className="entry-form" onSubmit={handleSubmit}>
-          <h3>{t.recordSale}</h3>
+          <h3>
+            {addTo
+              ? `${t.addItemsTo || "Add items to sale"}: ${addTo.customer || addTo.description} (${addTo.date})`
+              : t.recordSale}
+          </h3>
           <div className="form-grid">
             <EntryDate
               id="sale-date"
@@ -352,9 +388,12 @@ export default function Sales({ ownerUid, sub }) {
             stock={stock}
             t={t}
             idPrefix="sale"
-            itemLabel={t.itemSold}
-            qtyLabel={t.quantity}
-            amountLabel={`${t.amount} *`}
+            itemLabel={t.addItems || "Add items"}
+            baseTotal={
+              addTo
+                ? groupRows(addTo).reduce((a, r) => a + (Number(r.amount) || 0), 0)
+                : 0
+            }
             totalLabel={t.saleTotal || "Sale total"}
           />
           <button
@@ -380,6 +419,17 @@ export default function Sales({ ownerUid, sub }) {
         showToast={showToast}
         emptyMessage={t.noSales}
         totalKey="amount"
+        extraActions={(row) =>
+          row.fromCredit ? null : (
+            <button
+              className="edit-btn add-item-btn"
+              onClick={() => startAddTo(row)}
+              title={t.addItem || "Add item"}
+            >
+              + {t.itemNo || "Item"}
+            </button>
+          )
+        }
         totalLabel={t.totalSales}
       />
     </div>
