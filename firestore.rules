@@ -27,7 +27,7 @@ service cloud.firestore {
              request.resource.data.userId == request.auth.uid;
     }
 
-    // Fields that ONLY the backend (Admin SDK) may write.
+    // Fields that ONLY the backend (Admin SDK) may write...
     // A user cannot promote their own subscription from the browser.
     function touchesSubscriptionFields() {
       return request.resource.data.diff(resource.data).affectedKeys()
