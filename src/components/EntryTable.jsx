@@ -15,6 +15,7 @@ export default function EntryTable({
   showToast,
   totalKey, // optional: sum this column under the table (follows the search)
   totalLabel,
+  extraActions, // optional: (row) => extra buttons shown before Edit/Delete
 }) {
   const { t } = useLang();
   const [search, setSearch] = useState("");
@@ -237,6 +238,7 @@ export default function EntryTable({
                       </div>
                     ) : (
                       <div className="action-btns">
+                        {extraActions && extraActions(item)}
                         <button
                           className="edit-btn"
                           onClick={() => startEdit(item)}

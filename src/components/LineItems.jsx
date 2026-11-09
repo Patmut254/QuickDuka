@@ -1,11 +1,17 @@
-// LineItems — lets one customer buy (or take on credit) SEVERAL items in a
-// single entry. Each line has its own item, quantity and amount, and the
-// grand total shows underneath. Used by the Sales and Credits forms.
+// LineItems — a till-style cart. Search or tap an item and it drops into
+// the list below; tap it again to add one more. Each row's quantity and
+// amount can be adjusted, and the total shows underneath.
+// Used by the Sales and Credits forms (new entries and "add item").
 import ItemPicker from "./ItemPicker";
 import { stockOptions } from "../stockOptions";
-import { stockLabel, roundMoney } from "../hooks/useStock";
+import { roundMoney } from "../hooks/useStock";
 import { priceLimits } from "../stockPrice";
-import { newLine, lineStock, linesTotal, filledLines } from "../lineItems";
+import {
+  newLine,
+  lineStock,
+  linesTotal,
+  addStockToLines,
+} from "../lineItems";
 
 export default function LineItems({
   lines,
@@ -14,96 +20,79 @@ export default function LineItems({
   t,
   idPrefix,
   itemLabel,
-  qtyLabel,
-  amountLabel,
   totalLabel,
+  baseTotal = 0, // already-saved amount when adding to an existing entry
 }) {
   const update = (key, fn) =>
     setLines((ls) => ls.map((l) => (l.key === key ? { ...l, ...fn(l) } : l)));
-
-  const pick = (key, stockId) => {
-    const found = stock.find((s) => s.id === stockId) || null;
-    update(key, (l) => {
-      const up = found
-        ? found.priceMode === "range" && found.maxPrice != null
-          ? Number(found.maxPrice)
-          : found.price != null
-            ? Number(found.price)
-            : null
-        : null;
-      const qty = parseFloat(l.quantity) || 1;
-      return {
-        stockId: found ? found.id : "",
-        text: found ? stockLabel(found) : "",
-        unitPrice: up,
-        amount: up != null ? String(roundMoney(up * qty)) : l.amount,
-      };
-    });
-  };
+  const remove = (key) => setLines((ls) => ls.filter((l) => l.key !== key));
 
   const options = stockOptions(stock, {
-    labelFn: stockLabel,
+    labelFn: (s) => (s.variant ? `${s.name} (${s.variant})` : s.name),
     t,
     disableOut: true,
   });
-  const total = linesTotal(lines);
-  const many = lines.length > 1;
+  const total = roundMoney(baseTotal + linesTotal(lines));
 
   return (
-    <div className="field-group full-width line-items">
-      {lines.map((line, idx) => {
-        const s = lineStock(line, stock);
-        const qty = parseFloat(line.quantity) || 0;
-        const amt = parseFloat(line.amount) || 0;
-        const lim = s ? priceLimits(s, qty || 1) : null;
-        const outside =
-          lim &&
-          amt > 0 &&
-          (amt < lim.minTotal - 0.01 || amt > lim.maxTotal + 0.01);
-        const pre = `${idPrefix}-${idx}`;
-        return (
-          <div key={line.key} className="line-item">
-            {many && (
-              <div className="line-item-head">
-                <span>
-                  {t.itemNo || "Item"} {idx + 1}
+    <div className="field-group full-width cart">
+      <div className="cart-picker">
+        <ItemPicker
+          id={`${idPrefix}-item`}
+          label={itemLabel}
+          t={t}
+          options={options}
+          selectedValue=""
+          text=""
+          onPick={(v) => {
+            const s = stock.find((x) => x.id === v);
+            if (s) setLines((ls) => addStockToLines(ls, s));
+          }}
+          onCustom={(txt) =>
+            setLines((ls) => [...ls, { ...newLine(), text: txt }])
+          }
+        />
+      </div>
+
+      {lines.length === 0 ? (
+        <div className="cart-empty">
+          {t.cartEmpty || "Tap an item above to add it to this sale."}
+        </div>
+      ) : (
+        <div className="cart-list">
+          <div className="cart-row cart-row-head">
+            <span>{t.itemNo || "Item"}</span>
+            <span>{t.quantity || "Qty"}</span>
+            <span>{t.amount || "Amount"}</span>
+            <span />
+          </div>
+          {lines.map((line) => {
+            const s = lineStock(line, stock);
+            const qty = parseFloat(line.quantity) || 0;
+            const amt = parseFloat(line.amount) || 0;
+            const lim = s ? priceLimits(s, qty || 1) : null;
+            const outside =
+              lim &&
+              amt > 0 &&
+              (amt < lim.minTotal - 0.01 || amt > lim.maxTotal + 0.01);
+            return (
+              <div key={line.key} className="cart-row">
+                <span className="cart-name">
+                  {line.text}
+                  {!s && (
+                    <em className="cart-tag">{t.notInStock || "Not in stock"}</em>
+                  )}
+                  {(outside || (lim && !lim.fixed)) && (
+                    <small style={outside ? { color: "#dc2626" } : undefined}>
+                      {t.allowedAmount}:{" "}
+                      {lim.fixed
+                        ? `KES ${lim.minTotal.toLocaleString()}`
+                        : `KES ${lim.minTotal.toLocaleString()} to ${lim.maxTotal.toLocaleString()}`}
+                    </small>
+                  )}
                 </span>
-                <button
-                  type="button"
-                  className="line-item-remove"
-                  onClick={() =>
-                    setLines((ls) => ls.filter((l) => l.key !== line.key))
-                  }
-                >
-                  {t.remove || "Remove"}
-                </button>
-              </div>
-            )}
-            <div className="form-grid">
-              <ItemPicker
-                id={`${pre}-item`}
-                label={itemLabel}
-                required={idx === 0}
-                t={t}
-                options={options}
-                selectedValue={line.stockId}
-                text={line.text}
-                onPick={(v) => pick(line.key, v)}
-                onCustom={(txt) =>
-                  update(line.key, () => ({
-                    stockId: "",
-                    unitPrice: null,
-                    text: txt,
-                  }))
-                }
-              />
-              <div className="field-group">
-                <label htmlFor={`${pre}-qty`}>
-                  {qtyLabel}
-                  {s?.unit ? ` (${s.unit})` : ""}
-                </label>
                 <input
-                  id={`${pre}-qty`}
+                  aria-label={t.quantity || "Quantity"}
                   type="number"
                   min="0.001"
                   step="any"
@@ -120,21 +109,13 @@ export default function LineItems({
                     }));
                   }}
                 />
-              </div>
-              <div className="field-group">
-                <label htmlFor={`${pre}-amount`}>
-                  {amountLabel}
-                </label>
                 <input
-                  id={`${pre}-amount`}
+                  aria-label={t.amount || "Amount"}
                   type="number"
                   inputMode="decimal"
                   step="0.01"
-                  placeholder="0.00"
-                  min={lim ? lim.minTotal : "0"}
-                  max={lim ? lim.maxTotal : undefined}
+                  placeholder="0"
                   value={line.amount}
-                  required={idx === 0}
                   onChange={(e) => {
                     const v = e.target.value;
                     update(line.key, (l) => ({
@@ -142,7 +123,7 @@ export default function LineItems({
                       // remember the per-unit price typed, so changing the
                       // quantity afterwards scales from it
                       unitPrice:
-                        l.unitPrice != null && v !== ""
+                        v !== ""
                           ? roundMoney(
                               (parseFloat(v) || 0) / (parseFloat(l.quantity) || 1),
                             )
@@ -150,40 +131,22 @@ export default function LineItems({
                     }));
                   }}
                 />
-                {(outside || (lim && !lim.fixed)) && (
-                  <div
-                    className="line-item-hint"
-                    style={
-                      outside ? { color: "#dc2626", fontWeight: 600 } : undefined
-                    }
-                  >
-                    {t.allowedAmount}:{" "}
-                    {lim.fixed
-                      ? `KES ${lim.minTotal.toLocaleString()}`
-                      : `KES ${lim.minTotal.toLocaleString()} to ${lim.maxTotal.toLocaleString()}`}
-                  </div>
-                )}
+                <button
+                  type="button"
+                  className="cart-remove"
+                  title={t.remove || "Remove"}
+                  onClick={() => remove(line.key)}
+                >
+                  ✕
+                </button>
               </div>
-            </div>
-          </div>
-        );
-      })}
-
-      <button
-        type="button"
-        className="line-item-add"
-        onClick={() => setLines((ls) => [...ls, newLine()])}
-      >
-        + {t.addAnotherItem || "Add another item"}
-      </button>
+            );
+          })}
+        </div>
+      )}
 
       <div className="line-items-total">
-        <span>
-          {totalLabel}
-          {filledLines(lines).length > 1
-            ? ` · ${filledLines(lines).length} ${t.itemsWord || "items"}`
-            : ""}
-        </span>
+        <span>{totalLabel}</span>
         <strong>KES {total.toLocaleString()}</strong>
       </div>
     </div>

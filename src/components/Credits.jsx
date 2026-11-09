@@ -30,7 +30,6 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import LineItems from "./LineItems";
 import {
-  newLine,
   lineStock,
   lineQty,
   linesTotal,
@@ -87,7 +86,7 @@ export default function Credits({ ownerUid }) {
   };
   // Items taken on this credit — one customer can take several things
   // and owe one combined total.
-  const [lines, setLines] = useState(() => [newLine()]);
+  const [lines, setLines] = useState([]);
 
   const [form, setForm] = useState(emptyForm);
   const [showForm, setShowForm] = useState(false);
@@ -113,11 +112,45 @@ export default function Credits({ ownerUid }) {
 
   const today = localToday; // local date (not UTC)
 
+  // When set, the form is adding items to this existing credit.
+  const [addTo, setAddTo] = useState(null);
+
   const resetCreditForm = (date = lastDate) => {
     setForm({ ...emptyForm, date });
-    setLines([newLine()]);
+    setLines([]);
     setStockChoice(null);
+    setAddTo(null);
   };
+
+  const startAddTo = (credit) => {
+    setAddTo(credit);
+    setForm({
+      date: localToday(), // the day the extra items were taken
+      customer: credit.customer || "",
+      phone: credit.phone || "",
+      dueDate: credit.dueDate || "",
+      notes: credit.notes || "",
+    });
+    setLines([]);
+    setStockChoice(null);
+    setShowForm(true);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  // Items already on a credit (older single-item credits have no array)
+  const itemsOf = (c) =>
+    c.items?.length
+      ? c.items
+      : c.itemTaken
+        ? [
+            {
+              description: c.itemTaken,
+              quantity: Number(c.quantity) || 1,
+              amount: Number(c.totalAmount) || 0,
+              stockId: c.stockId || null,
+            },
+          ]
+        : [];
 
   // ── Save new credit ────────────────────────────────────────────────────────
   // A credit is a sale that hasn't been paid for yet, so items that come
@@ -148,6 +181,49 @@ export default function Credits({ ownerUid }) {
       };
     });
     const single = items.length === 1 ? items[0] : null;
+
+    // ── Adding items to an existing credit ──
+    if (addTo) {
+      setSaving(true);
+      try {
+        const all = [...itemsOf(addTo), ...items];
+        const newTotal = roundMoney(
+          Number(addTo.totalAmount || 0) + linesTotal(lines),
+        );
+        await updateItem(
+          addTo.id,
+          {
+            customer: form.customer,
+            phone: form.phone,
+            dueDate: form.dueDate,
+            notes: form.notes,
+            items: all,
+            itemTaken:
+              all.length === 1 ? all[0].description : summarizeLines(all),
+            quantity: all.length === 1 ? all[0].quantity : null,
+            stockId: all.length === 1 ? all[0].stockId : null,
+            totalAmount: newTotal,
+            // a cleared credit owes money again once more goods are taken
+            status:
+              addTo.status === "paid" && (addTo.paidAmount || 0) < newTotal
+                ? "outstanding"
+                : addTo.status,
+          },
+          addTo,
+        );
+        items.forEach((i) => {
+          if (i.stockId) recordStockSale(i.stockId, i.quantity);
+        });
+        showToast(t.saved);
+        resetCreditForm();
+        setShowForm(false);
+      } catch (err) {
+        console.error(err);
+        showToast(t.failedSave, "error");
+      }
+      setSaving(false);
+      return;
+    }
 
     setSaving(true);
     try {
@@ -622,7 +698,10 @@ export default function Credits({ ownerUid }) {
       {showForm && (
         <div className="entry-form" style={{ marginBottom: 20 }}>
           <h3>
-            <FontAwesomeIcon icon={faHandHoldingDollar} /> {t.newCredit}
+            <FontAwesomeIcon icon={faHandHoldingDollar} />{" "}
+            {addTo
+              ? `${t.addItemsTo || "Add items to"}: ${addTo.customer}`
+              : t.newCredit}
           </h3>
           <form onSubmit={handleSubmit}>
             <div className="form-grid">
@@ -687,9 +766,8 @@ export default function Credits({ ownerUid }) {
               stock={stock}
               t={t}
               idPrefix="credit"
-              itemLabel={t.itemTaken}
-              qtyLabel={t.creditQtyTaken || t.quantity}
-              amountLabel={t.amount || t.totalAmount}
+              itemLabel={t.addItems || "Add items"}
+              baseTotal={addTo ? Number(addTo.totalAmount) || 0 : 0}
               totalLabel={t.creditTotal || "Credit total"}
             />
             <div style={{ display: "flex", gap: 10 }}>
@@ -1124,6 +1202,15 @@ export default function Credits({ ownerUid }) {
 
                 {/* Actions */}
                 <div className="credit-actions">
+                  {!isBadDebt && (
+                    <button
+                      className="btn-secondary"
+                      style={{ fontSize: 12, padding: "7px 12px" }}
+                      onClick={() => startAddTo(credit)}
+                    >
+                      <FontAwesomeIcon icon={faPlus} /> {t.itemNo || "Item"}
+                    </button>
+                  )}
                   {isOutstanding && (
                     <>
                       <button
