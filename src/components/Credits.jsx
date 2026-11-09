@@ -4,13 +4,9 @@ import {
   useStock,
   recordStockSale,
   recordStockReturn,
-  stockLabel,
-  findStockByLabel,
-  roundQty,
   roundMoney,
 } from "../hooks/useStock";
 import { PAYMENT_METHODS } from "../paymentMethods";
-import { priceLimits, priceError } from "../stockPrice";
 import { useLang } from "../LangContext";
 import { Toast, useToast } from "./Toast";
 import AlertDialog from "./AlertDialog";
@@ -32,8 +28,16 @@ import {
   faChartBar,
   faPen,
 } from "@fortawesome/free-solid-svg-icons";
-import ItemPicker from "./ItemPicker";
-import { stockOptions } from "../stockOptions";
+import LineItems from "./LineItems";
+import {
+  newLine,
+  lineStock,
+  lineQty,
+  linesTotal,
+  filledLines,
+  validateLines,
+  summarizeLines,
+} from "../lineItems";
 
 export default function Credits({ ownerUid }) {
   const { t } = useLang();
@@ -78,12 +82,12 @@ export default function Credits({ ownerUid }) {
     date: lastDate,
     customer: "",
     phone: "",
-    itemTaken: "",
-    quantity: "1",
     dueDate: "",
-    totalAmount: "",
     notes: "",
   };
+  // Items taken on this credit — one customer can take several things
+  // and owe one combined total.
+  const [lines, setLines] = useState(() => [newLine()]);
 
   const [form, setForm] = useState(emptyForm);
   const [showForm, setShowForm] = useState(false);
@@ -95,11 +99,6 @@ export default function Credits({ ownerUid }) {
   // Day a debt was written off (asked for when writing off; editable later)
   const [badDebtDate, setBadDebtDate] = useState(localToday);
   const [closeDateEdit, setCloseDateEdit] = useState("");
-  // Stock item picked for this credit (so it can be deducted on save) and its
-  // per-unit price — kept apart from form.totalAmount so total = unit × qty
-  // stays right as the quantity changes. Same idea as the Sales form.
-  const [selectedStock, setSelectedStock] = useState(null);
-  const [unitPrice, setUnitPrice] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [badDebtTarget, setBadDebtTarget] = useState(null);
   // Edit-credit modal (fix a wrong payment / reopen a written-off debt)
@@ -114,116 +113,67 @@ export default function Credits({ ownerUid }) {
 
   const today = localToday; // local date (not UTC)
 
-  // ── Stock picker / quantity handlers (mirrors Sales) ───────────────────────
-  const handleStockSelect = (e) => {
-    const found = stock.find((c) => c.id === e.target.value) || null;
-    setSelectedStock(found);
-    let up = null;
-    if (found) {
-      // default to the full selling price (top of the range, if it's a range)
-      up =
-        found.priceMode === "range" && found.maxPrice != null
-          ? Number(found.maxPrice)
-          : found.price != null
-            ? Number(found.price)
-            : null;
-    }
-    setUnitPrice(up);
-    const qty = parseFloat(form.quantity) || 1;
-    setForm((f) => ({
-      ...f,
-      itemTaken: found ? stockLabel(found) : "",
-      totalAmount: up != null ? String(roundMoney(up * qty)) : f.totalAmount,
-    }));
-  };
-
-  const handleQuantityChange = (e) => {
-    const q = e.target.value;
-    setForm((f) => ({
-      ...f,
-      quantity: q,
-      totalAmount:
-        unitPrice != null
-          ? String(roundMoney(unitPrice * (parseFloat(q) || 0)))
-          : f.totalAmount,
-    }));
-  };
-
-  const resetCreditForm = () => {
-    setForm(emptyForm);
-    setSelectedStock(null);
-    setUnitPrice(null);
+  const resetCreditForm = (date = lastDate) => {
+    setForm({ ...emptyForm, date });
+    setLines([newLine()]);
+    setStockChoice(null);
   };
 
   // ── Save new credit ────────────────────────────────────────────────────────
-  // A credit is a sale that hasn't been paid for yet, so if the item comes
-  // from stock the quantity leaves stock right now (just like a sale).
+  // A credit is a sale that hasn't been paid for yet, so items that come
+  // from stock leave stock right now (just like a sale). Several items can
+  // go on one credit; the customer owes their combined total.
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (saving) return;
 
-    // Quantity may be fractional (0.375 L, 0.5 kg …)
-    const qty = roundQty(parseFloat(form.quantity)) || 1;
-    const matchedStock =
-      selectedStock || findStockByLabel(stock, form.itemTaken);
     // Old credits (older than a week) don't take goods out of today's stock
     // unless the user ticks "update my current stock" — see dates.js.
     const touchStock = stockUpdateWanted(form.date, stockChoice);
-
-    // Same price limits as a sale: the credit's total must stay inside the
-    // range (or fixed price) set on the stock item.
-    const badPrice = matchedStock
-      ? priceError(matchedStock, qty, parseFloat(form.totalAmount), t)
-      : null;
-    if (badPrice) {
-      showToast(badPrice, "error");
+    const problem = validateLines(lines, stock, touchStock, t);
+    if (problem) {
+      showToast(problem, "error");
       return;
     }
 
-    if (touchStock && matchedStock && matchedStock.quantity != null) {
-      const available = Number(matchedStock.quantity);
-      if (available <= 1e-9) {
-        showToast(`${stockLabel(matchedStock)} is out of stock.`, "error");
-        return;
-      }
-      if (qty > available + 1e-9) {
-        showToast(
-          `Only ${available.toLocaleString()} ${stockLabel(matchedStock)} left in stock.`,
-          "error",
-        );
-        return;
-      }
-    }
+    const items = filledLines(lines).map((line) => {
+      const s = lineStock(line, stock);
+      return {
+        description: line.text.trim(),
+        quantity: lineQty(line),
+        amount: roundMoney(parseFloat(line.amount)),
+        // remember which stock item each line came from so a cancelled
+        // credit can put the goods back
+        stockId: touchStock && s && s.quantity != null ? s.id : null,
+      };
+    });
+    const single = items.length === 1 ? items[0] : null;
 
     setSaving(true);
     try {
       await addItem({
         ...form,
-        quantity: qty,
-        totalAmount: parseFloat(form.totalAmount),
+        items,
+        // Single-item credits keep the original fields exactly as before;
+        // multi-item ones get a readable summary in itemTaken.
+        itemTaken: single ? single.description : summarizeLines(items),
+        quantity: single ? single.quantity : null,
+        stockId: single ? single.stockId : null,
+        totalAmount: linesTotal(lines),
         paidAmount: 0,
         status: "outstanding",
         payments: [],
         dateIssued: form.date,
-        // remember which stock item this came from so a cancelled credit can
-        // put the goods back
-        stockId:
-          touchStock && matchedStock && matchedStock.quantity != null
-            ? matchedStock.id
-            : null,
       });
 
       // Bookkeeping: the goods have left the shelf.
-      if (touchStock && matchedStock && matchedStock.quantity != null) {
-        await recordStockSale(matchedStock.id, qty);
-      }
+      items.forEach((i) => {
+        if (i.stockId) recordStockSale(i.stockId, i.quantity);
+      });
 
       showToast(t.saved);
       setLastDate(form.date); // next credit starts on the same day
-      setForm({ ...emptyForm, date: form.date });
-      setSelectedStock(null);
-      setUnitPrice(null);
-      setStockChoice(null);
+      resetCreditForm(form.date);
       setShowForm(false);
     } catch (err) {
       console.error(err);
@@ -521,9 +471,16 @@ export default function Credits({ ownerUid }) {
   };
 
   // ── Helpers ─────────────────────────────────────────────────────────────────
+  // Stock lines on a credit: the items array (new credits) or the single
+  // stockId/quantity pair (credits saved before multi-item support).
+  const stockLinesOf = (c) =>
+    (c.items?.length
+      ? c.items
+      : [{ stockId: c.stockId, quantity: c.quantity, description: c.itemTaken }]
+    ).filter((i) => i.stockId && Number(i.quantity) > 0);
+
   const returnsToStock = (c) =>
-    !!c.stockId &&
-    Number(c.quantity) > 0 &&
+    stockLinesOf(c).length > 0 &&
     c.status === "outstanding" &&
     !(c.paidAmount > 0);
 
@@ -678,7 +635,7 @@ export default function Credits({ ownerUid }) {
                   setStockChoice(null);
                 }}
               />
-              {(selectedStock || findStockByLabel(stock, form.itemTaken)) && (
+              {lines.some((l) => lineStock(l, stock)) && (
                 <StockUpdateToggle
                   date={form.date}
                   checked={stockUpdateWanted(form.date, stockChoice)}
@@ -714,96 +671,6 @@ export default function Credits({ ownerUid }) {
                   onChange={(e) => setForm({ ...form, phone: e.target.value })}
                 />
               </div>
-              <ItemPicker
-                id="credit-item"
-                label={t.itemTaken}
-                t={t}
-                options={stockOptions(stock, { labelFn: stockLabel, t, disableOut: true })}
-                selectedValue={selectedStock?.id || ""}
-                text={form.itemTaken}
-                onPick={(v) => handleStockSelect({ target: { value: v } })}
-                onCustom={(txt) => {
-                  handleStockSelect({ target: { value: "" } });
-                  setForm((f) => ({ ...f, itemTaken: txt }));
-                }}
-              />
-              <div className="field-group">
-                <label>
-                  {t.creditQtyTaken || t.quantity}
-                  {selectedStock?.unit ? ` (${selectedStock.unit})` : ""}
-                </label>
-                <input
-                  type="number"
-                  min="0.001"
-                  step="any"
-                  inputMode="decimal"
-                  value={form.quantity}
-                  onChange={handleQuantityChange}
-                />
-                {selectedStock?.quantity != null && (
-                  <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 4 }}>
-                    {t.qtyInStock}: {Number(selectedStock.quantity).toLocaleString()}
-                  </div>
-                )}
-              </div>
-              <div className="field-group">
-                <label>{t.totalAmount}</label>
-                {(() => {
-                  const lim = selectedStock
-                    ? priceLimits(selectedStock, parseFloat(form.quantity) || 1)
-                    : null;
-                  return (
-                    <input
-                      type="number"
-                      placeholder="0.00"
-                      step="0.01"
-                      inputMode="decimal"
-                      value={form.totalAmount}
-                      onChange={(e) => {
-                        const v = e.target.value;
-                        setForm({ ...form, totalAmount: v });
-                        // remember the per-unit price typed, so changing the
-                        // quantity afterwards scales from it
-                        if (unitPrice != null && v !== "") {
-                          const q = parseFloat(form.quantity) || 1;
-                          setUnitPrice(roundMoney((parseFloat(v) || 0) / q));
-                        }
-                      }}
-                      required
-                      min={lim ? lim.minTotal : "1"}
-                      max={lim ? lim.maxTotal : undefined}
-                    />
-                  );
-                })()}
-                {(() => {
-                  const q = parseFloat(form.quantity) || 1;
-                  const amt = parseFloat(form.totalAmount) || 0;
-                  const lim = selectedStock ? priceLimits(selectedStock, q) : null;
-                  if (!lim && !(unitPrice != null && q > 1)) return null;
-                  const outside =
-                    lim &&
-                    amt > 0 &&
-                    (amt < lim.minTotal - 0.01 || amt > lim.maxTotal + 0.01);
-                  return (
-                    <div
-                      style={{
-                        fontSize: 12,
-                        marginTop: 4,
-                        color: outside ? "#dc2626" : "var(--muted)",
-                        fontWeight: outside ? 600 : 400,
-                      }}
-                    >
-                      KES {roundMoney(amt / q).toLocaleString()} / unit × {q} ={" "}
-                      KES {amt.toLocaleString()}
-                      {lim &&
-                        ` · ${t.allowedAmount}: ` +
-                          (lim.fixed
-                            ? `KES ${lim.minTotal.toLocaleString()}`
-                            : `KES ${lim.minTotal.toLocaleString()} to ${lim.maxTotal.toLocaleString()}`)}
-                    </div>
-                  );
-                })()}
-              </div>
               <div className="field-group full-width">
                 <label>{t.creditNotes}</label>
                 <textarea
@@ -814,6 +681,17 @@ export default function Credits({ ownerUid }) {
                 />
               </div>
             </div>
+            <LineItems
+              lines={lines}
+              setLines={setLines}
+              stock={stock}
+              t={t}
+              idPrefix="credit"
+              itemLabel={t.itemTaken}
+              qtyLabel={t.creditQtyTaken || t.quantity}
+              amountLabel={t.amount || t.totalAmount}
+              totalLabel={t.creditTotal || "Credit total"}
+            />
             <div style={{ display: "flex", gap: 10 }}>
               <button type="submit" className="btn-primary" disabled={saving}>
                 {saving ? t.saving : t.saveCredit}
@@ -1071,7 +949,20 @@ export default function Credits({ ownerUid }) {
                       )}
                     </div>
 
-                    {credit.itemTaken && (
+                    {credit.items?.length > 1 ? (
+                      <ul className="credit-items">
+                        {credit.items.map((i, n) => (
+                          <li key={n}>
+                            <span>
+                              {i.description}
+                              {Number(i.quantity) !== 1 &&
+                                ` × ${Number(i.quantity).toLocaleString()}`}
+                            </span>
+                            <span>KES {Number(i.amount).toLocaleString()}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : credit.itemTaken && (
                       <div className="credit-desc">
                         {credit.itemTaken}
                         {credit.quantity != null && credit.quantity !== "" && (
@@ -1294,6 +1185,30 @@ export default function Credits({ ownerUid }) {
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* Totals under the list of credits */}
+      {credits.length > 0 && (
+        <div className="table-total" style={{ marginTop: 12 }}>
+          <span>
+            {t.creditTotals || "Credit totals"} ({credits.length})
+          </span>
+          <span style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+            <span>
+              {t.allCredits}: <strong>KES {grandTotal.toLocaleString()}</strong>
+            </span>
+            <span>
+              {t.totalCollected}:{" "}
+              <strong>KES {totalCollected.toLocaleString()}</strong>
+            </span>
+            <span>
+              {t.unpaidDebts}:{" "}
+              <strong style={{ color: "var(--orange)" }}>
+                KES {totalOutstanding.toLocaleString()}
+              </strong>
+            </span>
+          </span>
         </div>
       )}
 
@@ -1570,7 +1485,9 @@ export default function Credits({ ownerUid }) {
           deleteTarget
             ? `"${deleteTarget.customer}": ${t.cannotBeUndone || "This cannot be undone."}` +
               (returnsToStock(deleteTarget)
-                ? ` ${Number(deleteTarget.quantity).toLocaleString()} ${deleteTarget.itemTaken} → ${t.stock || "Stock"}.`
+                ? ` ${stockLinesOf(deleteTarget)
+                    .map((i) => `${Number(i.quantity).toLocaleString()} ${i.description}`)
+                    .join(", ")} → ${t.stock || "Stock"}.`
                 : "")
             : ""
         }
@@ -1584,9 +1501,8 @@ export default function Credits({ ownerUid }) {
             // the shelf. (Partly-paid or written-off credits keep their stock
             // deduction: those goods really did leave.)
             if (returnsToStock(deleteTarget)) {
-              await recordStockReturn(
-                deleteTarget.stockId,
-                Number(deleteTarget.quantity),
+              stockLinesOf(deleteTarget).forEach((i) =>
+                recordStockReturn(i.stockId, Number(i.quantity)),
               );
             }
             showToast(t.deletedToast);

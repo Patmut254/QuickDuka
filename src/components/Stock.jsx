@@ -175,7 +175,7 @@ function StockList({ sub, ownerUid }) {
         setStatus("idle");
         setForm(emptyForm);
         setShowForm(false);
-      }, 1200);
+      }, 400);
     } catch {
       setStatus("idle");
       showToast(t.failedSave || "Save failed. Try again.", "error");

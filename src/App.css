@@ -8168,3 +8168,98 @@ textarea {
 @media (min-width: 1280px) {
   .pf-form > .pf-card:first-child .pf-grid { grid-template-columns: 1fr; }
 }
+
+/* ── Multi-item sales / credits ─────────────────────────────── */
+.line-items { margin-bottom: 14px; }
+.line-item {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 12px 0;
+  margin-bottom: 10px;
+  background: var(--bg2);
+}
+.line-item .form-grid { grid-template-columns: 1fr 1fr; } /* picker spans the top row */
+.line-item-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+.line-item-remove {
+  border: none;
+  background: none;
+  color: #dc2626;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+}
+.line-item-hint { font-size: 12px; color: var(--muted); margin-top: 4px; }
+.line-item-add { width: 100%; justify-content: center; margin-bottom: 10px; }
+.line-items-total,
+.table-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--accent) 7%, transparent);
+  border: 1px solid var(--border);
+  font-size: 14px;
+}
+.line-items-total strong { font-size: 17px; color: var(--accent); }
+.table-total { margin-top: 10px; }
+.table-total strong { color: var(--text); }
+.sale-group-tag {
+  margin-left: 6px;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 7px;
+  border-radius: 20px;
+  background: #3b82f615;
+  color: #3b82f6;
+  white-space: nowrap;
+}
+.credit-items {
+  list-style: none;
+  margin: 4px 0 0;
+  padding: 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+.credit-items li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 2px 0;
+  border-bottom: 1px dashed var(--border);
+}
+
+/* Manual M-Pesa payment steps (SubscriptionWall) */
+.sub-manual-steps {
+  margin: 8px 0 0;
+  padding-left: 20px;
+  font-size: 13px;
+  line-height: 1.9;
+  color: var(--text);
+  text-align: left;
+}
+.sub-copy-btn {
+  margin-left: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 1px 8px;
+  border-radius: 20px;
+  border: 1px solid var(--accent);
+  background: transparent;
+  color: var(--accent);
+  cursor: pointer;
+  font-family: inherit;
+}

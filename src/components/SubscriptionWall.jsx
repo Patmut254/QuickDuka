@@ -20,6 +20,15 @@ import { PLANS as PLAN_MAP, PLAN_ORDER } from "../subscription";
 const MPESA_BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "";
 const SUPPORT_WHATSAPP = "254769758819";
 
+// ── TEMPORARY: manual M-Pesa payments ─────────────────────────────────────
+// There is no Paybill yet, so the Daraja STK push can't work. Until it does,
+// customers send money to the number below and WhatsApp us the M-Pesa
+// message; the account is then activated from the Admin panel.
+// To bring the automatic STK push back, set VITE_MPESA_AUTOMATED=true in
+// .env (and on Vercel) and redeploy. Nothing else needs to change.
+const MPESA_AUTOMATED = import.meta.env.VITE_MPESA_AUTOMATED === "true";
+const MANUAL_PAY_NUMBER = "0769 758 819";
+
 const PLANS = PLAN_ORDER.map((id) => ({ ...PLAN_MAP[id] }));
 
 export default function SubscriptionWall({ profile }) {
@@ -38,8 +47,11 @@ export default function SubscriptionWall({ profile }) {
   const [serverReady, setServerReady] = useState(false);
   const [serverWaking, setServerWaking] = useState(false);
 
+  const [copied, setCopied] = useState(false);
+
   useEffect(() => {
-    if (!MPESA_BACKEND_URL) return;
+    // Manual mode never calls the payment server, so don't wake it
+    if (!MPESA_AUTOMATED || !MPESA_BACKEND_URL) return;
     setServerWaking(true);
     fetch(`${MPESA_BACKEND_URL}/`, { method: "GET" })
       .then(() => setServerReady(true))
@@ -265,13 +277,13 @@ export default function SubscriptionWall({ profile }) {
         <p className="sub-wall-msg">{subtext}</p>
 
         {/* Server wake-up indicator */}
-        {serverWaking && (
+        {MPESA_AUTOMATED && serverWaking && (
           <div className="sub-server-waking">
             <FontAwesomeIcon icon={faSpinner} spin style={{ marginRight: 7 }} />
             Connecting to payment server...
           </div>
         )}
-        {!serverWaking && serverReady === false && MPESA_BACKEND_URL && (
+        {MPESA_AUTOMATED && !serverWaking && serverReady === false && MPESA_BACKEND_URL && (
           <div className="sub-server-offline">
             Payment server is currently offline. Please WhatsApp us for help.
           </div>
@@ -478,7 +490,66 @@ export default function SubscriptionWall({ profile }) {
           </div>
         </div>
 
-        {/* M-Pesa payment box */}
+        {/* Manual M-Pesa payment (temporary, until the Paybill is ready) */}
+        {!MPESA_AUTOMATED && (
+          <div className="sub-stk-box">
+            <div className="sub-stk-label">
+              <FontAwesomeIcon icon={faPhone} /> Pay KES{" "}
+              {selectedPlan.price.toLocaleString()} via M-Pesa
+            </div>
+            <ol className="sub-manual-steps">
+              <li>
+                Go to M-Pesa → <strong>Send Money</strong>
+              </li>
+              <li>
+                Send <strong>KES {selectedPlan.price.toLocaleString()}</strong>{" "}
+                to <strong>{MANUAL_PAY_NUMBER}</strong>{" "}
+                <button
+                  type="button"
+                  className="sub-copy-btn"
+                  onClick={() => {
+                    navigator.clipboard
+                      ?.writeText(MANUAL_PAY_NUMBER.replace(/\s/g, ""))
+                      .then(() => {
+                        setCopied(true);
+                        setTimeout(() => setCopied(false), 1500);
+                      })
+                      .catch(() => {});
+                  }}
+                >
+                  {copied ? "Copied" : "Copy"}
+                </button>
+              </li>
+              <li>
+                Send the M-Pesa confirmation message to us on WhatsApp (same
+                number)
+              </li>
+            </ol>
+            <a
+              href={`https://wa.me/${SUPPORT_WHATSAPP}?text=${encodeURIComponent(
+                `QuickDuka payment - ${selectedPlan.name} plan (KES ${selectedPlan.price})\n` +
+                  `Business: ${profile?.businessName || ""}\n` +
+                  `Account: ${profile?.phone || profile?.email || ""}\n\n` +
+                  `M-Pesa message: `,
+              )}`}
+              target="_blank"
+              rel="noreferrer"
+              className="sub-wa-btn"
+              style={{ display: "block", textAlign: "center", marginTop: 12 }}
+            >
+              Send M-Pesa message on WhatsApp
+            </a>
+            <p className="sub-stk-hint" style={{ marginTop: 12, marginBottom: 0 }}>
+              We are updating the app to automatic M-Pesa payments. Your
+              account will be activated as soon as we receive your message,
+              and you will get an email update once automatic payments are
+              live.
+            </p>
+          </div>
+        )}
+
+        {/* M-Pesa payment box (automatic STK push) */}
+        {MPESA_AUTOMATED && (
         <div className="sub-stk-box">
           <div className="sub-stk-label">
             <FontAwesomeIcon icon={faPhone} /> Pay KES{" "}
@@ -538,8 +609,10 @@ export default function SubscriptionWall({ profile }) {
           )}
         </div>
 
+        )}
+
         {/* Verify section — shown after STK push */}
-        {stkStatus === "sent" && (
+        {MPESA_AUTOMATED && stkStatus === "sent" && (
           <div style={{ marginTop: 16 }}>
             <p
               style={{
@@ -580,7 +653,7 @@ export default function SubscriptionWall({ profile }) {
         )}
 
         {/* WhatsApp support on error */}
-        {stkStatus === "error" && (
+        {MPESA_AUTOMATED && stkStatus === "error" && (
           <div style={{ marginTop: 12, textAlign: "center" }}>
             <a
               href={`https://wa.me/${SUPPORT_WHATSAPP}?text=QuickDuka subscription help - ${profile?.phone || profile?.email} - ${profile?.businessName || ""}`}

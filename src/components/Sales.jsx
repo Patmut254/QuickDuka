@@ -5,20 +5,23 @@ import { useCollection } from "../hooks/useCollection";
 import {
   useStock,
   recordStockSale,
-  stockLabel,
   findStockByLabel,
-  roundQty,
-  roundMoney,
 } from "../hooks/useStock";
 import { PAYMENT_METHODS, paymentMethodOptions } from "../paymentMethods";
-import { priceLimits, priceError } from "../stockPrice";
+import { priceError } from "../stockPrice";
 import EntryDate, { StockUpdateToggle } from "./EntryDate";
 import { localToday, stockUpdateWanted } from "../dates";
 import { useLang } from "../LangContext";
 import EntryTable from "./EntryTable";
 import { Toast, useToast } from "./Toast";
-import ItemPicker from "./ItemPicker";
-import { stockOptions } from "../stockOptions";
+import LineItems from "./LineItems";
+import {
+  newLine,
+  lineStock,
+  lineQty,
+  filledLines,
+  validateLines,
+} from "../lineItems";
 
 export default function Sales({ ownerUid, sub }) {
   const { t } = useLang();
@@ -56,141 +59,75 @@ export default function Sales({ ownerUid, sub }) {
   // Whether a back-dated sale should also change current stock (null = default)
   const [stockChoice, setStockChoice] = useState(null);
 
+  // Shared details for the whole sale; the items themselves live in `lines`
+  // so one customer can buy several things in a single entry.
   const emptyForm = {
     date: lastDate,
-    description: "",
     customer: "",
     phone: "",
-    quantity: "1",
-    amount: "",
     paymentMethod: "cash",
     branchId: "",
     notes: "",
   };
   const [form, setForm] = useState(emptyForm);
+  const [lines, setLines] = useState(() => [newLine()]);
   const [status, setStatus] = useState("idle");
   const [showForm, setShowForm] = useState(false);
-  // Tracks the matched stock item (if any) so we know its id (to decrement
-  // quantity on save) and its price mode (to bound the discount slider).
-  const [selectedStock, setSelectedStock] = useState(null);
-  // Per-unit price of the selected stock item — kept separate from
-  // form.amount (which is the TOTAL) so total = unitPrice × quantity
-  // always stays correct as either one changes.
-  const [unitPrice, setUnitPrice] = useState(null);
 
-  // The picker goes by stock id (not name) so two sizes of the same product —
-  // e.g. Water 0.375 L and Water 0.5 L — can each be picked, priced and
-  // deducted separately.
-  const handleStockSelect = (e) => {
-    const found = stock.find((c) => c.id === e.target.value);
-    setSelectedStock(found || null);
-    let up = null;
-    if (found) {
-      // default to full price; discount by dragging the range slider down
-      up =
-        found.priceMode === "range" && found.maxPrice != null
-          ? Number(found.maxPrice)
-          : found.price != null
-            ? Number(found.price)
-            : null;
-    }
-    setUnitPrice(up);
-    const qty = parseFloat(form.quantity) || 1;
-    setForm((f) => ({
-      ...f,
-      description: found ? stockLabel(found) : "",
-      amount: up != null ? String(roundMoney(up * qty)) : f.amount,
-    }));
-  };
-
-  // Quantity changed — recompute the total from the known unit price so
-  // "10 items at 1,000 each" always lands on 10,000, not 1,000.
-  const handleQuantityChange = (e) => {
-    const q = e.target.value;
-    setForm((f) => ({
-      ...f,
-      quantity: q,
-      amount:
-        unitPrice != null
-          ? String(roundMoney(unitPrice * (parseFloat(q) || 0)))
-          : f.amount,
-    }));
-  };
-
-  // The seller types the amount actually paid. Remember the per-unit price it
-  // implies, so changing the quantity afterwards scales from THAT price rather
-  // than jumping back to the list price.
-  const handleAmountChange = (e) => {
-    const value = e.target.value;
-    const qty = parseFloat(form.quantity) || 1;
-    setForm((f) => ({ ...f, amount: value }));
-    if (unitPrice != null && value !== "") {
-      setUnitPrice(roundMoney((parseFloat(value) || 0) / qty));
-    }
+  const resetForm = (date = lastDate) => {
+    setForm({ ...emptyForm, date });
+    setLines([newLine()]);
+    setStockChoice(null);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (status !== "idle") return;
 
-    // Quantity may be fractional (0.375 L, 0.5 kg …)
-    const qty = roundQty(parseFloat(form.quantity)) || 1;
-
-    // Resolve the stock match even if it wasn't picked from the dropdown
-    // (e.g. typed straight into the description field), so a zero-stock
-    // item can't be sold just by bypassing the picker.
-    const matchedStock =
-      selectedStock || findStockByLabel(stock, form.description);
-
     // Old sales usually don't touch today's stock count (see dates.js)
     const touchStock = stockUpdateWanted(form.date, stockChoice);
 
-    // The amount must stay inside the price set on the stock item: a range
-    // (min–max) or the single fixed price — never above or below it.
-    const badPrice = matchedStock
-      ? priceError(matchedStock, qty, parseFloat(form.amount), t)
-      : null;
-    if (badPrice) {
-      showToast(badPrice, "error");
+    // Price limits + enough stock, checked across ALL lines together (two
+    // lines of the same item must not oversell it).
+    const problem = validateLines(lines, stock, touchStock, t);
+    if (problem) {
+      showToast(problem, "error");
       return;
     }
 
-    // If this sale is against a tracked stock item, make sure there's
-    // enough left — and block entirely if it's out of stock.
-    if (touchStock && matchedStock && matchedStock.quantity != null) {
-      const available = Number(matchedStock.quantity);
-      if (available <= 1e-9) {
-        showToast(`${stockLabel(matchedStock)} is out of stock.`, "error");
-        return;
-      }
-      if (qty > available + 1e-9) {
-        showToast(
-          `Only ${available.toLocaleString()} ${stockLabel(matchedStock)} left in stock.`,
-          "error",
-        );
-        return;
-      }
-    }
-
+    const used = filledLines(lines);
     setStatus("saving");
     try {
       const chosenBranch = branches.find((b) => b.id === form.branchId);
-      const { branchId: _branchId, ...saleData } = form;
-      await addItem(
-        {
-          ...saleData,
-          amount: parseFloat(form.amount),
-          quantity: qty,
-        },
-        chosenBranch
-          ? { branchId: chosenBranch.id, branchName: chosenBranch.name }
-          : {},
-      );
+      const { branchId: _branchId, ...shared } = form;
+      // Every item is its own Sales row (so reports per item keep working),
+      // tied together by saleGroup so they read as one customer's purchase.
+      const saleGroup =
+        used.length > 1
+          ? `g${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`
+          : null;
 
-      // Bookkeeping: reduce stock quantity by the amount sold.
-      if (touchStock && matchedStock && matchedStock.quantity != null) {
-        await recordStockSale(matchedStock.id, qty);
-      }
+      await Promise.all(
+        used.map((line) => {
+          const s = lineStock(line, stock);
+          const qty = lineQty(line);
+          if (touchStock && s && s.quantity != null) recordStockSale(s.id, qty);
+          return addItem(
+            {
+              ...shared,
+              description: line.text.trim(),
+              quantity: qty,
+              amount: parseFloat(line.amount),
+              ...(saleGroup
+                ? { saleGroup, saleGroupSize: used.length }
+                : {}),
+            },
+            chosenBranch
+              ? { branchId: chosenBranch.id, branchName: chosenBranch.name }
+              : {},
+          );
+        }),
+      );
 
       setStatus("saved");
       showToast(t.saved);
@@ -198,12 +135,9 @@ export default function Sales({ ownerUid, sub }) {
       setTimeout(() => {
         setStatus("idle");
         setLastDate(savedDate); // next entry starts on the same day
-        setForm({ ...emptyForm, date: savedDate });
-        setStockChoice(null);
-        setSelectedStock(null);
-        setUnitPrice(null);
+        resetForm(savedDate);
         setShowForm(false);
-      }, 1500);
+      }, 500);
     } catch {
       setStatus("idle");
       showToast(t.failedSave, "error");
@@ -234,7 +168,21 @@ export default function Sales({ ownerUid, sub }) {
 
   const columns = [
     { key: "date", label: t.date, inputType: "date" },
-    { key: "description", label: t.itemSold },
+    {
+      key: "description",
+      label: t.itemSold,
+      // Items bought together in one multi-item sale get a small tag
+      format: (v, row) => (
+        <>
+          {v || "-"}
+          {row?.saleGroupSize > 1 && (
+            <span className="sale-group-tag">
+              {row.saleGroupSize} {t.itemsWord || "items"}
+            </span>
+          )}
+        </>
+      ),
+    },
     { key: "customer", label: t.customer },
     {
       key: "phone",
@@ -324,11 +272,7 @@ export default function Sales({ ownerUid, sub }) {
           onClick={() => {
             setShowForm(!showForm);
             setStatus("idle");
-            if (showForm) {
-              setForm(emptyForm);
-              setSelectedStock(null);
-              setUnitPrice(null);
-            }
+            if (showForm) resetForm();
           }}
         >
           {showForm ? `${t.cancel}` : `+ ${t.newSale}`}
@@ -347,7 +291,7 @@ export default function Sales({ ownerUid, sub }) {
                 setStockChoice(null);
               }}
             />
-            {(selectedStock || findStockByLabel(stock, form.description)) && (
+            {lines.some((l) => lineStock(l, stock)) && (
               <StockUpdateToggle
                 date={form.date}
                 checked={stockUpdateWanted(form.date, stockChoice)}
@@ -375,126 +319,6 @@ export default function Sales({ ownerUid, sub }) {
                 </select>
               </div>
             )}
-            <ItemPicker
-              id="sale-item"
-              label={t.itemSold}
-              required
-              t={t}
-              options={stockOptions(stock, { labelFn: stockLabel, t, disableOut: true })}
-              selectedValue={selectedStock?.id || ""}
-              text={form.description}
-              onPick={(v) => handleStockSelect({ target: { value: v } })}
-              onCustom={(txt) => {
-                handleStockSelect({ target: { value: "" } });
-                setForm((f) => ({ ...f, description: txt }));
-              }}
-            />
-            <div className="field-group">
-              <label htmlFor="sale-customer">{t.customer}</label>
-              <input
-                id="sale-customer"
-                name="sale-customer"
-                autoComplete="name"
-                placeholder={t.customerPh}
-                value={form.customer}
-                onChange={(e) => setForm({ ...form, customer: e.target.value })}
-              />
-            </div>
-            <div className="field-group">
-              <label htmlFor="sale-phone">{t.phone}</label>
-              <input
-                id="sale-phone"
-                name="sale-phone"
-                type="tel"
-                autoComplete="tel"
-                placeholder="07XX XXX XXX"
-                value={form.phone}
-                onChange={(e) => setForm({ ...form, phone: e.target.value })}
-              />
-            </div>
-            <div className="field-group">
-              <label htmlFor="sale-quantity">
-                {t.quantity}
-                {selectedStock?.unit ? ` (${selectedStock.unit})` : ""}
-              </label>
-              <input
-                id="sale-quantity"
-                name="sale-quantity"
-                type="number"
-                autoComplete="off"
-                min="0.001"
-                step="any"
-                inputMode="decimal"
-                value={form.quantity}
-                onChange={handleQuantityChange}
-              />
-              {selectedStock?.quantity != null && (
-                <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 4 }}>
-                  {t.qtyInStock}: {Number(selectedStock.quantity).toLocaleString()}
-                </div>
-              )}
-            </div>
-            <div className="field-group">
-              <label htmlFor="sale-amount">
-                {t.amount} *
-                {selectedStock?.priceMode === "range" && (
-                  <span style={{ fontWeight: 400, color: "var(--muted)" }}>
-                    {" "}
-                    ({t.priceRange}: KES {Number(selectedStock.minPrice).toLocaleString()} to 
-                    {Number(selectedStock.maxPrice).toLocaleString()})
-                  </span>
-                )}
-              </label>
-              {/* The seller types what the customer actually pays. The amount must
-                  stay inside the price set on the stock item (range or fixed). */}
-              {(() => {
-                const qty = parseFloat(form.quantity) || 0;
-                const lim = selectedStock ? priceLimits(selectedStock, qty || 1) : null;
-                return (
-                  <input
-                    id="sale-amount"
-                    name="sale-amount"
-                    type="number"
-                    autoComplete="off"
-                    inputMode="decimal"
-                    min={lim ? lim.minTotal : "0"}
-                    max={lim ? lim.maxTotal : undefined}
-                    step="0.01"
-                    placeholder="0.00"
-                    value={form.amount}
-                    onChange={handleAmountChange}
-                    required
-                  />
-                );
-              })()}
-              {(() => {
-                const qty = parseFloat(form.quantity) || 0;
-                const amt = parseFloat(form.amount) || 0;
-                const lim = selectedStock ? priceLimits(selectedStock, qty || 1) : null;
-                if (!lim && !(unitPrice != null && qty > 1)) return null;
-                const perUnit = qty > 0 ? amt / qty : 0;
-                const outside =
-                  lim && amt > 0 && (amt < lim.minTotal - 0.01 || amt > lim.maxTotal + 0.01);
-                return (
-                  <div
-                    style={{
-                      fontSize: 12,
-                      marginTop: 4,
-                      color: outside ? "#dc2626" : "var(--muted)",
-                      fontWeight: outside ? 600 : 400,
-                    }}
-                  >
-                    KES {roundMoney(perUnit).toLocaleString()} / unit × {qty || 1} ={" "}
-                    KES {amt.toLocaleString()}
-                    {lim &&
-                      ` · ${t.allowedAmount}: ` +
-                        (lim.fixed
-                          ? `KES ${lim.minTotal.toLocaleString()}`
-                          : `KES ${lim.minTotal.toLocaleString()} to ${lim.maxTotal.toLocaleString()}`)}
-                  </div>
-                );
-              })()}
-            </div>
             <div className="field-group">
               <label htmlFor="sale-payment-method">{t.paymentMethod}</label>
               <select
@@ -522,6 +346,17 @@ export default function Sales({ ownerUid, sub }) {
               />
             </div>
           </div>
+          <LineItems
+            lines={lines}
+            setLines={setLines}
+            stock={stock}
+            t={t}
+            idPrefix="sale"
+            itemLabel={t.itemSold}
+            qtyLabel={t.quantity}
+            amountLabel={`${t.amount} *`}
+            totalLabel={t.saleTotal || "Sale total"}
+          />
           <button
             type="submit"
             className={"btn-primary" + (status === "saved" ? " btn-saved" : "")}
@@ -544,6 +379,8 @@ export default function Sales({ ownerUid, sub }) {
         onUpdate={handleUpdate}
         showToast={showToast}
         emptyMessage={t.noSales}
+        totalKey="amount"
+        totalLabel={t.totalSales}
       />
     </div>
   );

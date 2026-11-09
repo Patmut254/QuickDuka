@@ -60,6 +60,18 @@ export const T = {
     customer: "Customer",
     customerPh: "Customer name",
     saveSale: "Save Sale",
+    // multi-item sales / credits
+    addAnotherItem: "Add another item",
+    saleTotal: "Sale total",
+    creditTotal: "Credit total",
+    creditTotals: "Credit totals",
+    itemsWord: "items",
+    itemNo: "Item",
+    remove: "Remove",
+    total: "Total",
+    addOneItem: "Add at least one item.",
+    chooseItemEachLine: "Choose an item on every line, or remove the empty line.",
+    enterAmount: "enter the amount.",
     noSales: "No sales yet. Click '+ New Sale' to add one.",
 
     // Purchases
@@ -795,6 +807,18 @@ export const T = {
     customer: "Mteja",
     customerPh: "Jina la mteja",
     saveSale: "Hifadhi Mauzo",
+    // multi-item sales / credits
+    addAnotherItem: "Ongeza bidhaa nyingine",
+    saleTotal: "Jumla ya mauzo",
+    creditTotal: "Jumla ya mkopo",
+    creditTotals: "Jumla ya mikopo",
+    itemsWord: "bidhaa",
+    itemNo: "Bidhaa",
+    remove: "Ondoa",
+    total: "Jumla",
+    addOneItem: "Ongeza angalau bidhaa moja.",
+    chooseItemEachLine: "Chagua bidhaa kwa kila mstari, au ondoa mstari ulio wazi.",
+    enterAmount: "weka kiasi.",
     noSales: "Hakuna mauzo bado. Bonyeza '+ Mauzo Mapya' kuanza.",
 
     // Purchases

@@ -46,15 +46,15 @@ export const roundMoney = (n) => Math.round((Number(n) || 0) * 100) / 100;
 export async function recordStockPurchase(stockId, qty, value = 0) {
   if (!stockId || !qty) return;
   qty = roundQty(qty);
-  try {
-    await updateDoc(doc(db, "stock", stockId), {
+  // Not awaited: the local cache updates instantly; waiting for the server
+  // only slowed every save down (see useCollection SPEED FIX).
+  updateDoc(doc(db, "stock", stockId), {
       quantity: increment(qty),
       totalPurchased: increment(qty),
       totalPurchaseValue: increment(value || 0),
-    });
-  } catch (err) {
-    console.error("Stock purchase update failed:", err.message);
-  }
+  }).catch((err) =>
+    console.error("Stock purchase update failed:", err.message),
+  );
 }
 
 // recordStockSale — goods going OUT (a sale). Bumps the remaining quantity
@@ -62,14 +62,12 @@ export async function recordStockPurchase(stockId, qty, value = 0) {
 export async function recordStockSale(stockId, qty) {
   if (!stockId || !qty) return;
   qty = roundQty(qty);
-  try {
-    await updateDoc(doc(db, "stock", stockId), {
+  // Not awaited: the local cache updates instantly; waiting for the server
+  // only slowed every save down (see useCollection SPEED FIX).
+  updateDoc(doc(db, "stock", stockId), {
       quantity: increment(-qty),
       totalSold: increment(qty),
-    });
-  } catch (err) {
-    console.error("Stock sale update failed:", err.message);
-  }
+  }).catch((err) => console.error("Stock sale update failed:", err.message));
 }
 
 // recordStockReturn — goods coming BACK (a cancelled credit / returned sale).
@@ -77,19 +75,19 @@ export async function recordStockSale(stockId, qty) {
 export async function recordStockReturn(stockId, qty) {
   if (!stockId || !qty) return;
   qty = roundQty(qty);
-  try {
-    await updateDoc(doc(db, "stock", stockId), {
+  // Not awaited: the local cache updates instantly; waiting for the server
+  // only slowed every save down (see useCollection SPEED FIX).
+  updateDoc(doc(db, "stock", stockId), {
       quantity: increment(qty),
       totalSold: increment(-qty),
-    });
-  } catch (err) {
-    console.error("Stock return update failed:", err.message);
-  }
+  }).catch((err) =>
+    console.error("Stock return update failed:", err.message),
+  );
 }
 
 export function useStock() {
   const [stock, setStock] = useState([]);
-  const [uid, setUid] = useState(null);
+  const [uid, setUid] = useState(() => auth.currentUser?.uid ?? null);
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (u) => setUid(u?.uid ?? null));
