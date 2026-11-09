@@ -13,6 +13,8 @@ export default function EntryTable({
   onUpdate,
   emptyMessage,
   showToast,
+  totalKey, // optional: sum this column under the table (follows the search)
+  totalLabel,
 }) {
   const { t } = useLang();
   const [search, setSearch] = useState("");
@@ -256,6 +258,21 @@ export default function EntryTable({
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {totalKey && !loading && filtered.length > 0 && (
+        <div className="table-total">
+          <span>
+            {totalLabel || t.total || "Total"}
+            {search ? ` (${filtered.length} ${t.records || "records"})` : ""}
+          </span>
+          <strong>
+            KES{" "}
+            {filtered
+              .reduce((a, r) => a + (Number(r[totalKey]) || 0), 0)
+              .toLocaleString()}
+          </strong>
         </div>
       )}
     </div>

@@ -9,6 +9,7 @@ import {
   query,
   serverTimestamp,
   updateDoc,
+  setDoc,
   getDocs,
   where,
   onSnapshot,
@@ -47,7 +48,9 @@ export function useCollection(
 
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [uid, setUid] = useState(null);
+  // Start from the already-known user (if auth has restored) so the
+  // listener attaches on the first render instead of waiting a tick.
+  const [uid, setUid] = useState(() => auth.currentUser?.uid ?? null);
 
   // ── FIX: stabilise overrideOwnerUid in a ref so the Firestore
   //    useEffect's dep array never changes SIZE — only value.
@@ -173,22 +176,43 @@ export function useCollection(
   }, [collectionName, uid]);
    
 
+  // ── SPEED FIX: optimistic writes ─────────────────────────────────────────
+  // Firestore applies a write to the local cache instantly (the onSnapshot
+  // listener above fires straight away), but the promise from addDoc /
+  // updateDoc only resolves after the SERVER confirms. Awaiting that made
+  // every "Save" wait a full network round-trip — several, when a save also
+  // wrote a purchase/audit entry — which is the delay users noticed when
+  // adding products. Now we queue the write, return immediately, and only
+  // log if the server later rejects it. `ref.committed` is the server-ack
+  // promise for the rare caller that truly needs it.
+  const background = (promise, what) => {
+    promise.catch((err) =>
+      console.error(`Firestore ${what} on ${collectionName} failed:`, err.message),
+    );
+    return promise;
+  };
+
   const addItem = async (data, extraMeta = {}) => {
     // ownerUid priority: extraMeta > hook's overrideOwnerUid > current user's uid
     const resolvedOwnerUid =
       extraMeta.ownerUid || overrideOwnerUidRef.current || uid;
 
-    const ref = await addDoc(collection(db, collectionName), {
-      ...data,
-      userId: uid,
-      ownerUid: resolvedOwnerUid,
-      staffName: extraMeta.staffName || null,
-      branchId: extraMeta.branchId || null,
-      branchName: extraMeta.branchName || null,
-      createdAt: serverTimestamp(),
-    });
+    const ref = doc(collection(db, collectionName)); // id is generated locally
+    ref.committed = background(
+      setDoc(ref, {
+        ...data,
+        userId: uid,
+        ownerUid: resolvedOwnerUid,
+        staffName: extraMeta.staffName || null,
+        branchId: extraMeta.branchId || null,
+        branchName: extraMeta.branchName || null,
+        createdAt: serverTimestamp(),
+      }),
+      "create",
+    );
 
-    await logAction(uid, collectionName, "CREATE", {
+    // Audit log never blocks the UI
+    logAction(uid, collectionName, "CREATE", {
       after: data,
       description: data.description || data.item || data.category || "",
     });
@@ -198,8 +222,8 @@ export function useCollection(
 
   const deleteItem = async (id, itemData) => {
     const before = itemData || items.find((i) => i.id === id) || null;
-    await deleteDoc(doc(db, collectionName, id));
-    await logAction(uid, collectionName, "DELETE", {
+    background(deleteDoc(doc(db, collectionName, id)), "delete");
+    logAction(uid, collectionName, "DELETE", {
       before,
       description:
         before?.description || before?.item || before?.category || "",
@@ -207,8 +231,8 @@ export function useCollection(
   };
 
   const updateItem = async (id, newData, oldData) => {
-    await updateDoc(doc(db, collectionName, id), newData);
-    await logAction(uid, collectionName, "UPDATE", {
+    background(updateDoc(doc(db, collectionName, id), newData), "update");
+    logAction(uid, collectionName, "UPDATE", {
       before: oldData || null,
       after: newData,
       description:
