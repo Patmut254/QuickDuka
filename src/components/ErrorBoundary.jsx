@@ -41,7 +41,7 @@ export default class ErrorBoundary extends Component {
             maxWidth: 440,
             margin: "60px auto",
             background: "var(--card, #fff)",
-            borderRadius: "var(--radius)",
+            borderRadius: 0,
             boxShadow: "0 2px 16px rgba(0,0,0,0.08)",
             border: "1px solid var(--border, #e5e7eb)",
           }}
@@ -83,7 +83,7 @@ export default class ErrorBoundary extends Component {
               background: "var(--accent, #2563eb)",
               color: "#fff",
               border: "none",
-              borderRadius: 8,
+              borderRadius: 0,
               fontWeight: 600,
               fontSize: 14,
               cursor: "pointer",

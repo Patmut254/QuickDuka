@@ -37,11 +37,11 @@ const STEP_ICONS = [
 ];
 const STEP_COLORS = [
   "var(--green)", // Dashboard
-  "#22c55e", // Sales
+  "#29573f", // Sales
   "var(--orange)", // Credits
-  "#3b82f6", // Purchases
-  "#f97316", // Buying stock on credit
-  "#a855f7", // Expenses
+  "#4f6f7d", // Purchases
+  "#a0623f", // Buying stock on credit
+  "#8c6e52", // Expenses
   "var(--red)", // Losses
   "#14b8a6", // Stock
   "var(--green)", // Reports
@@ -145,7 +145,7 @@ export default function FAQPage() {
                 marginTop: 8,
                 background: "var(--green-bg)",
                 padding: "10px 14px",
-                borderRadius: 6,
+                borderRadius: 0,
                 border: "1px solid var(--green-lt)",
               }}
             >

@@ -87,7 +87,7 @@ function BranchForm({ ownerUid, onAdded, onCancel }) {
         style={{
           background: "var(--bg2)",
           border: "1.5px solid var(--border)",
-          borderRadius: "var(--radius)",
+          borderRadius: 0,
           padding: "24px 20px",
           marginBottom: 20,
           textAlign: "center",
@@ -95,7 +95,7 @@ function BranchForm({ ownerUid, onAdded, onCancel }) {
       >
         <FontAwesomeIcon
           icon={faCheckCircle}
-          style={{ fontSize: 28, color: "#16a34a", marginBottom: 10 }}
+          style={{ fontSize: 28, color: "#29573f", marginBottom: 10 }}
         />
         <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text)" }}>
           Branch "{name}" created!
@@ -109,7 +109,7 @@ function BranchForm({ ownerUid, onAdded, onCancel }) {
       style={{
         background: "var(--bg2)",
         border: "1.5px solid var(--border)",
-        borderRadius: "var(--radius)",
+        borderRadius: 0,
         padding: "20px 20px 18px",
         marginBottom: 20,
       }}
@@ -249,7 +249,7 @@ function BranchCard({ branch, ownerUid, staffList, onToggle, onDelete }) {
       style={{
         background: "var(--bg2)",
         border: "1.5px solid var(--border)",
-        borderRadius: "var(--radius)",
+        borderRadius: 0,
         padding: "16px 18px",
         opacity: branch.active ? 1 : 0.6,
         transition: "opacity .2s",
@@ -268,7 +268,7 @@ function BranchCard({ branch, ownerUid, staffList, onToggle, onDelete }) {
           style={{
             width: 44,
             height: 44,
-            borderRadius: 10,
+            borderRadius: 0,
             flexShrink: 0,
             background: branch.active ? "var(--accent)18" : "var(--border)",
             border: `2px solid ${branch.active ? "var(--accent)40" : "var(--border)"}`,
@@ -343,12 +343,12 @@ function BranchCard({ branch, ownerUid, staffList, onToggle, onDelete }) {
           <span
             style={{
               padding: "2px 8px",
-              borderRadius: 20,
+              borderRadius: 0,
               fontSize: 11,
               fontWeight: 700,
-              background: branch.active ? "#16a34a18" : "var(--border)",
-              color: branch.active ? "#16a34a" : "var(--muted)",
-              border: `1.5px solid ${branch.active ? "#16a34a40" : "var(--border)"}`,
+              background: branch.active ? "#29573f18" : "var(--border)",
+              color: branch.active ? "#29573f" : "var(--muted)",
+              border: `1.5px solid ${branch.active ? "#29573f40" : "var(--border)"}`,
             }}
           >
             {branch.active ? "Active" : "Inactive"}
@@ -360,7 +360,7 @@ function BranchCard({ branch, ownerUid, staffList, onToggle, onDelete }) {
             style={{
               background: "none",
               border: "1px solid var(--border)",
-              borderRadius: 8,
+              borderRadius: 0,
               padding: "5px 9px",
               cursor: "pointer",
               fontSize: 16,
@@ -377,7 +377,7 @@ function BranchCard({ branch, ownerUid, staffList, onToggle, onDelete }) {
             style={{
               background: "none",
               border: "1px solid var(--border)",
-              borderRadius: 8,
+              borderRadius: 0,
               padding: "5px 9px",
               cursor: "pointer",
               color: "var(--red)",
@@ -428,7 +428,7 @@ function BranchCard({ branch, ownerUid, staffList, onToggle, onDelete }) {
                 style={{
                   fontSize: 10,
                   padding: "2px 7px",
-                  borderRadius: 20,
+                  borderRadius: 0,
                   background: s.active ? "var(--accent)15" : "var(--border)",
                   color: s.active ? "var(--accent)" : "var(--muted)",
                   border: `1px solid ${s.active ? "var(--accent)30" : "var(--border)"}`,
@@ -578,7 +578,7 @@ export default function BranchesPage({ sub }) {
               textAlign: "center",
               padding: "40px 20px",
               border: "1.5px dashed var(--border)",
-              borderRadius: "var(--radius)",
+              borderRadius: 0,
               background: "var(--bg2)",
               color: "var(--muted)",
               fontSize: 13,

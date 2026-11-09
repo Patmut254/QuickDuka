@@ -42,13 +42,13 @@ function statusBadge(user) {
   const status = user.subscriptionStatus;
 
   if (status === "active" && expiry && expiry >= now) {
-    return { label: t.statusPaying, color: "#22c55e", icon: faCheckCircle };
+    return { label: t.statusPaying, color: "#29573f", icon: faCheckCircle };
   }
   if (status === "trial") {
     return { label: t.statusTrial, color: "#f59e0b", icon: faCheckCircle };
   }
   if (!expiry || expiry < now) {
-    return { label: t.statusNotPaying, color: "#ef4444", icon: faExclamationTriangle };
+    return { label: t.statusNotPaying, color: "#a33a2a", icon: faExclamationTriangle };
   }
   return { label: t.statusUnknown, color: "var(--muted)", icon: faExclamationTriangle };
 }
@@ -128,7 +128,7 @@ export default function ReferrerDashboard({ referrerName, referrerId }) {
       <div style={{
         background: "var(--card)",
         border: "1px solid var(--border)",
-        borderRadius: "var(--radius)",
+        borderRadius: 0,
         padding: "20px 22px",
         marginBottom: 18,
         display: "flex",
@@ -167,15 +167,15 @@ export default function ReferrerDashboard({ referrerName, referrerId }) {
         marginBottom: 20,
       }}>
         {[
-          { label: t.totalPaid, value: `KES ${Number(totalEarned).toLocaleString()}`, color: "#22c55e", icon: faMoneyBillWave },
+          { label: t.totalPaid, value: `KES ${Number(totalEarned).toLocaleString()}`, color: "#29573f", icon: faMoneyBillWave },
           { label: t.totalReferrals, value: referrals.length, color: "var(--accent)", icon: faUsers },
-          { label: t.active, value: activeCount, color: "#22c55e", icon: faCheckCircle },
-          { label: t.inactive, value: inactiveCount, color: "#ef4444", icon: faUserSlash },
+          { label: t.active, value: activeCount, color: "#29573f", icon: faCheckCircle },
+          { label: t.inactive, value: inactiveCount, color: "#a33a2a", icon: faUserSlash },
         ].map(({ label, value, color, icon }) => (
           <div key={label} style={{
             background: "var(--card)",
             border: "1px solid var(--border)",
-            borderRadius: 10,
+            borderRadius: 0,
             padding: "14px 16px",
           }}>
             <div style={{ fontSize: 11, color: "var(--muted)", marginBottom: 6, fontWeight: 600 }}>{label}</div>
@@ -202,7 +202,7 @@ export default function ReferrerDashboard({ referrerName, referrerId }) {
             onClick={() => setActiveTab(tab.id)}
             style={{
               padding: "7px 14px",
-              borderRadius: 8,
+              borderRadius: 0,
               border: "none",
               background: activeTab === tab.id ? "var(--accent)" : "transparent",
               color: activeTab === tab.id ? "#fff" : "var(--muted)",
@@ -227,7 +227,7 @@ export default function ReferrerDashboard({ referrerName, referrerId }) {
           <div style={{
             background: "var(--card)",
             border: "1px solid var(--border)",
-            borderRadius: 10,
+            borderRadius: 0,
             padding: "18px 20px",
             marginBottom: 14,
           }}>
@@ -247,11 +247,11 @@ export default function ReferrerDashboard({ referrerName, referrerId }) {
             <div style={{
               background: "var(--card)",
               border: "1px solid var(--border)",
-              borderRadius: 10,
+              borderRadius: 0,
               padding: "18px 20px",
             }}>
               <h3 style={{ fontWeight: 700, fontSize: 15, marginBottom: 12 }}>
-                <FontAwesomeIcon icon={faMoneyBillWave} style={{ marginRight: 8, color: "#22c55e" }} />
+                <FontAwesomeIcon icon={faMoneyBillWave} style={{ marginRight: 8, color: "#29573f" }} />
                 Malipo ya Hivi Karibuni / Recent Payments
               </h3>
               {payments.slice(0, 3).map((p) => (
@@ -263,7 +263,7 @@ export default function ReferrerDashboard({ referrerName, referrerId }) {
                   borderBottom: "1px solid var(--border)",
                 }}>
                   <div>
-                    <div style={{ fontWeight: 700, color: "#22c55e", fontSize: 15 }}>
+                    <div style={{ fontWeight: 700, color: "#29573f", fontSize: 15 }}>
                       KES {Number(p.amount).toLocaleString()}
                     </div>
                     <div style={{ fontSize: 12, color: "var(--muted)" }}>
@@ -272,9 +272,9 @@ export default function ReferrerDashboard({ referrerName, referrerId }) {
                     </div>
                   </div>
                   <div style={{
-                    background: "#22c55e20",
-                    color: "#22c55e",
-                    borderRadius: 6,
+                    background: "#29573f20",
+                    color: "#29573f",
+                    borderRadius: 0,
                     padding: "3px 10px",
                     fontSize: 12,
                     fontWeight: 700,
@@ -290,7 +290,7 @@ export default function ReferrerDashboard({ referrerName, referrerId }) {
             <div style={{
               background: "var(--card)",
               border: "1px solid var(--border)",
-              borderRadius: 10,
+              borderRadius: 0,
               padding: "24px",
               textAlign: "center",
               color: "var(--muted)",
@@ -312,7 +312,7 @@ export default function ReferrerDashboard({ referrerName, referrerId }) {
             <div style={{
               background: "var(--card)",
               border: "1px solid var(--border)",
-              borderRadius: 10,
+              borderRadius: 0,
               padding: "28px",
               textAlign: "center",
               color: "var(--muted)",
@@ -328,7 +328,7 @@ export default function ReferrerDashboard({ referrerName, referrerId }) {
                   <div key={u.id} style={{
                     background: "var(--card)",
                     border: "1px solid var(--border)",
-                    borderRadius: 10,
+                    borderRadius: 0,
                     padding: "14px 18px",
                     display: "flex",
                     alignItems: "center",
@@ -349,7 +349,7 @@ export default function ReferrerDashboard({ referrerName, referrerId }) {
                     <div style={{
                       background: `${badge.color}20`,
                       color: badge.color,
-                      borderRadius: 8,
+                      borderRadius: 0,
                       padding: "4px 12px",
                       fontSize: 12,
                       fontWeight: 700,
@@ -366,12 +366,12 @@ export default function ReferrerDashboard({ referrerName, referrerId }) {
           {inactiveCount > 0 && (
             <div style={{
               marginTop: 16,
-              background: "#ef444410",
-              border: "1px solid #ef444430",
-              borderRadius: 8,
+              background: "#a33a2a10",
+              border: "1px solid #a33a2a30",
+              borderRadius: 0,
               padding: "12px 16px",
               fontSize: 13,
-              color: "#ef4444",
+              color: "#a33a2a",
             }}>
               <FontAwesomeIcon icon={faExclamationTriangle} style={{ marginRight: 6 }} />
               {t.inactiveWarning(inactiveCount)} </div>
@@ -385,7 +385,7 @@ export default function ReferrerDashboard({ referrerName, referrerId }) {
           <div style={{
             background: "var(--card)",
             border: "1px solid var(--border)",
-            borderRadius: 10,
+            borderRadius: 0,
             padding: "16px 18px",
             marginBottom: 14,
             display: "flex",
@@ -395,7 +395,7 @@ export default function ReferrerDashboard({ referrerName, referrerId }) {
             <div style={{ fontSize: 13, color: "var(--muted)", fontWeight: 600 }}>
               {t.totalAllTime}
             </div>
-            <div style={{ fontSize: 22, fontWeight: 800, color: "#22c55e" }}>
+            <div style={{ fontSize: 22, fontWeight: 800, color: "#29573f" }}>
               KES {Number(totalEarned).toLocaleString()}
             </div>
           </div>
@@ -406,7 +406,7 @@ export default function ReferrerDashboard({ referrerName, referrerId }) {
             <div style={{
               background: "var(--card)",
               border: "1px solid var(--border)",
-              borderRadius: 10,
+              borderRadius: 0,
               padding: "28px",
               textAlign: "center",
               color: "var(--muted)",
@@ -421,7 +421,7 @@ export default function ReferrerDashboard({ referrerName, referrerId }) {
                 <div key={p.id} style={{
                   background: "var(--card)",
                   border: "1px solid var(--border)",
-                  borderRadius: 10,
+                  borderRadius: 0,
                   padding: "14px 18px",
                   display: "flex",
                   justifyContent: "space-between",
@@ -429,7 +429,7 @@ export default function ReferrerDashboard({ referrerName, referrerId }) {
                   gap: 12,
                 }}>
                   <div>
-                    <div style={{ fontWeight: 700, color: "#22c55e", fontSize: 16 }}>
+                    <div style={{ fontWeight: 700, color: "#29573f", fontSize: 16 }}>
                       KES {Number(p.amount).toLocaleString()}
                     </div>
                     <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 2 }}>
@@ -445,9 +445,9 @@ export default function ReferrerDashboard({ referrerName, referrerId }) {
                     gap: 3,
                   }}>
                     <div style={{
-                      background: "#22c55e20",
-                      color: "#22c55e",
-                      borderRadius: 6,
+                      background: "#29573f20",
+                      color: "#29573f",
+                      borderRadius: 0,
                       padding: "3px 10px",
                       fontSize: 12,
                       fontWeight: 700,

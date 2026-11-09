@@ -255,7 +255,7 @@ export default function Sales({ ownerUid, sub }) {
             fontSize: 11,
             fontWeight: 600,
             padding: "2px 8px",
-            borderRadius: 20,
+            borderRadius: 0,
             background: "var(--accent)15",
             color: "var(--accent)",
             textTransform: "capitalize",
@@ -274,7 +274,7 @@ export default function Sales({ ownerUid, sub }) {
           label: "Location",
           readOnly: true,
           format: (v) => v
-            ? <span style={{ fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 20, background: "#3b82f615", color: "#3b82f6" }}>{v}</span>
+            ? <span style={{ fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 0, background: "#4f6f7d15", color: "#4f6f7d" }}>{v}</span>
             : <span style={{ fontSize: 11, color: "var(--muted)" }}></span>,
         }]
       : []),
@@ -285,7 +285,7 @@ export default function Sales({ ownerUid, sub }) {
           label: "By",
           readOnly: true,
           format: (v) => v
-            ? <span style={{ fontSize: 11, fontWeight: 600, padding: "2px 7px", borderRadius: 20, background: "var(--accent)15", color: "var(--accent)" }}>{v}</span>
+            ? <span style={{ fontSize: 11, fontWeight: 600, padding: "2px 7px", borderRadius: 0, background: "var(--accent)15", color: "var(--accent)" }}>{v}</span>
             : <span style={{ fontSize: 11, color: "var(--muted)" }}>Owner</span>,
         }]
       : []),

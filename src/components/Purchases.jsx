@@ -381,7 +381,7 @@ export default function Purchases({ ownerUid }) {
           <span style={{ whiteSpace: "nowrap" }}>
             {v}
             {st === "overdue" && (
-              <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 700, color: "#ef4444" }}>
+              <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 700, color: "#a33a2a" }}>
                 {t.overdueLabel}
               </span>
             )}
@@ -402,7 +402,7 @@ export default function Purchases({ ownerUid }) {
         const bal = balanceOf(item);
         if (bal <= 0)
           return (
-            <span style={{ fontSize: 12, color: "var(--green, #22c55e)" }}>
+            <span style={{ fontSize: 12, color: "var(--green, #29573f)" }}>
               {t.settled}
             </span>
           );
@@ -415,7 +415,7 @@ export default function Purchases({ ownerUid }) {
               whiteSpace: "nowrap",
             }}
           >
-            <strong style={{ color: "var(--red, #ef4444)" }}>
+            <strong style={{ color: "var(--red, #a33a2a)" }}>
               KES {bal.toLocaleString()}
             </strong>
             <button
@@ -445,7 +445,7 @@ export default function Purchases({ ownerUid }) {
           <span className="stat-label">{t.owedToSuppliers}</span>
           <span
             className="stat-value"
-            style={{ color: totalOwed > 0 ? "var(--red, #ef4444)" : "inherit" }}
+            style={{ color: totalOwed > 0 ? "var(--red, #a33a2a)" : "inherit" }}
           >
             KES {totalOwed.toLocaleString()}
           </span>
@@ -466,12 +466,12 @@ export default function Purchases({ ownerUid }) {
           style={{
             marginBottom: 14,
             padding: "10px 14px",
-            borderRadius: 8,
+            borderRadius: 0,
             fontSize: 13,
             fontWeight: 600,
-            border: `1px solid ${overdueCount > 0 ? "#ef4444" : "#f59e0b"}`,
-            background: overdueCount > 0 ? "#ef444415" : "#f59e0b15",
-            color: overdueCount > 0 ? "#ef4444" : "#b45309",
+            border: `1px solid ${overdueCount > 0 ? "#a33a2a" : "#f59e0b"}`,
+            background: overdueCount > 0 ? "#a33a2a15" : "#f59e0b15",
+            color: overdueCount > 0 ? "#a33a2a" : "#b45309",
           }}
         >
           {t.supplierPaymentsDue}:{" "}

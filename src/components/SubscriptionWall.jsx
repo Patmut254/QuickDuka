@@ -300,7 +300,7 @@ export default function SubscriptionWall({ profile }) {
               alignItems: "center",
               justifyContent: "space-between",
               border: `2px solid ${selectedPlan.color}`,
-              borderRadius: 10,
+              borderRadius: 0,
               padding: "12px 16px",
               background: `${selectedPlan.color}0f`,
               cursor: "pointer",
@@ -331,7 +331,7 @@ export default function SubscriptionWall({ profile }) {
             <div
               style={{
                 border: "1px solid var(--border)",
-                borderRadius: 10,
+                borderRadius: 0,
                 marginTop: 6,
                 overflow: "hidden",
               }}
@@ -400,7 +400,7 @@ export default function SubscriptionWall({ profile }) {
                               background: "var(--muted)",
                               color: "#fff",
                               padding: "1px 6px",
-                              borderRadius: 20,
+                              borderRadius: 0,
                             }}
                           >
                             Coming soon
@@ -414,7 +414,7 @@ export default function SubscriptionWall({ profile }) {
                                 background: plan.color,
                                 color: "#fff",
                                 padding: "1px 6px",
-                                borderRadius: 20,
+                                borderRadius: 0,
                               }}
                             >
                               {plan.badge}
@@ -450,7 +450,7 @@ export default function SubscriptionWall({ profile }) {
               marginTop: 10,
               padding: "10px 14px",
               background: "var(--bg2)",
-              borderRadius: 8,
+              borderRadius: 0,
               border: "1px solid var(--border)",
             }}
           >

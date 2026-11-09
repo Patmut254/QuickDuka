@@ -29,11 +29,11 @@ export default function EntryDate({
       style={{
         fontSize: 11,
         padding: "3px 9px",
-        borderRadius: 999,
+        borderRadius: 0,
         cursor: "pointer",
         fontFamily: "inherit",
         border: "1px solid var(--border2, var(--border))",
-        background: value === date ? "var(--green, #22c55e)" : "var(--bg2)",
+        background: value === date ? "var(--green, #29573f)" : "var(--bg2)",
         color: value === date ? "#fff" : "var(--text)",
       }}
     >
@@ -78,7 +78,7 @@ export default function EntryDate({
             color: "#b45309",
             background: "#f59e0b18",
             border: "1px solid #f59e0b",
-            borderRadius: 6,
+            borderRadius: 0,
             padding: "4px 8px",
           }}
         >
@@ -101,7 +101,7 @@ export function StockUpdateToggle({ date, checked, onChange }) {
         fontSize: 13,
         padding: "8px 10px",
         border: "1px dashed var(--border2, var(--border))",
-        borderRadius: 8,
+        borderRadius: 0,
       }}
     >
       <label style={{ display: "flex", gap: 8, alignItems: "center", cursor: "pointer" }}>

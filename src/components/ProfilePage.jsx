@@ -541,7 +541,7 @@ function SubscriptionInfoCard({ profile }) {
     : null;
 
   const statusColor =
-    { active: "#22c55e", trial: "#f59e0b", expired: "#ef4444", pending: "#6b7280" }[status] ||
+    { active: "#29573f", trial: "#f59e0b", expired: "#a33a2a", pending: "#6b7280" }[status] ||
     "#6b7280";
   const statusLabel =
     { active: "Active", trial: "Free Trial", expired: "Expired", pending: "Pending Payment" }[
@@ -603,15 +603,15 @@ function SubscriptionInfoCard({ profile }) {
                 {daysLeft > 0 ? (
                   <>
                     Expires in{" "}
-                    <strong style={{ color: daysLeft <= 5 ? "#ef4444" : undefined }}>
+                    <strong style={{ color: daysLeft <= 5 ? "#a33a2a" : undefined }}>
                       {daysLeft} day{daysLeft !== 1 ? "s" : ""}
                     </strong>{" "}
                     ({fmt(expiry)})
                   </>
                 ) : daysLeft === 0 ? (
-                  <strong style={{ color: "#ef4444" }}>Expires today</strong>
+                  <strong style={{ color: "#a33a2a" }}>Expires today</strong>
                 ) : (
-                  <strong style={{ color: "#ef4444" }}>Expired on {fmt(expiry)}</strong>
+                  <strong style={{ color: "#a33a2a" }}>Expired on {fmt(expiry)}</strong>
                 )}
               </div>
             )}

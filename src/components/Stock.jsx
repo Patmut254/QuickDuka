@@ -398,7 +398,7 @@ function StockList({ sub, ownerUid }) {
             <div
               style={{
                 padding: "10px 14px",
-                borderRadius: 8,
+                borderRadius: 0,
                 background: "var(--bg2)",
                 border: "1px solid var(--border)",
                 fontSize: 13,
@@ -422,7 +422,7 @@ function StockList({ sub, ownerUid }) {
           <span className="stat-label">{t.totalExpectedProfit}</span>
           <span
             className="stat-value"
-            style={{ color: totalExpectedProfit >= 0 ? "#22c55e" : "#ef4444" }}
+            style={{ color: totalExpectedProfit >= 0 ? "#29573f" : "#a33a2a" }}
           >
             KES {totalExpectedProfit.toLocaleString()}
           </span>
@@ -431,7 +431,7 @@ function StockList({ sub, ownerUid }) {
           <span className="stat-label">{t.totalActualProfit}</span>
           <span
             className="stat-value"
-            style={{ color: totalActualProfit >= 0 ? "#22c55e" : "#ef4444" }}
+            style={{ color: totalActualProfit >= 0 ? "#29573f" : "#a33a2a" }}
           >
             KES {totalActualProfit.toLocaleString()}
           </span>
@@ -677,7 +677,7 @@ function StockList({ sub, ownerUid }) {
                               fontSize: 11,
                               fontWeight: 600,
                               padding: "1px 7px",
-                              borderRadius: 20,
+                              borderRadius: 0,
                               background: "var(--accent)15",
                               color: "var(--accent)",
                             }}
@@ -702,7 +702,7 @@ function StockList({ sub, ownerUid }) {
                       style={{
                         textAlign: "right",
                         fontWeight: 700,
-                        color: remaining <= 0 ? "#ef4444" : "inherit",
+                        color: remaining <= 0 ? "#a33a2a" : "inherit",
                       }}
                     >
                       {remaining.toLocaleString()}
@@ -711,7 +711,7 @@ function StockList({ sub, ownerUid }) {
                           style={{
                             fontSize: 10,
                             fontWeight: 700,
-                            color: "#ef4444",
+                            color: "#a33a2a",
                             textTransform: "uppercase",
                           }}
                         >
@@ -736,8 +736,8 @@ function StockList({ sub, ownerUid }) {
                         color:
                           expected != null
                             ? expected >= 0
-                              ? "#22c55e"
-                              : "#ef4444"
+                              ? "#29573f"
+                              : "#a33a2a"
                             : "inherit",
                       }}
                     >
@@ -751,8 +751,8 @@ function StockList({ sub, ownerUid }) {
                         color:
                           actual != null
                             ? actual >= 0
-                              ? "#22c55e"
-                              : "#ef4444"
+                              ? "#29573f"
+                              : "#a33a2a"
                             : "inherit",
                       }}
                     >

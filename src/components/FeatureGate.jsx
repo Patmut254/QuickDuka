@@ -56,7 +56,7 @@ export default function FeatureGate({
             alignItems: "center",
             gap: 4,
             padding: "2px 8px",
-            borderRadius: 20,
+            borderRadius: 0,
             background: "var(--bg2)",
             border: "1px solid var(--border)",
             fontSize: 11,
@@ -80,7 +80,7 @@ export default function FeatureGate({
               background: "var(--text)",
               color: "var(--bg)",
               padding: "7px 10px",
-              borderRadius: 8,
+              borderRadius: 0,
               fontSize: 11,
               maxWidth: 240,
               whiteSpace: "normal",
@@ -104,7 +104,7 @@ export default function FeatureGate({
         alignItems: "center",
         gap: 10,
         padding: "20px 16px",
-        borderRadius: "var(--radius)",
+        borderRadius: 0,
         border: "1.5px dashed var(--border)",
         background: "var(--bg2)",
         textAlign: "center",
@@ -156,7 +156,7 @@ export default function FeatureGate({
             alignItems: "center",
             gap: 6,
             padding: "6px 14px",
-            borderRadius: 20,
+            borderRadius: 0,
             background: upgradePlan.color + "15",
             border: `1.5px solid ${upgradePlan.color}40`,
             fontSize: 12,
@@ -179,9 +179,9 @@ export default function FeatureGate({
  */
 export function PlanBadge({ plan }) {
   const colors = {
-    starter: "#1a7a3c",
-    growth: "#0369a1",
-    business: "#7c3aed",
+    starter: "#29573f",
+    growth: "#4f6f7d",
+    business: "#8c6e52",
   };
   const names = { starter: "Starter", growth: "Growth", business: "Business" };
   const color = colors[plan] || colors.starter;
@@ -190,7 +190,7 @@ export function PlanBadge({ plan }) {
       style={{
         display: "inline-block",
         padding: "2px 9px",
-        borderRadius: 20,
+        borderRadius: 0,
         background: color + "18",
         border: `1.5px solid ${color}40`,
         color,
