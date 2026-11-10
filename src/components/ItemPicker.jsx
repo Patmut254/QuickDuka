@@ -20,6 +20,7 @@ export default function ItemPicker({
   allowCustom = true,
   t = {},
   customTag,
+  listOnType = false, // true: list stays hidden until the user types
 }) {
   const [query, setQuery] = useState("");
   const [editing, setEditing] = useState(false);
@@ -116,7 +117,12 @@ export default function ItemPicker({
   };
 
   return (
-    <div className="field-group full-width item-picker">
+    <div
+      className={
+        "field-group full-width item-picker" +
+        (listOnType && !q ? " list-hidden" : "")
+      }
+    >
       {label && (
         <label htmlFor={id}>
           {label}
