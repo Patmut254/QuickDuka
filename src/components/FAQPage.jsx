@@ -37,16 +37,16 @@ const STEP_ICONS = [
 ];
 const STEP_COLORS = [
   "var(--green)", // Dashboard
-  "#29573f", // Sales
+  "var(--green)", // Sales
   "var(--orange)", // Credits
-  "#4f6f7d", // Purchases
-  "#a0623f", // Buying stock on credit
-  "#8c6e52", // Expenses
+  "var(--blue)", // Purchases
+  "var(--orange)", // Buying stock on credit
+  "var(--sand)", // Expenses
   "var(--red)", // Losses
-  "#14b8a6", // Stock
-  "var(--green)", // Reports
-  "#6366f1", // History
-  "#f59e0b", // Subscription Plans (amber/gold)
+  "var(--green)", // Stock
+  "var(--blue)", // Reports
+  "var(--sand)", // History
+  "var(--orange)", // Subscription Plans
 ];
 
 function FaqItem({ f, i, open, setOpen }) {
@@ -154,33 +154,27 @@ export default function FAQPage() {
             </p>
           </div>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          <div className="howto-grid">
             {steps.map((step, i) => (
-              <div
-                key={i}
-                className="info-card"
-                style={{
-                }}
-              >
+              <div key={i} className="info-card howto-card">
                 <h2>
                   <span
-                    style={{
-                      width: 24,
-                      height: 24,
-                      color: STEP_COLORS[i] || "var(--green)",
-                      display: "inline-flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: 14,
-                      marginRight: 10,
-                      flexShrink: 0,
-                    }}
+                    className="howto-icon"
+                    style={{ color: STEP_COLORS[i] || "var(--green)" }}
                   >
                     <FontAwesomeIcon icon={STEP_ICONS[i] || faChartLine} />
                   </span>
                   {step.title}
                 </h2>
-                <p>{step.desc}</p>
+                <p className="howto-desc">{step.desc}</p>
+                {step.points && (
+                  <ol className="howto-steps">
+                    {step.points.map((pt, k) => (
+                      <li key={k}>{pt}</li>
+                    ))}
+                  </ol>
+                )}
+                {step.tip && <p className="howto-tip">{step.tip}</p>}
               </div>
             ))}
           </div>
@@ -203,17 +197,26 @@ export default function FAQPage() {
 
       {activeTab === "faq" && (
         <div>
-          <div className="info-card">
-            {faqs.map((f, i) => (
-              <FaqItem
-                key={i}
-                f={f}
-                i={i}
-                open={openFaq}
-                setOpen={setOpenFaq}
-              />
-            ))}
-          </div>
+          {Object.entries(t.faqCats || { all: "" }).map(([cat, label]) => {
+            const list = faqs
+              .map((f, i) => ({ f, i }))
+              .filter(({ f }) => !t.faqCats || f.cat === cat);
+            if (!list.length) return null;
+            return (
+              <div key={cat} className="info-card faq-group">
+                {label && <h2 className="faq-group-title">{label}</h2>}
+                {list.map(({ f, i }) => (
+                  <FaqItem
+                    key={i}
+                    f={f}
+                    i={i}
+                    open={openFaq}
+                    setOpen={setOpenFaq}
+                  />
+                ))}
+              </div>
+            );
+          })}
           <div className="info-card" style={{ marginTop: 14 }}>
             <h2>{t.stillQuestions}</h2>
             <p>

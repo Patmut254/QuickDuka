@@ -1,4 +1,5 @@
 import { createContext, useContext } from "react";
+import { HELP } from "./helpContent";
 
 // Full translation strings for every component
 export const T = {
@@ -481,169 +482,17 @@ export const T = {
     howToUse: "How to Use",
     faqsTab: "FAQs",
     welcomeTitle: "Welcome to QuickDuka",
-    welcomeDesc:
-      "QuickDuka is a simple business management app built for small business owners in Kenya. Use it to record your daily sales, track expenses, manage customer debts, and see your profit every month. Everything is saved securely online so you can access it from any device.",
-    welcomeTip:
-      "Record every sale and expense daily for accurate reports at the end of the month.",
+    welcomeDesc: HELP.en.welcomeDesc,
+    welcomeTip: HELP.en.welcomeTip,
     tipLabel: "Tip",
     yourDataPrivate: "Your Data is Private",
-    yourDataDesc:
-      "All your business records are stored securely in your personal account. No one else can see your data. QuickDuka does not share your information with anyone.",
+    yourDataDesc: HELP.en.yourDataDesc,
     stillQuestions: "Still have questions?",
     stillQuestionsEmail: "Email us at",
     orWhatsapp: "or WhatsApp us and we will respond within 24 hours.",
-    howToSteps: [
-      {
-        title: "Dashboard",
-        desc: "Your dashboard is the first thing you see when you log in. It shows your sales, purchases, expenses, losses and profit for the current month at a glance. Recent activity lists your latest sales, purchases, expenses and credits, a credit shows at KES 0 when you give it and grows as the customer pays. If you owe suppliers for stock bought on credit, a reminder panel shows what is due. You also see a 6-month performance chart.",
-      },
-      {
-        title: "Recording Sales",
-        desc: "Go to Sales and tap New Sale. The date defaults to today, tap the date to open the calendar and pick an earlier day if you are adding an old sale. Pick the item from your stock list. If you sell one product in different sizes (for example Water 0.375 L and Water 0.5 L), pick the size you sold. Enter the quantity (decimals like 0.5 are fine), the customer name and phone (both optional), and how they paid: Cash, M-Pesa, M-Pesa Till, Paybill (bank or business), Pochi la Biashara, Send Money, Airtel Money or Card. The amount fills in from your price list. Type the amount the customer actually pays, it can be lower or higher than the list price, but only within the price range set for that item in Stock (or exactly the fixed price). The quantity is taken out of your stock automatically.",
-      },
-      {
-        title: "Tracking Debts with Credits",
-        desc: "When a customer takes goods on credit, go to Credits and tap New Credit. Pick the item from your stock and enter the quantity, like a sale, it leaves your stock straight away. Then enter the customer's name, phone, total amount and a due date. When they pay, tap Pay on their card, enter the amount and choose how they paid. Each payment is added to Sales as you receive it, and the balance updates. If you delete a credit before they have paid anything, the goods go back into your stock. If someone never pays, mark them as Bad Debt and the unpaid amount is written off as a loss. Made a mistake, or the customer decides to pay later? Tap Edit on the credit to remove or correct a payment, or to reopen a written-off debt.",
-      },
-      {
-        title: "Recording Purchases",
-        desc: "Purchases now live inside the Stock/Purchases page. Open Stock/Purchases, switch to the Purchase history tab and tap New Purchase. Pick the item from your stock (or type a new one and it is added to your stock automatically), then enter the supplier, quantity and total cost. The quantity is added to your stock. You can also use the Restock button on the Stock tab when new goods arrive, it records the purchase for you.",
-      },
-      {
-        title: "Buying Stock on Credit",
-        desc: "Took stock on credit or with a loan? When you record a purchase or a restock, set Payment to Not fully paid (on credit). Enter how much you have paid so far (0 if nothing) and the date you promised to pay the rest. The app keeps track of what you still owe on each purchase. Owed amounts appear on the Dashboard with the promised date, marked DUE SOON within 3 days and OVERDUE after the date. To pay the supplier, open Stock/Purchases, go to Purchase history and tap Pay next to the balance. You can pay in parts, choose the payment method and set a new date for what remains. The full cost counts in your profit from the day you bought the stock. Reminders show when you open the app.",
-      },
-      {
-        title: "Logging Expenses",
-        desc: "Expenses are costs that are not stock purchases. Things like rent, electricity, transport, airtime, and salaries go here. Go to Expenses and tap New Expense. Choose a category, enter the amount and date. This helps you see where your money is going outside of buying stock.",
-      },
-      {
-        title: "Recording Losses",
-        desc: "Things go wrong in business. When stock expires, gets stolen, is damaged or goes to waste, record it in Losses. Go to Losses and tap New Loss. Enter what was lost and its value. This keeps your profit calculations accurate and honest.",
-      },
-      {
-        title: "Stock Catalogue and Sizes",
-        desc: "Use Stock/Purchases to keep a list of everything you sell, with buying and selling prices and how many you have left. If you sell the same product in different sizes, for example Water 0.375 L and Water 0.5 L, add each size as its own item using the Variant field, so each has its own price and stock count. Quantities can be decimals (like 0.5 or 0.375). Sales and credits pick from this list and reduce your stock automatically. Tap Restock when new goods arrive.",
-      },
-      {
-        title: "Reports",
-        desc: "Reports show you a full financial summary for any month you choose. You can see your total sales, purchases, expenses, losses, net profit and profit margin. There are also charts showing trends over 6 months. Use this at the end of every month to review your business performance.",
-      },
-      {
-        title: "History",
-        desc: "History keeps a record of every change made in the app. Every time you add, edit or delete a record, it is logged here. If you accidentally delete something, you can restore it from History. You can also filter by Added, Edited, Deleted or Restored.",
-      },
-      {
-        title: "Subscription Plans",
-        desc: "QuickDuka has three plans. Starter (KES 100/mo) is for a single owner running one shop with no extra staff. Growth (KES 250/mo) adds multiple staff accounts so your team can each log in with their own credentials while you manage everything as the owner. Business (KES 700/mo) unlocks multiple branches, a central admin dashboard, and combined reporting across all your shops. You start with a free 1-month trial and can upgrade at any time from your profile.",
-      },
-    ],
-    faqList: [
-      {
-        q: "What plans does QuickDuka offer?",
-        a: `QuickDuka has three plans:\n\nStarter: KES 100/mo\nOne shop, owner only. Perfect for a solo trader who wants to track sales, expenses and profit.\n\nGrowth: KES 250/mo\nOne shop with unlimited staff accounts. Your team each get their own login while you manage everything as the owner.\n\nBusiness: KES 700/mo\nMultiple branches, a central admin dashboard, and combined reports across all your shops.\n\nAll plans include a free 1-month trial. No card needed, pay via M-Pesa.`,
-      },
-      {
-        q: "How much does QuickDuka cost?",
-        a: `There are three pricing tiers:\n\nStarter: KES 100/mo, One shop, owner only.\nGrowth: KES 250/mo, One shop + unlimited staff accounts.\nBusiness: KES 700/mo, Multiple branches + central admin + combined reports.\n\nAll plans start with a free 1-month trial. You pay via M-Pesa STK push, no card required.`,
-      },
-      {
-        q: "How do I pay for my subscription?",
-        a: `On the payment screen, select your plan, enter your M-Pesa number and tap Pay Now. You will get a pop-up on your phone to enter your M-Pesa PIN, then tap Verify Payment.\n\nStarter: KES 100/mo\nGrowth: KES 250/mo\nBusiness: KES 700/mo\n\nIf you have trouble, use the manual option and WhatsApp us your M-Pesa confirmation SMS.`,
-      },
-      {
-        q: "Can I add staff to my account?",
-        a: `It depends on your plan:\n\nStarter (KES 100/mo): Owner account only, no extra staff logins.\nGrowth (KES 250/mo): Unlimited staff accounts. Each team member gets their own login linked to your account.\nBusiness (KES 700/mo): Unlimited staff across multiple branches.\n\nUpgrade anytime from your profile.`,
-      },
-      {
-        q: "Can I manage multiple shops or branches?",
-        a: `Multiple branches are available on the Business plan only:\n\nStarter (KES 100/mo): One shop, one owner.\nGrowth (KES 250/mo): One shop with a team.\nBusiness (KES 700/mo): Unlimited branches, central admin dashboard, and combined reporting across all shops.\n\nUpgrade to Business from your profile to unlock multi-branch management.`,
-      },
-      {
-        q: "Is there a free trial?",
-        a: `Yes, every new account gets a free 1-month trial with full access to all features.\n\nAfter the trial, choose the plan that fits your business:\n\nStarter: KES 100/mo, Solo owner, one shop.\nGrowth: KES 250/mo, One shop + staff accounts.\nBusiness: KES 700/mo, Multiple branches + admin tools.\n\nNo card needed. Pay via M-Pesa when your trial ends.`,
-      },
-      {
-        q: "What happens when my subscription expires?",
-        a: `Your account is locked until you renew, but your data is never deleted. You get a 2-day grace period after expiry.\n\nRenew by paying for your plan via M-Pesa:\n\nStarter: KES 100/mo\nGrowth: KES 250/mo\nBusiness: KES 700/mo\n\nYou can also upgrade to a higher plan at renewal.`,
-      },
-      {
-        q: "Can I log in with my phone number?",
-        a: "Yes. You can register and log in using your phone number (+254...) or your email address. Both are supported.",
-      },
-      {
-        q: "Is my data safe?",
-        a: "Your data is stored securely in Google Firebase which is the same infrastructure used by millions of apps worldwide. Each user's data is separate and only accessible by you.",
-      },
-      {
-        q: "How do I track who owes me money?",
-        a: "Use the Credits section. Pick the item from your stock and enter the quantity (it leaves your stock straight away), plus the customer's name, phone and amount. Record each payment as it comes in, partial payments are fine, and each one is added to Sales. The Dashboard shows the credit at KES 0 and it grows as the customer pays.",
-      },
-      {
-        q: "Can I follow up on buyers or suppliers?",
-        a: "Yes. Phone numbers saved in Sales, Purchases, Expenses and Credits appear as clickable links. Tap to call directly from the app.",
-      },
-      {
-        q: "How do I reset my password?",
-        a: "On the login screen, tap Forgot password and enter your email or phone number. We will email a reset link to your registered email address.",
-      },
-      {
-        q: "Can I use QuickDuka offline?",
-        a: "QuickDuka requires an internet connection to save and sync data. We recommend using it with mobile data or WiFi.",
-      },
-      {
-        q: "What is the Credits section for?",
-        a: "Credits is where you track customers who have taken goods on credit and owe you money. You can record partial payments and monitor outstanding balances. Each payment is added to Sales as you receive it, so your sales only include money you have actually collected.",
-      },
-      {
-        q: "What is the difference between Expenses and Losses?",
-        a: "Expenses are planned business costs like rent, transport and salaries. Losses are unexpected events like stolen or expired stock. Both reduce your profit but they are tracked separately so you can see what is causing your costs.",
-      },
-      {
-        q: "How do I record stock I bought on credit or with a loan?",
-        a: "Go to Stock/Purchases → Purchase history → New Purchase (or tap Restock on an item). Set Payment to Not fully paid (on credit), enter what you have paid so far and the date you promised to pay the rest. The balance you owe is tracked for you. When you pay the supplier, tap Pay next to the balance and enter the amount, part payments are fine.",
-      },
-      {
-        q: "Will I be reminded when a supplier payment is due?",
-        a: "Yes. Unpaid supplier balances show on your Dashboard with the promised date. They are marked DUE SOON when the date is within 3 days and OVERDUE after it. Reminders show when you open the app, QuickDuka does not send SMS or WhatsApp reminders.",
-      },
-      {
-        q: "Where did the Purchases page go?",
-        a: "Purchases is now part of the Stock/Purchases page. Open it and choose the Purchase history tab to add, edit or delete purchases. Your old purchases are all still there and still count in your reports.",
-      },
-      {
-        q: "How do I sell the same product in different sizes, like 0.375 L and 0.5 L water?",
-        a: "In Stock/Purchases, add each size as its own item and put the size in the Variant field (for example Water: 0.375 L, and Water: 0.5 L). Each size gets its own price and stock count. When selling, pick the exact size from the list.",
-      },
-      {
-        q: "Can I sell or buy in fractions like 0.5 kg?",
-        a: "Yes. Quantity fields accept decimals such as 0.5 or 0.375, and the amount is worked out from your price and the quantity.",
-      },
-      {
-        q: "Which payment methods can I record?",
-        a: "Cash, M-Pesa, M-Pesa Till (Buy Goods), Paybill (bank or business), Pochi la Biashara, M-Pesa Send Money, Airtel Money and Card. You can choose one on every sale, when a customer pays off a credit, and when you pay a supplier. Your reports show totals by payment method.",
-      },
-      {
-        q: "Does giving an item on credit reduce my stock?",
-        a: "Yes. Picking an item from your stock on a credit takes the quantity out of stock straight away, just like a sale. If you delete a credit before the customer has paid anything, the goods go back into your stock.",
-      },
-      {
-        q: "Why can't I see some pages (like Reports or History) on my phone?",
-        a: "Some accounts are set up to show certain pages only on a computer. Log in on a computer to see them, or contact support if you want them on your phone as well.",
-      },
-      {
-        q: "I marked a debt paid by mistake, or a customer I wrote off now wants to pay. What do I do?",
-        a: "Open Credits, find the credit and tap Edit. To fix a wrong payment, remove it or change its amount or payment method, the matching entry in Sales updates too, and the balance comes back. For a written-off debt, tap Reopen debt: the write-off is removed from Losses and you can record payments again.",
-      },
-      {
-        q: "Can I add sales or expenses from an earlier date, like last April?",
-        a: "Yes. On every form (Sales, Credits, Expenses, Losses, Purchases) tap the Date field to open the calendar and pick the day. Future dates are not allowed. The date stays on your chosen day for the next entry, with a banner reminding you it is not today, tap Today to switch back. Recording a credit payment, a supplier payment or a bad-debt write-off also asks for the day it really happened (it can be earlier than the debt). You can also fix the date of an existing entry with its Edit button in the list. For an entry older than a week, QuickDuka does not change your current stock by default; tick Also update my current stock if it should.",
-      },
-      {
-        q: "Why does it say my amount is outside the allowed price?",
-        a: "Every item in Stock has a selling price: either a range (a minimum and a maximum per unit) or one fixed price. Sales and credits must stay inside it, the allowed total for the quantity you entered is shown under the amount field. Type an amount within that range. To sell at other prices, change the item's price in Stock first.",
-      },
-    ],
+    howToSteps: HELP.en.howToSteps,
+    faqList: HELP.en.faqList,
+    faqCats: HELP.en.faqCats,
 
     // Privacy page
     privacyTitle: "Privacy Policy",
@@ -1233,169 +1082,17 @@ export const T = {
     howToUse: "Jinsi ya Kutumia",
     faqsTab: "Maswali",
     welcomeTitle: "Karibu QuickDuka",
-    welcomeDesc:
-      "QuickDuka ni programu rahisi ya usimamizi wa biashara iliyoundwa kwa wamiliki wa biashara ndogo ndogo Kenya. Itumie kurekodi mauzo yako ya kila siku, kufuatilia gharama, kusimamia madeni ya wateja, na kuona faida yako kila mwezi. Kila kitu kimehifadhiwa salama mtandaoni ili uweze kuifikia kutoka kwa kifaa chochote.",
-    welcomeTip:
-      "Rekodi kila mauzo na gharama kila siku ili upate ripoti sahihi mwishoni mwa mwezi.",
+    welcomeDesc: HELP.sw.welcomeDesc,
+    welcomeTip: HELP.sw.welcomeTip,
     tipLabel: "Kidokezo",
     yourDataPrivate: "Data Yako ni ya Siri",
-    yourDataDesc:
-      "Rekodi zote za biashara yako zimehifadhiwa salama katika akaunti yako ya kibinafsi. Hakuna mtu mwingine anayeweza kuona data yako. QuickDuka haishiriki taarifa zako na mtu yeyote.",
+    yourDataDesc: HELP.sw.yourDataDesc,
     stillQuestions: "Bado una maswali?",
     stillQuestionsEmail: "Tutumie barua pepe kwa",
     orWhatsapp: "au WhatsApp na tutajibu ndani ya masaa 24.",
-    howToSteps: [
-      {
-        title: "Dashibodi",
-        desc: "Dashibodi ndiyo jambo la kwanza unaona unapoingia. Inaonyesha mauzo, manunuzi, gharama, hasara na faida yako kwa mwezi huu kwa haraka. Shughuli za hivi karibuni zinaorodhesha mauzo, manunuzi, gharama na mikopo yako ya karibuni, mkopo unaonekana kama KES 0 unapoutoa na huongezeka mteja anapolipa. Ikiwa unadaiwa na wauzaji kwa hisa ulizochukua kwa deni, kikumbusho kinaonyesha kinachosubiri kulipwa. Pia unaona chati ya utendaji wa miezi 6.",
-      },
-      {
-        title: "Kurekodi Mauzo",
-        desc: "Nenda Mauzo na gonga Mauzo Mapya. Tarehe huwa ya leo, gonga tarehe kufungua kalenda na uchague siku ya awali ukiongeza mauzo ya zamani. Chagua bidhaa kutoka kwenye orodha yako ya bidhaa. Ukiuza bidhaa moja kwa ukubwa tofauti (mfano Maji 0.375 L na Maji 0.5 L), chagua ukubwa uliouza. Weka kiasi (desimali kama 0.5 zinaruhusiwa), jina na simu ya mteja (hiari), kisha chagua njia ya malipo: Fedha Taslimu, M-Pesa, Till ya M-Pesa, Paybill (Benki / Biashara), Pochi la Biashara, Tuma Pesa, Airtel Money au Kadi. Kiasi kinajazwa kutoka kwenye orodha yako ya bei. Andika kiasi anacholipa mteja kweli, kinaweza kuwa chini au juu ya bei ya orodha, lakini ndani ya kiwango cha bei kilichowekwa kwa bidhaa hiyo kwenye Bidhaa tu (au bei maalum kamili). Bidhaa inapunguzwa dukani moja kwa moja.",
-      },
-      {
-        title: "Kufuatilia Madeni kwa Mikopo",
-        desc: "Mteja anapochukua bidhaa kwa mkopo, nenda Mikopo na gonga Mkopo Mpya. Chagua bidhaa kutoka dukani na weka kiasi, kama mauzo, bidhaa hupunguzwa dukani papo hapo. Kisha weka jina la mteja, simu, jumla ya kiasi na tarehe ya mwisho. Mteja anapolipa, gonga Lipa kwenye kadi yake, weka kiasi na uchague njia ya malipo. Kila malipo huingia kwenye Mauzo unapoyapokea, na salio husasishwa. Ukifuta mkopo kabla hajalipa chochote, bidhaa hurudi dukani. Mtu asipolipa kabisa, mwashirie kama Deni Baya na kiasi ambacho hakijalipwa kinaandikwa kama hasara. Umekosea, au mteja ameamua kulipa baadaye? Gonga Hariri kwenye mkopo kuondoa au kurekebisha malipo, au kufungua tena deni lililoandikwa kama hasara.",
-      },
-      {
-        title: "Kurekodi Manunuzi",
-        desc: "Manunuzi sasa yako ndani ya ukurasa wa Bidhaa/Manunuzi. Fungua Bidhaa/Manunuzi, nenda kwenye kichupo cha Historia ya manunuzi na gonga Ununuzi Mpya. Chagua bidhaa kutoka dukani (au andika mpya na itaongezwa dukani moja kwa moja), kisha weka muuzaji, kiasi na jumla ya gharama. Kiasi kinaongezwa dukani. Unaweza pia kutumia kitufe cha Ongeza Bidhaa Dukani kwenye kichupo cha Bidhaa bidhaa mpya zinapofika, kinarekodi ununuzi kwa ajili yako.",
-      },
-      {
-        title: "Kununua Hisa kwa Deni",
-        desc: "Umechukua hisa kwa deni au mkopo? Unaporekodi ununuzi au kuongeza bidhaa dukani, weka Malipo kuwa Sijamaliza kulipa (deni). Weka ulichokwisha lipa hadi sasa (0 ikiwa hujalipa chochote) na tarehe uliyoahidi kulipa kilichobaki. Programu hufuatilia unachodaiwa kwa kila ununuzi. Madeni yanaonekana kwenye Dashibodi pamoja na tarehe ya kulipa, INAKARIBIA ikiwa imebaki siku 3 au chini, na IMECHELEWA baada ya tarehe hiyo. Unapomlipa muuzaji, fungua Bidhaa/Manunuzi, nenda Historia ya manunuzi na gonga Lipa karibu na deni. Unaweza kulipa kwa awamu, kuchagua njia ya malipo na kuweka tarehe mpya ya kilichobaki. Gharama kamili huhesabiwa kwenye faida tangu siku uliponunua hisa. Vikumbusho huonekana unapofungua programu.",
-      },
-      {
-        title: "Kurekodi Gharama",
-        desc: "Gharama ni matumizi yasiyohusiana na ununuzi wa hisa. Vitu kama pango, umeme, usafiri, airtime, na mishahara vinakwenda hapa. Nenda Gharama na gonga Gharama Mpya. Chagua aina, weka kiasi na tarehe. Hii inakusaidia kuona pesa zako zinakokwenda nje ya kununua hisa.",
-      },
-      {
-        title: "Kurekodi Hasara",
-        desc: "Mambo mabaya hutokea biashara. Hisa inapoisha muda, kuibwa, kuharibiwa au kupotea, rekodi katika Hasara. Nenda Hasara na gonga Rekodi Hasara Mpya. Weka kilichopotea na thamani yake. Hii inaweka mahesabu ya faida yako kuwa sahihi na ya kweli.",
-      },
-      {
-        title: "Katalogi ya Bidhaa na Ukubwa",
-        desc: "Tumia Bidhaa/Manunuzi kuweka orodha ya kila kitu unachouza, pamoja na bei za kununua na kuuza na idadi iliyobaki. Ukiuza bidhaa ile ile kwa ukubwa tofauti, mfano Maji 0.375 L na Maji 0.5 L, ongeza kila ukubwa kama bidhaa yake kwa kutumia sehemu ya Aina (Rangi / Ukubwa / Kiasi), ili kila mmoja awe na bei yake na idadi yake. Kiasi kinaweza kuwa na desimali (mfano 0.5 au 0.375). Mauzo na mikopo huchagua kutoka orodha hii na kupunguza bidhaa dukani moja kwa moja. Gonga Ongeza Bidhaa Dukani bidhaa mpya zinapofika.",
-      },
-      {
-        title: "Ripoti",
-        desc: "Ripoti zinakuonyesha muhtasari kamili wa fedha kwa mwezi wowote unaochagua. Unaweza kuona jumla ya mauzo, manunuzi, gharama, hasara, faida halisi na asilimia ya faida. Pia kuna chati zinazoonyesha mwenendo wa miezi 6. Zitumie mwishoni mwa kila mwezi kukagua utendaji wa biashara yako.",
-      },
-      {
-        title: "Historia",
-        desc: "Historia inaweka rekodi ya kila mabadiliko yaliyofanywa kwenye programu. Kila wakati unapoongeza, kuhariri au kufuta rekodi, inarekodiwa hapa. Ukifuta kitu kwa bahati mbaya, unaweza kuirejesha kutoka Historia. Unaweza pia kuchagua kwa Imeongezwa, Imebadilishwa, Imefutwa au Imerudishwa.",
-      },
-      {
-        title: "Mipango ya Usajili",
-        desc: "QuickDuka ina mipango mitatu. Starter (KES 100/mwezi) ni kwa mmiliki mmoja wa duka moja bila wafanyakazi wengine. Growth (KES 250/mwezi) inaongeza akaunti nyingi za wafanyakazi ili timu yako kila mmoja aweze kuingia kwa nambari yake huku ukiendelea kusimamia kila kitu kama mmiliki. Business (KES 700/mwezi) inafungua matawi mengi, dashibodi ya msimamizi mkuu, na ripoti za pamoja za matawi yote. Unaanza na jaribio la bure la mwezi 1 na unaweza kuboresha mpango wako wakati wowote kutoka kwenye wasifu wako.",
-      },
-    ],
-    faqList: [
-      {
-        q: "QuickDuka ina mipango gani?",
-        a: `QuickDuka ina mipango mitatu:\n\nStarter: KES 100/mwezi\nDuka moja, mmiliki peke yake. Inafaa kwa mfanyabiashara wa peke yake anayetaka kufuatilia mauzo, gharama na faida.\n\nGrowth: KES 250/mwezi\nDuka moja na akaunti nyingi za wafanyakazi. Timu yako kila mmoja anaingia kwa nambari yake huku ukisimamia kila kitu kama mmiliki.\n\nBusiness: KES 700/mwezi\nMatawi mengi, dashibodi ya msimamizi mkuu, na ripoti za pamoja za maduka yako yote.\n\nMipango yote inaanza na jaribio la bure la mwezi 1. Hakuna kadi, lipa kupitia M-Pesa.`,
-      },
-      {
-        q: "QuickDuka inagharimu kiasi gani?",
-        a: `Kuna viwango vitatu vya bei:\n\nStarter: KES 100/mwezi, Duka moja, mmiliki peke yake.\nGrowth: KES 250/mwezi, Duka moja + akaunti nyingi za wafanyakazi.\nBusiness: KES 700/mwezi, Matawi mengi + msimamizi mkuu + ripoti za pamoja.\n\nMipango yote inaanza na jaribio la bure la mwezi 1. Unalipa kupitia M-Pesa STK push, hakuna kadi inayohitajika.`,
-      },
-      {
-        q: "Ninawezaje kulipa usajili wangu?",
-        a: `Kwenye skrini ya malipo, chagua mpango wako, weka nambari yako ya M-Pesa na gonga Lipa Sasa. Utapata pop-up kwenye simu yako kuingiza PIN yako ya M-Pesa, kisha gonga Thibitisha Malipo.\n\nStarter: KES 100/mwezi\nGrowth: KES 250/mwezi\nBusiness: KES 700/mwezi\n\nUkipata shida, tumia chaguo la mkono na tutumie SMS yako ya uthibitisho wa M-Pesa kwenye WhatsApp.`,
-      },
-      {
-        q: "Ninaweza kuongeza wafanyakazi kwenye akaunti yangu?",
-        a: `Inategemea mpango wako:\n\nStarter (KES 100/mwezi): Akaunti ya mmiliki peke yake, hakuna kuingia kwa wafanyakazi wengine.\nGrowth (KES 250/mwezi): Akaunti nyingi za wafanyakazi. Kila mwanachama wa timu anapata kuingia kwake mwenyewe.\nBusiness (KES 700/mwezi): Wafanyakazi wasio na kikomo katika matawi mengi.\n\nBoresha mpango wako wakati wowote kutoka kwenye wasifu wako.`,
-      },
-      {
-        q: "Ninaweza kusimamia matawi mengi?",
-        a: `Matawi mengi yanapatikana kwenye mpango wa Business peke yake:\n\nStarter (KES 100/mwezi): Duka moja, mmiliki mmoja.\nGrowth (KES 250/mwezi): Duka moja na timu.\nBusiness (KES 700/mwezi): Matawi yasiyo na kikomo, dashibodi ya msimamizi mkuu, na ripoti za pamoja za maduka yote.\n\nBoresha hadi Business kutoka kwenye wasifu wako kufungua usimamizi wa matawi mengi.`,
-      },
-      {
-        q: "Je, kuna jaribio la bure?",
-        a: `Ndiyo, kila akaunti mpya inapata jaribio la bure la mwezi 1 na ufikiaji kamili wa vipengele vyote.\n\nBaada ya jaribio, chagua mpango unaofaa biashara yako:\n\nStarter: KES 100/mwezi, Mmiliki mmoja, duka moja.\nGrowth: KES 250/mwezi, Duka moja + akaunti za wafanyakazi.\nBusiness: KES 700/mwezi, Matawi mengi + zana za msimamizi.\n\nHakuna kadi. Lipa kupitia M-Pesa jaribio lako linapoisha.`,
-      },
-      {
-        q: "Nini kinatokea usajili wangu ukiisha?",
-        a: `Akaunti yako inafungwa hadi urenew, lakini data yako haifutwi kamwe. Unapata kipindi cha neema cha siku 2 baada ya kuisha.\n\nRenew kwa kulipa kwa mpango wako kupitia M-Pesa:\n\nStarter: KES 100/mwezi\nGrowth: KES 250/mwezi\nBusiness: KES 700/mwezi\n\nUnaweza pia kuboresha hadi mpango wa juu wakati wa kurenew.`,
-      },
-      {
-        q: "Ninaweza kuingia kwa nambari yangu ya simu?",
-        a: "Ndiyo. Unaweza kusajili na kuingia ukitumia nambari yako ya simu (+254...) au anwani yako ya barua pepe. Zote zinasaidiwa.",
-      },
-      {
-        q: "Je, data yangu iko salama?",
-        a: "Data yako imehifadhiwa salama katika Google Firebase ambayo ni miundombinu ile ile inayotumiwa na programu milioni duniani. Data ya kila mtumiaji iko tofauti na inaweza kufikika na wewe peke yako.",
-      },
-      {
-        q: "Ninawezaje kufuatilia wanaonidaiwa pesa?",
-        a: "Tumia sehemu ya Mikopo. Chagua bidhaa kutoka dukani na weka kiasi (kinapungua dukani papo hapo), pamoja na jina la mteja, simu na kiasi cha deni. Rekodi kila malipo yanapoingia, malipo ya sehemu yanakubalika, na kila moja huongezwa kwenye Mauzo. Dashibodi inaonyesha mkopo kama KES 0 na huongezeka mteja anapolipa.",
-      },
-      {
-        q: "Ninaweza kufuatilia wanunuzi au wasambazaji?",
-        a: "Ndiyo. Nambari za simu zilizohifadhiwa katika Mauzo, Manunuzi, Gharama na Mikopo zinaonekana kama viungo vinavyoweza kubonyezwa. Gonga kupiga simu moja kwa moja kutoka kwenye programu.",
-      },
-      {
-        q: "Ninawezaje kuweka upya nenosiri langu?",
-        a: "Kwenye skrini ya kuingia, gonga Umesahau nenosiri na weka barua pepe yako au nambari ya simu. Tutatuma kiungo cha kuweka upya kwa anwani yako ya barua pepe iliyosajiliwa.",
-      },
-      {
-        q: "Ninaweza kutumia QuickDuka bila mtandao?",
-        a: "QuickDuka inahitaji muunganisho wa intaneti kuhifadhi na kusynchronize data. Tunapendekeza kuitumia na data ya simu au WiFi.",
-      },
-      {
-        q: "Sehemu ya Mikopo ni kwa nini?",
-        a: "Mikopo ni mahali unapofuatilia wateja waliochukua bidhaa kwa mkopo na wanakudai pesa. Unaweza kurekodi malipo ya sehemu na kufuatilia salio zilizobaki. Kila malipo huongezwa kwenye Mauzo unapoyapokea, kwa hiyo mauzo yako yanajumuisha pesa ulizokusanya tu.",
-      },
-      {
-        q: "Tofauti kati ya Gharama na Hasara ni nini?",
-        a: "Gharama ni matumizi ya biashara yaliyopangwa kama pango, usafiri na mishahara. Hasara ni matukio yasiyotarajiwa kama hisa iliyoibiwa au kuisha muda. Zote mbili zinapunguza faida yako lakini zinafuatiliwa tofauti ili uweze kuona kinachosababisha gharama zako.",
-      },
-      {
-        q: "Ninawezaje kurekodi hisa nilizochukua kwa deni au mkopo?",
-        a: "Nenda Bidhaa/Manunuzi → Historia ya manunuzi → Ununuzi Mpya (au gonga Ongeza Bidhaa Dukani kwenye bidhaa). Weka Malipo kuwa Sijamaliza kulipa (deni), weka ulichokwisha lipa na tarehe uliyoahidi kulipa kilichobaki. Deni unalodaiwa hufuatiliwa kwa ajili yako. Unapomlipa muuzaji, gonga Lipa karibu na deni na weka kiasi, malipo ya sehemu yanakubalika.",
-      },
-      {
-        q: "Nitakumbushwa malipo ya muuzaji yanapofika?",
-        a: "Ndiyo. Madeni ya wauzaji ambayo hayajalipwa yanaonekana kwenye Dashibodi pamoja na tarehe uliyoahidi. Yanaandikwa INAKARIBIA tarehe ikiwa ndani ya siku 3, na IMECHELEWA baada ya tarehe. Vikumbusho vinaonekana unapofungua programu, QuickDuka haitumi vikumbusho kwa SMS au WhatsApp.",
-      },
-      {
-        q: "Ukurasa wa Manunuzi umeenda wapi?",
-        a: "Manunuzi sasa ni sehemu ya ukurasa wa Bidhaa/Manunuzi. Ufungue na uchague kichupo cha Historia ya manunuzi kuongeza, kuhariri au kufuta manunuzi. Manunuzi yako ya zamani yote bado yapo na bado yanahesabiwa kwenye ripoti zako.",
-      },
-      {
-        q: "Ninawezaje kuuza bidhaa ile ile kwa ukubwa tofauti, kama maji 0.375 L na 0.5 L?",
-        a: "Kwenye Bidhaa/Manunuzi, ongeza kila ukubwa kama bidhaa yake na weka ukubwa kwenye sehemu ya Aina (mfano Maji: 0.375 L, na Maji: 0.5 L). Kila ukubwa una bei yake na idadi yake. Unapouza, chagua ukubwa kamili kutoka kwenye orodha.",
-      },
-      {
-        q: "Naweza kuuza au kununua kwa sehemu kama kilo 0.5?",
-        a: "Ndiyo. Sehemu za kiasi zinakubali desimali kama 0.5 au 0.375, na jumla hukokotolewa kutoka kwenye bei yako na kiasi.",
-      },
-      {
-        q: "Ni njia gani za malipo ninazoweza kurekodi?",
-        a: "Fedha Taslimu, M-Pesa, Till ya M-Pesa (Lipa na M-Pesa), Paybill (Benki / Biashara), Pochi la Biashara, Tuma Pesa ya M-Pesa, Airtel Money na Kadi. Unaweza kuchagua moja kwenye kila mauzo, mteja anapolipa mkopo, na unapomlipa muuzaji. Ripoti zako zinaonyesha jumla kwa kila njia ya malipo.",
-      },
-      {
-        q: "Kutoa bidhaa kwa mkopo kunapunguza hisa yangu?",
-        a: "Ndiyo. Ukichagua bidhaa kutoka dukani kwenye mkopo, kiasi hupunguzwa dukani papo hapo, kama mauzo. Ukifuta mkopo kabla mteja hajalipa chochote, bidhaa hurudi dukani.",
-      },
-      {
-        q: "Kwa nini siwezi kuona kurasa fulani (kama Ripoti au Historia) kwenye simu yangu?",
-        a: "Baadhi ya akaunti zimewekwa kuonyesha kurasa fulani kwenye kompyuta pekee. Ingia kwenye kompyuta kuziona, au wasiliana na msaada ukitaka ziwepo pia kwenye simu.",
-      },
-      {
-        q: "Nimeweka deni kuwa limelipwa kimakosa, au mteja niliyemwandika kama deni baya sasa anataka kulipa. Nifanye nini?",
-        a: "Fungua Mikopo, tafuta mkopo na ugonge Hariri. Kurekebisha malipo yaliyokosewa, yaondoe au ubadilishe kiasi au njia ya malipo, rekodi husika kwenye Mauzo pia husasishwa, na salio linarudi. Kwa deni lililoandikwa kama hasara, gonga Fungua deni tena: kiasi hicho kinaondolewa kwenye Hasara na unaweza kurekodi malipo tena.",
-      },
-      {
-        q: "Naweza kuongeza mauzo au gharama za tarehe ya awali, kama Aprili iliyopita?",
-        a: "Ndiyo. Kwenye kila fomu (Mauzo, Mikopo, Gharama, Hasara, Manunuzi) gonga sehemu ya Tarehe kufungua kalenda na uchague siku. Tarehe za baadaye haziruhusiwi. Tarehe inabaki kwenye siku uliyochagua kwa rekodi inayofuata, na kuna ujumbe unaokukumbusha kuwa si leo, gonga Leo kurudi. Kurekodi malipo ya mkopo, malipo ya muuzaji au deni baya pia kunauliza siku ilipotokea kweli (inaweza kuwa kabla ya deni). Unaweza pia kurekebisha tarehe ya rekodi iliyopo kwa kitufe chake cha Hariri kwenye orodha. Kwa rekodi za zaidi ya wiki moja, QuickDuka haibadilishi bidhaa zilizopo dukani kwa chaguo-msingi; weka tiki Sasisha pia bidhaa zilizopo dukani ikiwa inapaswa.",
-      },
-      {
-        q: "Kwa nini inasema kiasi changu kiko nje ya bei inayoruhusiwa?",
-        a: "Kila bidhaa kwenye Bidhaa ina bei ya kuuza: ama kiwango (kiwango cha chini na cha juu kwa kila kimoja) au bei moja maalum. Mauzo na mikopo lazima vibaki ndani yake, jumla inayoruhusiwa kwa kiasi ulichoweka inaonyeshwa chini ya sehemu ya kiasi. Andika kiasi ndani ya kiwango hicho. Ili kuuza kwa bei nyingine, badilisha kwanza bei ya bidhaa kwenye Bidhaa.",
-      },
-    ],
+    howToSteps: HELP.sw.howToSteps,
+    faqList: HELP.sw.faqList,
+    faqCats: HELP.sw.faqCats,
 
     // Privacy page
     privacyTitle: "Sera ya Faragha",
