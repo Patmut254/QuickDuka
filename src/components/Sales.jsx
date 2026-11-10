@@ -356,6 +356,29 @@ export default function Sales({ ownerUid, sub }) {
               </div>
             )}
             <div className="field-group">
+              <label htmlFor="sale-customer">{t.customer}</label>
+              <input
+                id="sale-customer"
+                name="sale-customer"
+                autoComplete="name"
+                placeholder={t.customerPh}
+                value={form.customer}
+                onChange={(e) => setForm({ ...form, customer: e.target.value })}
+              />
+            </div>
+            <div className="field-group">
+              <label htmlFor="sale-phone">{t.phone}</label>
+              <input
+                id="sale-phone"
+                name="sale-phone"
+                type="tel"
+                autoComplete="tel"
+                placeholder="07XX XXX XXX"
+                value={form.phone}
+                onChange={(e) => setForm({ ...form, phone: e.target.value })}
+              />
+            </div>
+            <div className="field-group">
               <label htmlFor="sale-payment-method">{t.paymentMethod}</label>
               <select
                 id="sale-payment-method"
@@ -388,7 +411,7 @@ export default function Sales({ ownerUid, sub }) {
             stock={stock}
             t={t}
             idPrefix="sale"
-            itemLabel={t.addItems || "Add items"}
+            itemLabel={t.itemSold}
             baseTotal={
               addTo
                 ? groupRows(addTo).reduce((a, r) => a + (Number(r.amount) || 0), 0)

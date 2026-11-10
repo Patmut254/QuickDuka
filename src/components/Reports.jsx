@@ -389,17 +389,19 @@ const bestLocation = salesByLocation[0] || null;
 // ── CSV Download ──────────────────────────────────────────────────────
 const downloadCSV = () => {
   const rows = [
-    ["Type", "Date", "Description / Item", "Category", "Quantity", "Payment Method", "Amount (KES)"],
+    ["Type", "Date", "Description / Item", "Category", "Quantity", "Payment Method", "Amount (KES)", "Customer", "Phone"],
     ...sales
       .filter(inRange)
       .map((s) => [
         "Sale",
         s.date || "",
-        s.description || s.item || "",
+        s.description || s.item || s.itemTaken || "",
         s.branchName || "",
         s.quantity ?? "",
         s.paymentMethod || "cash",
         s.amount || 0,
+        s.customer || "",
+        s.phone || "",
       ]),
     ...purchases
       .filter(inRange)
