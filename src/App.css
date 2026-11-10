@@ -8174,7 +8174,6 @@ textarea {
 /* ── Multi-item sales / credits (till-style cart) ───────────── */
 .cart { margin: 4px 0 18px; gap: 10px; }
 .cart-picker .item-picker-chosen { display: none; } /* picker is only for adding */
-.cart-picker .item-picker-list { max-height: 170px; }
 .cart-empty {
   font-size: 13px;
   color: var(--muted);
