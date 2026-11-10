@@ -3,6 +3,7 @@ import { useCollection } from "../hooks/useCollection";
 import { useStock } from "../hooks/useStock";
 import { useLang } from "../LangContext";
 import EntryTable from "./EntryTable";
+import PeriodStats from "./PeriodStats";
 import { Toast, useToast } from "./Toast";
 import EntryDate from "./EntryDate";
 import { localToday } from "../dates";
@@ -163,6 +164,7 @@ export default function Expenses({ ownerUid }) {
             KES {total.toLocaleString()}
           </span>
         </div>
+        <PeriodStats items={items} t={t} />
         <button
           className="btn-primary"
           onClick={() => {

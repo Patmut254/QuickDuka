@@ -13,9 +13,8 @@ export default function EntryTable({
   onUpdate,
   emptyMessage,
   showToast,
-  totalKey, // optional: sum this column under the table (follows the search)
+  totalKey, // optional: column summed on each grouped purchase's total line
   totalLabel,
-  hideGrandTotal = false, // keep per-group totals but drop the footer total
   extraActions, // optional: (row, info) => extra buttons shown before Edit/Delete
   groupKey, // optional: rows sharing this value are shown together as one purchase
   groupShared = [], // columns shown only once per group (date, customer, …)
@@ -316,20 +315,6 @@ export default function EntryTable({
         </div>
       )}
 
-      {totalKey && !hideGrandTotal && !loading && filtered.length > 0 && (
-        <div className="table-total">
-          <span>
-            {totalLabel || t.total || "Total"}
-            {search ? ` (${filtered.length} ${t.records || "records"})` : ""}
-          </span>
-          <strong>
-            KES{" "}
-            {filtered
-              .reduce((a, r) => a + (Number(r[totalKey]) || 0), 0)
-              .toLocaleString()}
-          </strong>
-        </div>
-      )}
     </div>
   );
 }

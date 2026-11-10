@@ -13,6 +13,7 @@ import EntryDate, { StockUpdateToggle } from "./EntryDate";
 import { localToday, stockUpdateWanted } from "../dates";
 import { useLang } from "../LangContext";
 import EntryTable from "./EntryTable";
+import PeriodStats from "./PeriodStats";
 import { Toast, useToast } from "./Toast";
 import LineItems from "./LineItems";
 import {
@@ -285,6 +286,7 @@ export default function Sales({ ownerUid, sub }) {
           <span className="stat-label">{t.totalSales}</span>
           <span className="stat-value green">KES {total.toLocaleString()}</span>
         </div>
+        <PeriodStats items={items} t={t} />
         <button
           className="btn-primary"
           onClick={() => {
@@ -455,7 +457,6 @@ export default function Sales({ ownerUid, sub }) {
             </button>
           )
         }
-        hideGrandTotal // "Total Sales" is already shown at the top of the page
       />
     </div>
   );

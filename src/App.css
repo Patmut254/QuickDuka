@@ -8811,3 +8811,22 @@ textarea {
   flex-wrap: wrap;
 }
 .module-header { justify-content: flex-start; flex-wrap: wrap; gap: 12px; }
+
+/* Header side boxes (Today / This month / loss categories): solid light */
+.module-stat.module-stat-sub,
+[data-theme="dark"] .module-stat.module-stat-sub {
+  background: var(--bg2) !important;
+  border: 1px solid var(--border2);
+  flex: 0 1 180px;
+  min-width: 140px;
+}
+.module-stat.module-stat-sub .stat-label { color: var(--muted) !important; }
+.module-stat.module-stat-sub .stat-value { color: var(--text) !important; font-size: 18px; }
+.stat-sub-count { font-size: 11px; color: var(--muted); }
+@media (max-width: 768px) {
+  .module-stat.module-stat-sub { width: calc(50% - 6px); flex: none; }
+}
+.stat-sub-count { display: block; margin-top: 2px; }
+@media (max-width: 768px) {
+  .module-header { flex-direction: row !important; flex-wrap: wrap; }
+}
