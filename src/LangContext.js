@@ -302,6 +302,8 @@ export const T = {
     restockSupplier: "Supplier (optional)",
     // Entry dates / back-dating
     todayLabel: "Today",
+    thisMonthLabel: "This month",
+    recordWord: "record",
     yesterdayLabel: "Yesterday",
     recordingFor: "Recording for",
     notToday: "not today",
@@ -903,6 +905,8 @@ export const T = {
     restockSupplier: "Muuzaji (hiari)",
     // Entry dates / back-dating
     todayLabel: "Leo",
+    thisMonthLabel: "Mwezi huu",
+    recordWord: "rekodi",
     yesterdayLabel: "Jana",
     recordingFor: "Unarekodi kwa tarehe",
     notToday: "si leo",

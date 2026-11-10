@@ -130,6 +130,15 @@ export default function Losses({ ownerUid }) {
           <span className="stat-label">{t.totalLosses}</span>
           <span className="stat-value red">KES {total.toLocaleString()}</span>
         </div>
+        {byCategory.map((c) => (
+          <div key={c.cat} className="module-stat module-stat-sub">
+            <span className="stat-label">{c.cat}</span>
+            <span className="stat-value">KES {c.total.toLocaleString()}</span>
+            <span className="stat-sub-count">
+              {c.count} {c.count === 1 ? t.recordWord || "record" : t.records || "records"}
+            </span>
+          </div>
+        ))}
         <button
           className="btn-primary"
           style={{ background: "var(--red)" }}
@@ -143,42 +152,6 @@ export default function Losses({ ownerUid }) {
         </button>
       </div>
 
-      {byCategory.length > 0 && (
-        <div
-          style={{
-            display: "flex",
-            gap: 10,
-            flexWrap: "wrap",
-            marginBottom: 16,
-          }}
-        >
-          {byCategory.map((c) => (
-            <div
-              key={c.cat}
-              style={{
-                background: "var(--red-bg)",
-                border: "1px solid #f5a5a5",
-                borderRadius: 0,
-                padding: "8px 14px",
-                fontSize: 12,
-              }}
-            >
-              <div
-                style={{
-                  fontWeight: 700,
-                  color: "var(--red)",
-                  marginBottom: 2,
-                }}
-              >
-                {c.cat}
-              </div>
-              <div style={{ color: "var(--muted)" }}>
-                {c.count} · KES {c.total.toLocaleString()}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
 
       {showForm && (
         <form className="entry-form" onSubmit={handleSubmit}>

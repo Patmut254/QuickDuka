@@ -1283,29 +1283,6 @@ export default function Credits({ ownerUid }) {
         </div>
       )}
 
-      {/* Totals under the list of credits */}
-      {credits.length > 0 && (
-        <div className="table-total" style={{ marginTop: 12 }}>
-          <span>
-            {t.creditTotals || "Credit totals"} ({credits.length})
-          </span>
-          <span style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
-            <span>
-              {t.allCredits}: <strong>KES {grandTotal.toLocaleString()}</strong>
-            </span>
-            <span>
-              {t.totalCollected}:{" "}
-              <strong>KES {totalCollected.toLocaleString()}</strong>
-            </span>
-            <span>
-              {t.unpaidDebts}:{" "}
-              <strong style={{ color: "var(--orange)" }}>
-                KES {totalOutstanding.toLocaleString()}
-              </strong>
-            </span>
-          </span>
-        </div>
-      )}
 
       {/* Edit credit: fix a wrong payment / reopen a written-off debt */}
       {managed && (
