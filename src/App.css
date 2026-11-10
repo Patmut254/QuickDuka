@@ -46,8 +46,8 @@
   --border: #2a3a30;
   --border2: #36493d;
   --text: #f1e9df;
-  --text2: #d9cdbf;
-  --muted: #9c9184;
+  --text2: #e8dfd3; /* brighter for readability */
+  --muted: #bdb2a4;
   --green: #7fb894;
   --green2: #6aa581;
   --green3: #93c8a6;
@@ -8563,3 +8563,61 @@ textarea {
 [data-theme="dark"] .ai-bubble { color: #fff; }
 [data-theme="dark"] .btn-danger:hover { background: #82291c; }
 [data-theme="dark"] .sale-group-tag { background: #2f6b4b; color: #fff; }
+
+
+/* ================================================================
+   DARK MODE READABILITY — brighter, bolder text everywhere
+   ================================================================ */
+[data-theme="dark"] body { font-weight: 500; }
+[data-theme="dark"] label,
+[data-theme="dark"] .field-group label { color: var(--text2); font-weight: 700; }
+[data-theme="dark"] input::placeholder,
+[data-theme="dark"] textarea::placeholder { color: #9d9285; opacity: 1; }
+
+/* Text colours set inside the components (deep greens, rust, terracotta)
+   are lifted to light versions on the dark background */
+[data-theme="dark"] [style^="color: rgb(41, 87, 63)"]:not(.card-value):not(.stat-value):not(.rc-value):not(.credits-stat-val),
+[data-theme="dark"] [style*=" color: rgb(41, 87, 63)"]:not(.card-value):not(.stat-value):not(.rc-value):not(.credits-stat-val) { color: #93cfa8 !important; }
+[data-theme="dark"] [style^="color: rgb(30, 63, 46)"]:not(.card-value):not(.stat-value):not(.rc-value):not(.credits-stat-val),
+[data-theme="dark"] [style*=" color: rgb(30, 63, 46)"]:not(.card-value):not(.stat-value):not(.rc-value):not(.credits-stat-val) { color: #93cfa8 !important; }
+[data-theme="dark"] [style^="color: rgb(163, 58, 42)"]:not(.card-value):not(.stat-value):not(.rc-value):not(.credits-stat-val),
+[data-theme="dark"] [style*=" color: rgb(163, 58, 42)"]:not(.card-value):not(.stat-value):not(.rc-value):not(.credits-stat-val) { color: #f39a86 !important; }
+[data-theme="dark"] [style^="color: rgb(160, 98, 63)"]:not(.card-value):not(.stat-value):not(.rc-value):not(.credits-stat-val),
+[data-theme="dark"] [style*=" color: rgb(160, 98, 63)"]:not(.card-value):not(.stat-value):not(.rc-value):not(.credits-stat-val) { color: #eaa680 !important; }
+[data-theme="dark"] [style^="color: rgb(140, 110, 82)"]:not(.card-value):not(.stat-value):not(.rc-value):not(.credits-stat-val),
+[data-theme="dark"] [style*=" color: rgb(140, 110, 82)"]:not(.card-value):not(.stat-value):not(.rc-value):not(.credits-stat-val) { color: #dcbf9f !important; }
+[data-theme="dark"] [style^="color: rgb(79, 111, 125)"]:not(.card-value):not(.stat-value):not(.rc-value):not(.credits-stat-val),
+[data-theme="dark"] [style*=" color: rgb(79, 111, 125)"]:not(.card-value):not(.stat-value):not(.rc-value):not(.credits-stat-val) { color: #a6c7d6 !important; }
+
+/* Top bar user chip */
+[data-theme="dark"] .user-badge,
+[data-theme="dark"] .user-badge-btn { color: var(--text) !important; font-weight: 600; }
+
+/* Contact page WhatsApp tile */
+[data-theme="dark"] .contact-method-icon { background: #2f6b4b !important; color: #fff !important; }
+[data-theme="dark"] .contact-method-text,
+[data-theme="dark"] .contact-method-text * { color: var(--text) !important; }
+
+/* Charts: legend, axis and tooltip text readable */
+[data-theme="dark"] .recharts-legend-item-text { color: var(--text) !important; font-weight: 600; }
+[data-theme="dark"] .recharts-cartesian-axis-tick-value { fill: var(--text2); }
+[data-theme="dark"] .recharts-default-tooltip {
+  background: var(--bg3) !important;
+  border: 1px solid var(--border2) !important;
+}
+[data-theme="dark"] .recharts-default-tooltip .recharts-tooltip-label,
+[data-theme="dark"] .recharts-default-tooltip .recharts-tooltip-item { color: var(--text) !important; font-weight: 600; }
+[data-theme="dark"] .recharts-pie-sector path { stroke: var(--bg2); }
+
+/* Dark mode outlined buttons (Edit, + Item, Cancel): bright text */
+[data-theme="dark"] .btn-secondary {
+  background: transparent;
+  color: #93cfa8;
+  border-color: #93cfa8;
+}
+[data-theme="dark"] .btn-secondary:hover { background: #2f6b4b; color: #fff; }
+[data-theme="dark"] .btn-secondary[style*="--red"] { border-color: #f39a86 !important; }
+[data-theme="dark"] .btn-secondary[style*="--red"],
+[data-theme="dark"] .btn-secondary[style*="--red"] * { color: #f39a86 !important; }
+[data-theme="dark"] .contact-submit-btn { background: #2f6b4b; color: #fff; font-weight: 700; }
+[data-theme="dark"] .contact-submit-btn:hover { background: #245a3d; }
