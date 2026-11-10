@@ -8406,4 +8406,3 @@ textarea {
 .sidebar .logout-btn:hover,
 .sidebar .sidebar-lang-toggle:hover { background: #29573f; color: #fff; }
 .entry-table-wrap .table-total { padding: 12px 16px; margin-top: 0; }
-.item-picker.list-hidden .item-picker-list-wrap { display: none; } /* Sales/Credits: list shows once you type */

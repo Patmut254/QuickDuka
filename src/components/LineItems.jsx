@@ -36,28 +36,10 @@ export default function LineItems({
 
   return (
     <div className="field-group full-width cart">
-      <div className="cart-picker">
-        <ItemPicker
-          id={`${idPrefix}-item`}
-          label={itemLabel}
-          t={t}
-          options={options}
-          selectedValue=""
-          text=""
-          listOnType
-          onPick={(v) => {
-            const s = stock.find((x) => x.id === v);
-            if (s) setLines((ls) => addStockToLines(ls, s));
-          }}
-          onCustom={(txt) =>
-            setLines((ls) => [...ls, { ...newLine(), text: txt }])
-          }
-        />
-      </div>
-
+      <label htmlFor={`${idPrefix}-item`}>{itemLabel} *</label>
       {lines.length === 0 ? (
         <div className="cart-empty">
-          {t.cartEmpty || "Type an item name above, then tap it to add."}
+          {t.cartEmpty || "No items yet. Pick from the list below or type to search."}
         </div>
       ) : (
         <div className="cart-list">
@@ -145,6 +127,23 @@ export default function LineItems({
           })}
         </div>
       )}
+
+      <div className="cart-picker">
+        <ItemPicker
+          id={`${idPrefix}-item`}
+          t={t}
+          options={options}
+          selectedValue=""
+          text=""
+          onPick={(v) => {
+            const s = stock.find((x) => x.id === v);
+            if (s) setLines((ls) => addStockToLines(ls, s));
+          }}
+          onCustom={(txt) =>
+            setLines((ls) => [...ls, { ...newLine(), text: txt }])
+          }
+        />
+      </div>
 
       <div className="line-items-total">
         <span>{totalLabel}</span>
