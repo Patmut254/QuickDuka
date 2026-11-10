@@ -8621,3 +8621,23 @@ textarea {
 [data-theme="dark"] .btn-secondary[style*="--red"] * { color: #f39a86 !important; }
 [data-theme="dark"] .contact-submit-btn { background: #2f6b4b; color: #fff; font-weight: 700; }
 [data-theme="dark"] .contact-submit-btn:hover { background: #245a3d; }
+
+/* Top bar profile chip: icon + name/email fit cleanly (desktop) */
+@media (min-width: 769px) {
+  .top-bar-right .user-badge.user-badge-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    max-width: 260px;
+    padding: 0 12px;
+    overflow: hidden;
+  }
+  .user-badge .user-badge-icon-mobile { flex-shrink: 0; font-size: 15px; }
+  .user-badge .user-badge-name {
+    display: block;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
