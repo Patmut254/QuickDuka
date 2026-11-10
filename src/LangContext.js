@@ -63,6 +63,9 @@ export const T = {
     saveSale: "Save Sale",
     // multi-item sales / credits
     addItems: "Add items (search or tap)",
+    addAnotherExpense: "Add another expense",
+    addAnotherLoss: "Add another loss",
+    restockMany: "Restock many items",
     addItemsTo: "Add items to",
     cartEmpty: "No items yet. Pick from the list below or type to search.",
     saleTotal: "Sale total",
@@ -660,6 +663,9 @@ export const T = {
     saveSale: "Hifadhi Mauzo",
     // multi-item sales / credits
     addItems: "Ongeza bidhaa (tafuta au gusa)",
+    addAnotherExpense: "Ongeza gharama nyingine",
+    addAnotherLoss: "Ongeza hasara nyingine",
+    restockMany: "Ongeza bidhaa nyingi dukani",
     addItemsTo: "Ongeza bidhaa kwa",
     cartEmpty: "Bado hakuna bidhaa. Chagua kwenye orodha hapa chini au andika kutafuta.",
     saleTotal: "Jumla ya mauzo",

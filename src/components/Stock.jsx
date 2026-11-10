@@ -28,6 +28,8 @@ export default function Stock(props) {
     if (want) sessionStorage.removeItem("qd-stock-view");
     return want === "purchases" ? "purchases" : "stock";
   });
+  // "Restock many items" on the Stock list opens the multi-item purchase form
+  const [openPurchaseForm, setOpenPurchaseForm] = useState(false);
   const views = [
     { id: "stock", label: t.stock },
     { id: "purchases", label: t.purchaseHistory || t.purchases },
@@ -45,7 +47,10 @@ export default function Stock(props) {
           <button
             key={v.id}
             type="button"
-            onClick={() => setView(v.id)}
+            onClick={() => {
+              setView(v.id);
+              setOpenPurchaseForm(false);
+            }}
             style={{
               padding: "10px 18px",
               border: "none",
@@ -66,15 +71,21 @@ export default function Stock(props) {
         ))}
       </div>
       {view === "stock" ? (
-        <StockList {...props} />
+        <StockList
+          {...props}
+          onRestockMany={() => {
+            setOpenPurchaseForm(true);
+            setView("purchases");
+          }}
+        />
       ) : (
-        <Purchases ownerUid={props.ownerUid} />
+        <Purchases ownerUid={props.ownerUid} autoOpen={openPurchaseForm} />
       )}
     </div>
   );
 }
 
-function StockList({ sub, ownerUid }) {
+function StockList({ sub, ownerUid, onRestockMany }) {
   const { t } = useLang();
   const { items, loading, addItem, deleteItem, updateItem } =
     useCollection("stock", ownerUid ? { ownerUid } : undefined);
@@ -436,15 +447,22 @@ function StockList({ sub, ownerUid }) {
             KES {totalActualProfit.toLocaleString()}
           </span>
         </div>
-        <button
-          className="btn-primary"
-          onClick={() => {
-            setShowForm(!showForm);
-            setStatus("idle");
-          }}
-        >
-          {showForm ? t.cancel : "+ " + t.addItem}
-        </button>
+        <div className="module-header-actions">
+          {onRestockMany && !showForm && (
+            <button className="btn-secondary" onClick={onRestockMany}>
+              {t.restockMany || "Restock many items"}
+            </button>
+          )}
+          <button
+            className="btn-primary"
+            onClick={() => {
+              setShowForm(!showForm);
+              setStatus("idle");
+            }}
+          >
+            {showForm ? t.cancel : "+ " + t.addItem}
+          </button>
+        </div>
       </div>
 
       <div className="stock-hint">
