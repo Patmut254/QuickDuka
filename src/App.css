@@ -8526,3 +8526,40 @@ textarea {
   .module-header > .btn-primary,
   .module-header > button { margin-left: auto; }
 }
+
+/* ================================================================
+   DARK MODE: coloured boxes and buttons stay deep so white text
+   is easy to read (dark theme otherwise uses light pastel colours)
+   ================================================================ */
+[data-theme="dark"] .summary-card,
+[data-theme="dark"] .admin-stat-tile,
+[data-theme="dark"] .report-card.tinted,
+[data-theme="dark"] .module-stat,
+[data-theme="dark"] .credits-stat-box,
+[data-theme="dark"] .btn-primary,
+[data-theme="dark"] .btn-pay,
+[data-theme="dark"] .btn-danger,
+[data-theme="dark"] .ai-bubble,
+[data-theme="dark"] .sale-group-tag {
+  --green: #2f6b4b;
+  --green2: #245a3d;
+  --accent: #2f6b4b;
+  --accent2: #245a3d;
+  --orange: #a0623f;
+  --red: #a33a2a;
+  --sand: #8c6e52;
+}
+[data-theme="dark"] .credits-stat-neutral,
+[data-theme="dark"] .credits-stat-neutral .credits-stat-label,
+[data-theme="dark"] .credits-stat-neutral .credits-stat-val,
+[data-theme="dark"] .credits-stat-neutral .credits-stat-icon,
+[data-theme="dark"] .module-stat:has(.stat-value[style*="--accent"]) .stat-label,
+[data-theme="dark"] .module-stat:has(.stat-value[style*="--accent"]) .stat-value {
+  color: #fff !important;
+}
+[data-theme="dark"] .btn-primary,
+[data-theme="dark"] .btn-pay,
+[data-theme="dark"] .btn-danger,
+[data-theme="dark"] .ai-bubble { color: #fff; }
+[data-theme="dark"] .btn-danger:hover { background: #82291c; }
+[data-theme="dark"] .sale-group-tag { background: #2f6b4b; color: #fff; }
