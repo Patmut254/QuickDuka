@@ -124,31 +124,31 @@ export default function Dashboard({
     {
       label: t.salesThisMonth,
       value: totalSales,
-      color: "#22c55e",
+      color: "#29573f",
       icon: faMoneyBillTrendUp,
     },
     {
       label: t.purchasesThisMonth,
       value: totalPurchases,
-      color: "#f97316",
+      color: "#a0623f",
       icon: faCartPlus,
     },
     {
       label: t.expensesThisMonth,
       value: totalExpenses,
-      color: "#a855f7",
+      color: "#8c6e52",
       icon: faReceipt,
     },
     {
       label: t.lossesThisMonth,
       value: totalLosses,
-      color: "#ef4444",
+      color: "#a33a2a",
       icon: faTriangleExclamation,
     },
     {
       label: t.netProfitLabel,
       value: profit,
-      color: profit >= 0 ? "#22c55e" : "#ef4444",
+      color: profit >= 0 ? "#29573f" : "#a33a2a",
       icon: profit >= 0 ? faArrowTrendUp : faArrowTrendDown,
     },
   ];
@@ -217,7 +217,7 @@ export default function Dashboard({
             padding: "14px 16px",
             background: "var(--bg2)",
             border: "1px solid var(--border)",
-            borderRadius: "var(--radius)",
+            borderRadius: 0,
           }}
         >
           <div
@@ -269,7 +269,7 @@ export default function Dashboard({
                         marginLeft: 8,
                         color:
                           st === "overdue"
-                            ? "#ef4444"
+                            ? "#a33a2a"
                             : st === "soon"
                               ? "#f59e0b"
                               : "var(--muted)",
@@ -305,20 +305,20 @@ export default function Dashboard({
             >
               <defs>
                 <linearGradient id="gSales" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#22c55e" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="#22c55e" stopOpacity={0} />
+                  <stop offset="5%" stopColor="#29573f" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="#29573f" stopOpacity={0} />
                 </linearGradient>
                 <linearGradient id="gProfit" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                  <stop offset="5%" stopColor="#4f6f7d" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="#4f6f7d" stopOpacity={0} />
                 </linearGradient>
                 <linearGradient id="gExp" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#a855f7" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="#a855f7" stopOpacity={0} />
+                  <stop offset="5%" stopColor="#8c6e52" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="#8c6e52" stopOpacity={0} />
                 </linearGradient>
                 <linearGradient id="gLoss" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
+                  <stop offset="5%" stopColor="#a33a2a" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="#a33a2a" stopOpacity={0} />
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="#2a2a3a" />
@@ -336,7 +336,7 @@ export default function Dashboard({
                 contentStyle={{
                   background: "var(--bg2)",
                   border: "1px solid var(--border)",
-                  borderRadius: 8,
+                  borderRadius: 0,
                   color: "var(--text)",
                 }}
                 formatter={(v) => `KES ${v.toLocaleString()}`}
@@ -345,28 +345,28 @@ export default function Dashboard({
               <Area
                 type="monotone"
                 dataKey="Sales"
-                stroke="#22c55e"
+                stroke="#29573f"
                 fill="url(#gSales)"
                 strokeWidth={2}
               />
               <Area
                 type="monotone"
                 dataKey="Expenses"
-                stroke="#a855f7"
+                stroke="#8c6e52"
                 fill="url(#gExp)"
                 strokeWidth={2}
               />
               <Area
                 type="monotone"
                 dataKey="Losses"
-                stroke="#ef4444"
+                stroke="#a33a2a"
                 fill="url(#gLoss)"
                 strokeWidth={2}
               />
               <Area
                 type="monotone"
                 dataKey="Profit"
-                stroke="#3b82f6"
+                stroke="#4f6f7d"
                 fill="url(#gProfit)"
                 strokeWidth={2}
               />
@@ -428,8 +428,8 @@ export default function Dashboard({
                   style={{
                     color:
                       item.type === "sale" || item.type === "credit"
-                        ? "#22c55e"
-                        : "#f97316",
+                        ? "#29573f"
+                        : "#a0623f",
                   }}
                 >
                   {item.type === "sale" || item.type === "credit" ? "+" : "-"}KES{" "}
@@ -461,7 +461,7 @@ export default function Dashboard({
             <div
               style={{
                 padding: 16,
-                borderRadius: 10,
+                borderRadius: 0,
                 background: "var(--bg2)",
                 border: "1px solid var(--border)",
                 fontSize: 13,

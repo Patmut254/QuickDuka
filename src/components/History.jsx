@@ -18,7 +18,7 @@ const ACTION_COLORS = {
   CREATE: {
     bg: "#f0fdf4",
     border: "#86efac",
-    text: "#16a34a",
+    text: "#29573f",
     label: "actAdded",
   },
   UPDATE: {
@@ -30,7 +30,7 @@ const ACTION_COLORS = {
   DELETE: {
     bg: "#fef2f2",
     border: "#fca5a5",
-    text: "#dc2626",
+    text: "#a33a2a",
     label: "actDeleted",
   },
   RESTORE: {

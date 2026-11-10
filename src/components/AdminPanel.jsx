@@ -272,7 +272,7 @@ function ChangePlanControl({ u, onChanged }) {
         onChange={(e) => setSelected(e.target.value)}
         style={{
           padding: "5px 8px",
-          borderRadius: 7,
+          borderRadius: 0,
           border: "1.5px solid var(--border2)",
           background: "var(--bg)",
           color: "var(--text)",
@@ -373,7 +373,7 @@ function MobileTabsControl({ u, onSaved }) {
         flexBasis: "100%",
         padding: "10px 12px",
         border: "1px solid var(--border2)",
-        borderRadius: 8,
+        borderRadius: 0,
         background: "var(--bg2)",
       }}
     >
@@ -439,7 +439,7 @@ function ActivateTrialControl({ u, onActivated }) {
         className="adm-act-btn"
         style={{
           background: "#f0fdf4",
-          color: "#166534",
+          color: "#1e3f2e",
           border: "1px solid #bbf7d0",
         }}
         onClick={() => setOpen(true)}
@@ -469,7 +469,7 @@ function ActivateTrialControl({ u, onActivated }) {
         gap: 6,
         flexWrap: "wrap",
         padding: "6px 10px",
-        borderRadius: 8,
+        borderRadius: 0,
         background: "#f0fdf4",
         border: "1px solid #bbf7d0",
       }}
@@ -479,7 +479,7 @@ function ActivateTrialControl({ u, onActivated }) {
         onChange={(e) => setPlan(e.target.value)}
         style={{
           padding: "4px 8px",
-          borderRadius: 6,
+          borderRadius: 0,
           border: "1px solid var(--border2)",
           background: "var(--bg)",
           color: "var(--text)",
@@ -498,7 +498,7 @@ function ActivateTrialControl({ u, onActivated }) {
         onChange={(e) => setMonths(e.target.value)}
         style={{
           padding: "4px 8px",
-          borderRadius: 6,
+          borderRadius: 0,
           border: "1px solid var(--border2)",
           background: "var(--bg)",
           color: "var(--text)",
@@ -1314,7 +1314,7 @@ function DeleteUserModal({ user, onClose, onDeleted }) {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="admin-modal-header">
-          <h3 style={{ color: "var(--red, #ef4444)" }}>
+          <h3 style={{ color: "var(--red, #a33a2a)" }}>
             <FontAwesomeIcon icon={faTrash} /> Delete User
           </h3>
           <button className="admin-modal-close" onClick={onClose}>
@@ -1350,7 +1350,7 @@ function DeleteUserModal({ user, onClose, onDeleted }) {
                 marginTop: 6,
                 width: "100%",
                 padding: "8px 10px",
-                borderRadius: 7,
+                borderRadius: 0,
                 border: "1px solid var(--border2)",
                 background: "var(--bg3)",
                 color: "var(--text)",
@@ -1521,10 +1521,10 @@ export default function AdminPanel() {
   });
 
   const statusConfig = {
-    active: { color: "#22c55e", label: "Active", icon: faCircleCheck },
-    expired: { color: "#ef4444", label: "Expired", icon: faCircleXmark },
-    pending: { color: "#f97316", label: "Pending", icon: faClock },
-    trial: { color: "#f97316", label: "Pending", icon: faClock },
+    active: { color: "#29573f", label: "Active", icon: faCircleCheck },
+    expired: { color: "#a33a2a", label: "Expired", icon: faCircleXmark },
+    pending: { color: "#a0623f", label: "Pending", icon: faClock },
+    trial: { color: "#a0623f", label: "Pending", icon: faClock },
   };
 
   const StatusBadge = ({ u }) => {
@@ -1537,7 +1537,7 @@ export default function AdminPanel() {
           alignItems: "center",
           gap: 5,
           padding: "4px 10px",
-          borderRadius: 20,
+          borderRadius: 0,
           fontSize: 12,
           fontWeight: 700,
           background: cfg.color + "22",
@@ -1582,7 +1582,7 @@ export default function AdminPanel() {
           style={{
             background: "#fff3cd",
             border: "1px solid #ffc107",
-            borderRadius: 6,
+            borderRadius: 0,
             padding: "10px 16px",
             marginBottom: 16,
             fontSize: 13,
@@ -1605,7 +1605,7 @@ export default function AdminPanel() {
                 style={{
                   background: "#f8f9fa",
                   padding: "1px 4px",
-                  borderRadius: 3,
+                  borderRadius: 0,
                 }}
               >
                 allow read, write: if request.auth != null;
@@ -1742,25 +1742,25 @@ export default function AdminPanel() {
           {
             label: "Total Users",
             val: stats.total,
-            color: "#3b82f6",
+            color: "#4f6f7d",
             icon: faUsers,
           },
           {
             label: "Active",
             val: stats.active,
-            color: "#22c55e",
+            color: "#29573f",
             icon: faCircleCheck,
           },
           {
             label: "Expired",
             val: stats.expired,
-            color: "#ef4444",
+            color: "#a33a2a",
             icon: faCircleXmark,
           },
           {
             label: "Pending",
             val: stats.pending,
-            color: "#f97316",
+            color: "#a0623f",
             icon: faClock,
           },
         ].map((s) => (
@@ -2016,7 +2016,7 @@ export default function AdminPanel() {
                             className="adm-act-btn"
                             style={{
                               background: "#fee2e2",
-                              color: "#dc2626",
+                              color: "#a33a2a",
                               border: "1px solid #fca5a5",
                               marginLeft: "auto",
                             }}
@@ -2066,7 +2066,7 @@ export default function AdminPanel() {
                                     alignItems: "center",
                                     gap: 10,
                                     background: "var(--bg)",
-                                    borderRadius: 8,
+                                    borderRadius: 0,
                                     padding: "8px 12px",
                                     fontSize: 12,
                                     opacity: s.active !== false ? 1 : 0.55,
@@ -2116,15 +2116,15 @@ export default function AdminPanel() {
                                     style={{
                                       fontSize: 10,
                                       padding: "2px 6px",
-                                      borderRadius: 20,
+                                      borderRadius: 0,
                                       fontWeight: 700,
                                       background:
                                         s.active !== false
-                                          ? "#16a34a18"
+                                          ? "#29573f18"
                                           : "var(--border)",
                                       color:
                                         s.active !== false
-                                          ? "#16a34a"
+                                          ? "#29573f"
                                           : "var(--muted)",
                                     }}
                                   >
@@ -2216,9 +2216,9 @@ function HistoryModal({ user, onClose }) {
 
   const typeInfo = (type) =>
     ({
-      admin_extension: { label: "Admin Extension", color: "#22c55e" },
-      admin_suspend: { label: "Suspended", color: "#ef4444" },
-      mpesa_payment: { label: "M-Pesa Payment", color: "#3b82f6" },
+      admin_extension: { label: "Admin Extension", color: "#29573f" },
+      admin_suspend: { label: "Suspended", color: "#a33a2a" },
+      mpesa_payment: { label: "M-Pesa Payment", color: "#4f6f7d" },
     })[type] || { label: type, color: "var(--muted)" };
 
   return (
@@ -2278,7 +2278,7 @@ function HistoryModal({ user, onClose }) {
                   style={{
                     background: "var(--bg3)",
                     border: "1px solid var(--border)",
-                    borderRadius: 6,
+                    borderRadius: 0,
                     padding: "10px 14px",
                     fontSize: 13,
                   }}
@@ -2395,9 +2395,9 @@ function PlansEditor({ users, showToast }) {
   };
 
   const PLAN_COLORS = {
-    starter: "#1a7a3c",
-    growth: "#0369a1",
-    business: "#7c3aed",
+    starter: "#29573f",
+    growth: "#4f6f7d",
+    business: "#8c6e52",
   };
 
   return (
@@ -2443,7 +2443,7 @@ function PlansEditor({ users, showToast }) {
               style={{
                 background: "var(--bg2)",
                 border: `2px solid ${color}30`,
-                borderRadius: "var(--radius)",
+                borderRadius: 0,
                 overflow: "hidden",
               }}
             >
@@ -2472,7 +2472,7 @@ function PlansEditor({ users, showToast }) {
                             fontSize: 10,
                             fontWeight: 700,
                             padding: "2px 6px",
-                            borderRadius: 20,
+                            borderRadius: 0,
                             background: color,
                             color: "#fff",
                           }}
@@ -2505,7 +2505,7 @@ function PlansEditor({ users, showToast }) {
                     style={{
                       background: color,
                       color: "#fff",
-                      borderRadius: 10,
+                      borderRadius: 0,
                       padding: "6px 10px",
                       textAlign: "center",
                       minWidth: 50,
@@ -2552,7 +2552,7 @@ function PlansEditor({ users, showToast }) {
                   >
                     <FontAwesomeIcon
                       icon={faCircleCheck}
-                      style={{ color: "#16a34a", fontSize: 10, flexShrink: 0 }}
+                      style={{ color: "#29573f", fontSize: 10, flexShrink: 0 }}
                     />
                     {f}
                   </div>
@@ -2583,7 +2583,7 @@ function PlansEditor({ users, showToast }) {
                           fontWeight: 700,
                           color:
                             v === true
-                              ? "#16a34a"
+                              ? "#29573f"
                               : v === false
                                 ? "var(--red)"
                                 : "var(--text)",
@@ -2621,7 +2621,7 @@ function PlansEditor({ users, showToast }) {
                       fontSize: 12,
                       background: "var(--bg)",
                       border: "1px solid var(--border)",
-                      borderRadius: 8,
+                      borderRadius: 0,
                       padding: "6px 8px",
                       color: "var(--text)",
                       fontFamily: "inherit",
@@ -2645,7 +2645,7 @@ function PlansEditor({ users, showToast }) {
                         background: color,
                         color: "#fff",
                         border: "none",
-                        borderRadius: 8,
+                        borderRadius: 0,
                         cursor: "pointer",
                         fontFamily: "inherit",
                         fontWeight: 700,
@@ -2669,7 +2669,7 @@ function PlansEditor({ users, showToast }) {
           padding: "14px 18px",
           background: "var(--bg2)",
           border: "1px solid var(--border)",
-          borderRadius: "var(--radius)",
+          borderRadius: 0,
           fontSize: 13,
         }}
       >
@@ -2828,7 +2828,7 @@ function AnalyticsTab({ users }) {
           style={{
             background: "var(--bg2)",
             border: "1px solid var(--border)",
-            borderRadius: 8,
+            borderRadius: 0,
             padding: "7px 12px",
             color: "var(--text)",
             fontFamily: "inherit",
@@ -2856,7 +2856,7 @@ function AnalyticsTab({ users }) {
             textAlign: "center",
             padding: "40px",
             border: "1.5px dashed var(--border)",
-            borderRadius: "var(--radius)",
+            borderRadius: 0,
             color: "var(--muted)",
             fontSize: 13,
           }}
@@ -2870,7 +2870,7 @@ function AnalyticsTab({ users }) {
             style={{
               background: "var(--bg2)",
               border: "1px solid var(--border)",
-              borderRadius: "var(--radius)",
+              borderRadius: 0,
               padding: "20px",
               marginBottom: 16,
             }}
@@ -2911,7 +2911,7 @@ function AnalyticsTab({ users }) {
                         flex: 1,
                         height: 22,
                         background: "var(--border)",
-                        borderRadius: 4,
+                        borderRadius: 0,
                         overflow: "hidden",
                       }}
                     >
@@ -2922,7 +2922,7 @@ function AnalyticsTab({ users }) {
                           background: isTop
                             ? "var(--accent)"
                             : "var(--accent)60",
-                          borderRadius: 4,
+                          borderRadius: 0,
                           transition: "width .4s ease",
                           display: "flex",
                           alignItems: "center",
@@ -2965,7 +2965,7 @@ function AnalyticsTab({ users }) {
               style={{
                 background: "var(--bg2)",
                 border: "1px solid var(--border)",
-                borderRadius: "var(--radius)",
+                borderRadius: 0,
                 padding: "14px 16px",
                 fontSize: 12,
                 color: "var(--muted)",
@@ -2997,7 +2997,7 @@ function AnalyticsTab({ users }) {
                   marginTop: 16,
                   background: "var(--bg2)",
                   border: "1px solid var(--border)",
-                  borderRadius: "var(--radius)",
+                  borderRadius: 0,
                   padding: "14px 16px",
                 }}
               >
@@ -3093,9 +3093,9 @@ function AllPaymentsHistory({ users }) {
 
   const typeColor = (t) =>
     ({
-      admin_extension: "#22c55e",
-      admin_suspend: "#ef4444",
-      mpesa_payment: "#3b82f6",
+      admin_extension: "#29573f",
+      admin_suspend: "#a33a2a",
+      mpesa_payment: "#4f6f7d",
     })[t] || "var(--muted)";
   const typeLabel = (t) =>
     ({

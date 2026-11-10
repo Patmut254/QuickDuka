@@ -101,7 +101,7 @@ export default function ContactPage() {
         <p>{t.whatsappDesc}</p>
         <div className="contact-methods">
           <a href="https://wa.me/254769758819?text=Hello QuickDuka, I need help with..." target="_blank" rel="noreferrer" className="contact-method">
-            <div className="contact-method-icon" style={{ background: "#dcfce7", color: "#16a34a" }}>
+            <div className="contact-method-icon" style={{ background: "#dcfce7", color: "#29573f" }}>
               <FontAwesomeIcon icon={faWhatsapp} />
             </div>
             <div className="contact-method-text">

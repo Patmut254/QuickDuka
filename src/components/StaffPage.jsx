@@ -169,7 +169,7 @@ function StaffForm({
         style={{
           background: "var(--bg2)",
           border: "1.5px solid var(--border)",
-          borderRadius: "var(--radius)",
+          borderRadius: 0,
           padding: "24px 20px",
           marginBottom: 20,
           textAlign: "center",
@@ -179,7 +179,7 @@ function StaffForm({
           icon={faCheckCircle}
           style={{
             fontSize: 28,
-            color: "var(--green, #16a34a)",
+            color: "var(--green, #29573f)",
             marginBottom: 10,
           }}
         />
@@ -207,7 +207,7 @@ function StaffForm({
       style={{
         background: "var(--bg2)",
         border: "1.5px solid var(--border)",
-        borderRadius: "var(--radius)",
+        borderRadius: 0,
         padding: "20px 20px 18px",
         marginBottom: 20,
       }}
@@ -391,7 +391,7 @@ function StaffCard({ member, onToggle, onDelete }) {
       style={{
         background: "var(--bg2)",
         border: "1.5px solid var(--border)",
-        borderRadius: "var(--radius)",
+        borderRadius: 0,
         padding: "14px 16px",
         display: "flex",
         alignItems: "center",
@@ -486,13 +486,13 @@ function StaffCard({ member, onToggle, onDelete }) {
       <span
         style={{
           padding: "2px 8px",
-          borderRadius: 20,
+          borderRadius: 0,
           fontSize: 11,
           fontWeight: 700,
           flexShrink: 0,
-          background: member.active ? "#16a34a18" : "var(--border)",
-          color: member.active ? "#16a34a" : "var(--muted)",
-          border: `1.5px solid ${member.active ? "#16a34a40" : "var(--border)"}`,
+          background: member.active ? "#29573f18" : "var(--border)",
+          color: member.active ? "#29573f" : "var(--muted)",
+          border: `1.5px solid ${member.active ? "#29573f40" : "var(--border)"}`,
         }}
       >
         {member.active ? "Active" : "Inactive"}
@@ -506,7 +506,7 @@ function StaffCard({ member, onToggle, onDelete }) {
           style={{
             background: "none",
             border: "1px solid var(--border)",
-            borderRadius: 8,
+            borderRadius: 0,
             padding: "5px 9px",
             cursor: "pointer",
             fontSize: 16,
@@ -523,7 +523,7 @@ function StaffCard({ member, onToggle, onDelete }) {
           style={{
             background: "none",
             border: "1px solid var(--border)",
-            borderRadius: 8,
+            borderRadius: 0,
             padding: "5px 9px",
             cursor: "pointer",
             color: "var(--red)",
@@ -674,7 +674,7 @@ export default function StaffPage({ sub, profile, isAdmin = false }) {
             style={{
               background: "var(--accent)0a",
               border: "1.5px solid var(--accent)30",
-              borderRadius: "var(--radius)",
+              borderRadius: 0,
               padding: "14px 16px",
               marginBottom: 20,
               fontSize: 12,
@@ -740,7 +740,7 @@ export default function StaffPage({ sub, profile, isAdmin = false }) {
               textAlign: "center",
               padding: "40px 20px",
               border: "1.5px dashed var(--border)",
-              borderRadius: "var(--radius)",
+              borderRadius: 0,
               background: "var(--bg2)",
               color: "var(--muted)",
               fontSize: 13,

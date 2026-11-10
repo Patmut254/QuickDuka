@@ -83,7 +83,7 @@ export default function LineItems({
                     <em className="cart-tag">{t.notInStock || "Not in stock"}</em>
                   )}
                   {(outside || (lim && !lim.fixed)) && (
-                    <small style={outside ? { color: "#dc2626" } : undefined}>
+                    <small style={outside ? { color: "#a33a2a" } : undefined}>
                       {t.allowedAmount}:{" "}
                       {lim.fixed
                         ? `KES ${lim.minTotal.toLocaleString()}`

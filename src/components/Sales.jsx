@@ -255,7 +255,7 @@ export default function Sales({ ownerUid, sub }) {
             fontSize: 11,
             fontWeight: 600,
             padding: "2px 8px",
-            borderRadius: 20,
+            borderRadius: 0,
             background: "var(--accent)15",
             color: "var(--accent)",
             textTransform: "capitalize",
@@ -274,7 +274,7 @@ export default function Sales({ ownerUid, sub }) {
           label: "Location",
           readOnly: true,
           format: (v) => v
-            ? <span style={{ fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 20, background: "#3b82f615", color: "#3b82f6" }}>{v}</span>
+            ? <span style={{ fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 0, background: "#4f6f7d15", color: "#4f6f7d" }}>{v}</span>
             : <span style={{ fontSize: 11, color: "var(--muted)" }}></span>,
         }]
       : []),
@@ -285,7 +285,7 @@ export default function Sales({ ownerUid, sub }) {
           label: "By",
           readOnly: true,
           format: (v) => v
-            ? <span style={{ fontSize: 11, fontWeight: 600, padding: "2px 7px", borderRadius: 20, background: "var(--accent)15", color: "var(--accent)" }}>{v}</span>
+            ? <span style={{ fontSize: 11, fontWeight: 600, padding: "2px 7px", borderRadius: 0, background: "var(--accent)15", color: "var(--accent)" }}>{v}</span>
             : <span style={{ fontSize: 11, color: "var(--muted)" }}>Owner</span>,
         }]
       : []),
@@ -356,6 +356,29 @@ export default function Sales({ ownerUid, sub }) {
               </div>
             )}
             <div className="field-group">
+              <label htmlFor="sale-customer">{t.customer}</label>
+              <input
+                id="sale-customer"
+                name="sale-customer"
+                autoComplete="name"
+                placeholder={t.customerPh}
+                value={form.customer}
+                onChange={(e) => setForm({ ...form, customer: e.target.value })}
+              />
+            </div>
+            <div className="field-group">
+              <label htmlFor="sale-phone">{t.phone}</label>
+              <input
+                id="sale-phone"
+                name="sale-phone"
+                type="tel"
+                autoComplete="tel"
+                placeholder="07XX XXX XXX"
+                value={form.phone}
+                onChange={(e) => setForm({ ...form, phone: e.target.value })}
+              />
+            </div>
+            <div className="field-group">
               <label htmlFor="sale-payment-method">{t.paymentMethod}</label>
               <select
                 id="sale-payment-method"
@@ -388,7 +411,7 @@ export default function Sales({ ownerUid, sub }) {
             stock={stock}
             t={t}
             idPrefix="sale"
-            itemLabel={t.addItems || "Add items"}
+            itemLabel={t.itemSold}
             baseTotal={
               addTo
                 ? groupRows(addTo).reduce((a, r) => a + (Number(r.amount) || 0), 0)

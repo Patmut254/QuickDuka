@@ -32,10 +32,10 @@ import {
   subDays,
 } from "date-fns";
 const COLORS = [
-  "#22c55e",
-  "#f97316",
-  "#a855f7",
-  "#3b82f6",
+  "#29573f",
+  "#a0623f",
+  "#8c6e52",
+  "#4f6f7d",
   "#ec4899",
   "#14b8a6",
 ];
@@ -389,17 +389,19 @@ const bestLocation = salesByLocation[0] || null;
 // ── CSV Download ──────────────────────────────────────────────────────
 const downloadCSV = () => {
   const rows = [
-    ["Type", "Date", "Description / Item", "Category", "Quantity", "Payment Method", "Amount (KES)"],
+    ["Type", "Date", "Description / Item", "Category", "Quantity", "Payment Method", "Amount (KES)", "Customer", "Phone"],
     ...sales
       .filter(inRange)
       .map((s) => [
         "Sale",
         s.date || "",
-        s.description || s.item || "",
+        s.description || s.item || s.itemTaken || "",
         s.branchName || "",
         s.quantity ?? "",
         s.paymentMethod || "cash",
         s.amount || 0,
+        s.customer || "",
+        s.phone || "",
       ]),
     ...purchases
       .filter(inRange)
@@ -483,10 +485,10 @@ const allTransactions = useMemo(() => {
 }, [sales, purchases, expenses, losses, inRange]);
 
 const typeColor = {
-  sale: "#22c55e",
-  purchase: "#f97316",
-  expense: "#a855f7",
-  loss: "#ef4444",
+  sale: "#29573f",
+  purchase: "#a0623f",
+  expense: "#8c6e52",
+  loss: "#a33a2a",
 };
 const typeLabel = {
   sale: t.sales || "Sale",
@@ -508,13 +510,13 @@ return (
             onClick={() => setPeriod(p)}
             style={{
               padding: "6px 14px",
-              borderRadius: 20,
+              borderRadius: 0,
               border: "none",
               cursor: "pointer",
               fontSize: 13,
               fontWeight: 600,
               background:
-                period === p ? "var(--accent, #22c55e)" : "var(--bg2, #1a1a2e)",
+                period === p ? "var(--accent, #29573f)" : "var(--bg2, #1a1a2e)",
               color: period === p ? "#fff" : "var(--muted, #9ca3af)",
               transition: "all 0.15s",
             }}
@@ -566,7 +568,7 @@ return (
         onClick={downloadCSV}
         style={{
           padding: "6px 16px",
-          borderRadius: 20,
+          borderRadius: 0,
           border: "1px solid var(--border, #333)",
           background: "var(--bg2, #1a1a2e)",
           color: "var(--text, #fff)",
@@ -600,32 +602,32 @@ return (
         {
           label: t.totalSales || "Total Sales",
           value: ms,
-          color: "#22c55e",
+          color: "#29573f",
         },
         {
           label: t.totalPurchases || "Total Purchases",
           value: mp,
-          color: "#f97316",
+          color: "#a0623f",
         },
         {
           label: t.totalExpenses || "Total Expenses",
           value: me,
-          color: "#a855f7",
+          color: "#8c6e52",
         },
         {
           label: t.totalLosses || "Total Losses",
           value: ml,
-          color: "#ef4444",
+          color: "#a33a2a",
         },
         {
           label: t.netProfitLabel || "Net Profit",
           value: mProfit,
-          color: mProfit >= 0 ? "#22c55e" : "#ef4444",
+          color: mProfit >= 0 ? "#29573f" : "#a33a2a",
         },
         {
           label: (t.netProfitLabel || "Net Profit") + " %",
           value: `${margin}%`,
-          color: mProfit >= 0 ? "#3b82f6" : "#ef4444",
+          color: mProfit >= 0 ? "#4f6f7d" : "#a33a2a",
           raw: true,
         },
       ].map((c) => (
@@ -685,28 +687,28 @@ return (
               <Line
                 type="monotone"
                 dataKey={t.sales || "Sales"}
-                stroke="#22c55e"
+                stroke="#29573f"
                 strokeWidth={2}
                 dot={false}
               />
               <Line
                 type="monotone"
                 dataKey={t.purchases || "Purchases"}
-                stroke="#f97316"
+                stroke="#a0623f"
                 strokeWidth={2}
                 dot={false}
               />
               <Line
                 type="monotone"
                 dataKey={t.expenses || "Expenses"}
-                stroke="#a855f7"
+                stroke="#8c6e52"
                 strokeWidth={2}
                 dot={false}
               />
               <Line
                 type="monotone"
                 dataKey={t.netProfitLabel || "Net Profit"}
-                stroke="#3b82f6"
+                stroke="#4f6f7d"
                 strokeWidth={2}
                 dot={false}
               />
@@ -735,22 +737,22 @@ return (
               <Legend wrapperStyle={{ color: "#ccc" }} />
               <Bar
                 dataKey={t.sales || "Sales"}
-                fill="#22c55e"
+                fill="#29573f"
                 radius={[3, 3, 0, 0]}
               />
               <Bar
                 dataKey={t.purchases || "Purchases"}
-                fill="#f97316"
+                fill="#a0623f"
                 radius={[3, 3, 0, 0]}
               />
               <Bar
                 dataKey={t.expenses || "Expenses"}
-                fill="#a855f7"
+                fill="#8c6e52"
                 radius={[3, 3, 0, 0]}
               />
               <Bar
                 dataKey={t.losses || "Losses"}
-                fill="#ef4444"
+                fill="#a33a2a"
                 radius={[3, 3, 0, 0]}
               />
             </BarChart>
@@ -870,7 +872,7 @@ return (
                 }}
                 formatter={(v) => `KES ${Number(v).toLocaleString()}`}
               />
-              <Bar dataKey="value" fill="#3b82f6" radius={[0, 4, 4, 0]} />
+              <Bar dataKey="value" fill="#4f6f7d" radius={[0, 4, 4, 0]} />
             </BarChart>
           </ResponsiveContainer>
         )}
@@ -886,9 +888,9 @@ return (
                 fontSize: 13,
                 marginBottom: 10,
                 padding: "6px 10px",
-                borderRadius: 8,
-                background: "#22c55e15",
-                color: "#22c55e",
+                borderRadius: 0,
+                background: "#29573f15",
+                color: "#29573f",
                 fontWeight: 600,
               }}
             >
@@ -1009,7 +1011,7 @@ return (
                       style={{
                         background: typeColor[item._type] + "22",
                         color: typeColor[item._type],
-                        borderRadius: 10,
+                        borderRadius: 0,
                         padding: "2px 8px",
                         fontSize: 11,
                         fontWeight: 700,
@@ -1070,7 +1072,7 @@ return (
                       padding: "7px 8px",
                       textAlign: "right",
                       fontWeight: 600,
-                      color: item._type === "sale" ? "#22c55e" : "#f97316",
+                      color: item._type === "sale" ? "#29573f" : "#a0623f",
                     }}
                   >
                     {item._type === "sale" ? "+" : "-"}

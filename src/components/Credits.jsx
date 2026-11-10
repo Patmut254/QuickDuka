@@ -766,7 +766,7 @@ export default function Credits({ ownerUid }) {
               stock={stock}
               t={t}
               idPrefix="credit"
-              itemLabel={t.addItems || "Add items"}
+              itemLabel={t.itemTaken}
               baseTotal={addTo ? Number(addTo.totalAmount) || 0 : 0}
               totalLabel={t.creditTotal || "Credit total"}
             />

@@ -121,7 +121,7 @@ export default function Losses({ ownerUid }) {
               style={{
                 background: "var(--red-bg)",
                 border: "1px solid #f5a5a5",
-                borderRadius: 8,
+                borderRadius: 0,
                 padding: "8px 14px",
                 fontSize: 12,
               }}

@@ -111,7 +111,7 @@ function DoneStep({ onBack }) {
         style={{
           background: "var(--green-bg)",
           border: "1px solid var(--green-lt)",
-          borderRadius: 8,
+          borderRadius: 0,
           padding: "10px 16px",
           fontSize: 13,
           color: "var(--green)",
@@ -409,7 +409,7 @@ export default function Register({ onBack }) {
                     onClick={() => !comingSoon && setSelectedPlan(plan.id)}
                     style={{
                       border: `2px solid ${selectedPlan === plan.id ? plan.color : "var(--border)"}`,
-                      borderRadius: 10,
+                      borderRadius: 0,
                       padding: "10px 14px",
                       background:
                         selectedPlan === plan.id
@@ -467,7 +467,7 @@ export default function Register({ onBack }) {
                             fontSize: 9,
                             fontWeight: 700,
                             padding: "2px 7px",
-                            borderRadius: 20,
+                            borderRadius: 0,
                             letterSpacing: 0.5,
                             background: "var(--muted)",
                             color: "#fff",
@@ -482,7 +482,7 @@ export default function Register({ onBack }) {
                               fontSize: 9,
                               fontWeight: 700,
                               padding: "2px 7px",
-                              borderRadius: 20,
+                              borderRadius: 0,
                               letterSpacing: 0.5,
                               background: plan.color,
                               color: "#fff",
@@ -593,12 +593,12 @@ export default function Register({ onBack }) {
               {phone.trim() && phoneError ? (
                 <span
                   className="field-hint"
-                  style={{ color: "var(--red, #ef4444)" }}
+                  style={{ color: "var(--red, #a33a2a)" }}
                 >
                   {phoneError}
                 </span>
               ) : phone.trim() && hasPhone ? (
-                <span className="field-hint" style={{ color: "#16a34a" }}>
+                <span className="field-hint" style={{ color: "#29573f" }}>
                   {normPhone}
                 </span>
               ) : (

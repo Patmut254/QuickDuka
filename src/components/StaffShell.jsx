@@ -158,13 +158,13 @@ function MiniStaffForm({
           padding: "16px",
           textAlign: "center",
           background: "var(--bg2)",
-          borderRadius: "var(--radius)",
+          borderRadius: 0,
           marginBottom: 12,
         }}
       >
         <FontAwesomeIcon
           icon={faCheckCircle}
-          style={{ color: "#16a34a", fontSize: 22, marginBottom: 6 }}
+          style={{ color: "#29573f", fontSize: 22, marginBottom: 6 }}
         />
         <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text)" }}>
           Account created for {name}!
@@ -177,7 +177,7 @@ function MiniStaffForm({
       style={{
         background: "var(--bg2)",
         border: "1.5px solid var(--border)",
-        borderRadius: "var(--radius)",
+        borderRadius: 0,
         padding: "16px",
         marginBottom: 14,
       }}
@@ -421,7 +421,7 @@ function BranchStaffTab({ ownerUid, ownerProfile, branchId, branchName }) {
             textAlign: "center",
             padding: "20px",
             border: "1.5px dashed var(--border)",
-            borderRadius: 10,
+            borderRadius: 0,
             color: "var(--muted)",
             fontSize: 13,
           }}
@@ -436,7 +436,7 @@ function BranchStaffTab({ ownerUid, ownerProfile, branchId, branchName }) {
               style={{
                 background: "var(--bg2)",
                 border: "1px solid var(--border)",
-                borderRadius: 10,
+                borderRadius: 0,
                 padding: "10px 14px",
                 display: "flex",
                 alignItems: "center",
@@ -479,10 +479,10 @@ function BranchStaffTab({ ownerUid, ownerProfile, branchId, branchName }) {
                 style={{
                   fontSize: 10,
                   padding: "2px 7px",
-                  borderRadius: 20,
+                  borderRadius: 0,
                   fontWeight: 700,
-                  background: s.active ? "#16a34a18" : "var(--border)",
-                  color: s.active ? "#16a34a" : "var(--muted)",
+                  background: s.active ? "#29573f18" : "var(--border)",
+                  color: s.active ? "#29573f" : "var(--muted)",
                 }}
               >
                 {s.active ? "Active" : "Inactive"}
@@ -492,7 +492,7 @@ function BranchStaffTab({ ownerUid, ownerProfile, branchId, branchName }) {
                 style={{
                   background: "none",
                   border: "1px solid var(--border)",
-                  borderRadius: 7,
+                  borderRadius: 0,
                   padding: "4px 7px",
                   cursor: "pointer",
                   fontSize: 14,
@@ -612,7 +612,7 @@ export default function StaffShell({ user, profile }) {
           style={{
             background: "none",
             border: "1px solid var(--border2)",
-            borderRadius: 8,
+            borderRadius: 0,
             padding: "8px 20px",
             color: "var(--muted)",
             cursor: "pointer",
@@ -684,7 +684,7 @@ export default function StaffShell({ user, profile }) {
           style={{
             background: "none",
             border: "1px solid var(--border2)",
-            borderRadius: 8,
+            borderRadius: 0,
             padding: "6px 12px",
             color: "var(--muted)",
             cursor: "pointer",
@@ -760,7 +760,7 @@ export default function StaffShell({ user, profile }) {
               style={{
                 background: "var(--accent)0d",
                 border: "1.5px solid var(--accent)30",
-                borderRadius: "var(--radius)",
+                borderRadius: 0,
                 padding: "16px 20px",
                 marginBottom: 20,
                 display: "flex",
@@ -922,7 +922,7 @@ export default function StaffShell({ user, profile }) {
                     padding: "24px",
                     textAlign: "center",
                     border: "1.5px dashed var(--border)",
-                    borderRadius: "var(--radius)",
+                    borderRadius: 0,
                     background: "var(--bg2)",
                   }}
                 >
@@ -938,7 +938,7 @@ export default function StaffShell({ user, profile }) {
                       style={{
                         background: "var(--bg2)",
                         border: "1px solid var(--border)",
-                        borderRadius: 10,
+                        borderRadius: 0,
                         padding: "12px 14px",
                         display: "flex",
                         justifyContent: "space-between",

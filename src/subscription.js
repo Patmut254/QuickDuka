@@ -13,7 +13,7 @@ export const PLANS = {
     id: "starter",
     name: "Starter",
     price: 100, // KES / month
-    color: "#1a7a3c",
+    color: "#29573f",
     badge: "Popular",
     description: "Perfect for a single-person shop",
     features: [
@@ -34,7 +34,7 @@ export const PLANS = {
     id: "growth",
     name: "Growth",
     price: 250,
-    color: "#0369a1",
+    color: "#4f6f7d",
     description: "For growing shops with a team",
     features: [
       "1 shop",
@@ -54,7 +54,7 @@ export const PLANS = {
     id: "business",
     name: "Business",
     price: 700,
-    color: "#7c3aed",
+    color: "#8c6e52",
     badge: "Best Value",
     description: "For multi-branch businesses",
     features: [
