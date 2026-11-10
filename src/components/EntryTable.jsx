@@ -15,7 +15,10 @@ export default function EntryTable({
   showToast,
   totalKey, // optional: sum this column under the table (follows the search)
   totalLabel,
-  extraActions, // optional: (row) => extra buttons shown before Edit/Delete
+  extraActions, // optional: (row, info) => extra buttons shown before Edit/Delete
+  groupKey, // optional: rows sharing this value are shown together as one purchase
+  groupShared = [], // columns shown only once per group (date, customer, …)
+  groupLabelKey, // column that shows "Total" on the group's total line
 }) {
   const { t } = useLang();
   const [search, setSearch] = useState("");
@@ -32,6 +35,33 @@ export default function EntryTable({
       return val && String(val).toLowerCase().includes(search.toLowerCase());
     }),
   );
+
+  // Items bought together (same groupKey) are listed one under another,
+  // followed by a total line for that purchase.
+  const displayRows = [];
+  {
+    const seen = new Set();
+    for (const item of filtered) {
+      const g = groupKey ? item[groupKey] : null;
+      if (!g) {
+        displayRows.push({ item, pos: 0, size: 1 });
+        continue;
+      }
+      if (seen.has(g)) continue;
+      seen.add(g);
+      const members = filtered.filter((x) => x[groupKey] === g);
+      members.forEach((m, pos) =>
+        displayRows.push({ item: m, pos, size: members.length }),
+      );
+      if (members.length > 1)
+        displayRows.push({
+          total: true,
+          key: `total-${g}`,
+          count: members.length,
+          sum: members.reduce((a, m) => a + (Number(m[totalKey]) || 0), 0),
+        });
+    }
+  }
 
   const startEdit = (item) => {
     // Sanitise editData: convert any non-primitive values (e.g. Firestore
@@ -159,14 +189,34 @@ export default function EntryTable({
               </tr>
             </thead>
             <tbody>
-              {filtered.map((item) => (
+              {displayRows.map((row) =>
+                row.total ? (
+                  <tr key={row.key} className="row-group-total">
+                    {columns.map((c) => (
+                      <td key={c.key}>
+                        {c.key === groupLabelKey
+                          ? `${t.total || "Total"} · ${row.count} ${t.itemsWord || "items"}`
+                          : c.key === totalKey
+                            ? `KES ${row.sum.toLocaleString()}`
+                            : ""}
+                      </td>
+                    ))}
+                    <td />
+                  </tr>
+                ) : (() => {
+                const item = row.item;
+                const cont = row.pos > 0; // a later item of the same purchase
+                return (
                 <tr
                   key={item.id}
-                  className={editId === item.id ? "row-editing" : ""}
+                  className={
+                    (editId === item.id ? "row-editing" : "") +
+                    (row.size > 1 ? (cont ? " row-group-cont" : " row-group-first") : "")
+                  }
                 >
                   {columns.map((c) => (
                     <td key={c.key}>
-                      {editId === item.id ? (
+                      {cont && editId !== item.id && groupShared.includes(c.key) ? null : editId === item.id ? (
                         // Edit mode — only render editable columns (skip read-only ones like staffName)
                         c.readOnly ? (
                           // Read-only column: show plain text even in edit mode
@@ -238,7 +288,7 @@ export default function EntryTable({
                       </div>
                     ) : (
                       <div className="action-btns">
-                        {extraActions && extraActions(item)}
+                        {extraActions && extraActions(item, { cont })}
                         <button
                           className="edit-btn"
                           onClick={() => startEdit(item)}
@@ -257,7 +307,9 @@ export default function EntryTable({
                     )}
                   </td>
                 </tr>
-              ))}
+                );
+                })(),
+              )}
             </tbody>
           </table>
         </div>

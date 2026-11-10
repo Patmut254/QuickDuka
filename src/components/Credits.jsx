@@ -704,6 +704,8 @@ export default function Credits({ ownerUid }) {
               : t.newCredit}
           </h3>
           <form onSubmit={handleSubmit}>
+            <div className="split-form">
+            <div className="split-form-left">
             <div className="form-grid">
               <EntryDate
                 id="credit-date"
@@ -760,6 +762,8 @@ export default function Credits({ ownerUid }) {
                 />
               </div>
             </div>
+            </div>
+            <div className="split-form-right">
             <LineItems
               lines={lines}
               setLines={setLines}
@@ -769,21 +773,25 @@ export default function Credits({ ownerUid }) {
               itemLabel={t.itemTaken}
               baseTotal={addTo ? Number(addTo.totalAmount) || 0 : 0}
               totalLabel={t.creditTotal || "Credit total"}
+              action={
+                <div style={{ display: "flex", gap: 10 }}>
+                  <button type="submit" className="btn-primary" disabled={saving}>
+                    {saving ? t.saving : t.saveCredit}
+                  </button>
+                  <button
+                    type="button"
+                    className="btn-secondary"
+                    onClick={() => {
+                      resetCreditForm();
+                      setShowForm(false);
+                    }}
+                  >
+                    {t.cancel}
+                  </button>
+                </div>
+              }
             />
-            <div style={{ display: "flex", gap: 10 }}>
-              <button type="submit" className="btn-primary" disabled={saving}>
-                {saving ? t.saving : t.saveCredit}
-              </button>
-              <button
-                type="button"
-                className="btn-secondary"
-                onClick={() => {
-                  resetCreditForm();
-                  setShowForm(false);
-                }}
-              >
-                {t.cancel}
-              </button>
+            </div>
             </div>
           </form>
         </div>
