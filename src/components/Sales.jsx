@@ -455,7 +455,7 @@ export default function Sales({ ownerUid, sub }) {
             </button>
           )
         }
-        totalLabel={t.totalSales}
+        hideGrandTotal // "Total Sales" is already shown at the top of the page
       />
     </div>
   );
