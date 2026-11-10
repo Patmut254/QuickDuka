@@ -44,6 +44,7 @@ export default function LineItems({
           options={options}
           selectedValue=""
           text=""
+          listOnType
           onPick={(v) => {
             const s = stock.find((x) => x.id === v);
             if (s) setLines((ls) => addStockToLines(ls, s));
@@ -56,7 +57,7 @@ export default function LineItems({
 
       {lines.length === 0 ? (
         <div className="cart-empty">
-          {t.cartEmpty || "Tap an item above to add it to this sale."}
+          {t.cartEmpty || "Type an item name above, then tap it to add."}
         </div>
       ) : (
         <div className="cart-list">
