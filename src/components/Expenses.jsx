@@ -6,8 +6,8 @@ import EntryTable from "./EntryTable";
 import { Toast, useToast } from "./Toast";
 import EntryDate from "./EntryDate";
 import { localToday } from "../dates";
-import SearchSelect from "./SearchSelect";
-import { stockOptions } from "../stockOptions";
+import BatchRows from "./BatchRows";
+import { newBatchRow, usedRows, newBatchId } from "../batchRows";
 
 export default function Expenses({ ownerUid }) {
   const { t } = useLang();
@@ -23,54 +23,98 @@ export default function Expenses({ ownerUid }) {
   // one after another without re-picking the date each time.
   const [lastDate, setLastDate] = useState(localToday);
 
+  // Shared details for every expense saved together; each row holds the
+  // category, description and amount, so several can be entered at once.
   const emptyForm = {
     date: lastDate,
-    category: "",
-    customCategory: "",
-    description: "",
     payee: "",
     phone: "",
-    amount: "",
     notes: "",
   };
   const [form, setForm] = useState(emptyForm);
+  const makeRow = () =>
+    newBatchRow({ category: "", customCategory: "", description: "", amount: "" });
+  const [rows, setRows] = useState(() => [makeRow()]);
   const [status, setStatus] = useState("idle");
   const [showForm, setShowForm] = useState(false);
 
-  const isOther = form.category === OTHER;
+  const rowFields = [
+    {
+      key: "category",
+      label: t.expCategory,
+      type: "select",
+      options: CATS,
+      placeholder: t.selectCategory,
+      required: true,
+      grow: 1.5,
+      extra: {
+        when: (r) => r.category === OTHER,
+        key: "customCategory",
+        placeholder: t.specifyCatPh || t.specifyCategory,
+      },
+    },
+    {
+      key: "description",
+      label: t.description,
+      type: "stock",
+      grow: 2,
+      placeholder: t.descriptionPh,
+      onStockPick: (st, r) =>
+        st.price != null && !r.amount ? { amount: String(st.price) } : {},
+    },
+    { key: "amount", label: t.amount, type: "number", placeholder: "0.00", required: true },
+  ];
 
-  const handleStockSelect = (e) => {
-    const found = stock.find((c) => c.name === e.target.value);
-    setForm((f) => ({
-      ...f,
-      description: found ? found.name : e.target.value,
-      amount: found?.price != null ? String(found.price) : f.amount,
-    }));
+  const resetForm = (date = lastDate) => {
+    setForm({ ...emptyForm, date });
+    setRows([makeRow()]);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (status !== "idle") return;
+    const used = usedRows(rows, rowFields);
+    if (!used.length) {
+      showToast(t.addOneItem || "Add at least one entry.", "error");
+      return;
+    }
+    for (const r of used) {
+      const amt = parseFloat(r.amount);
+      if (!r.category || (r.category === OTHER && !r.customCategory.trim())) {
+        showToast(`${t.expCategory}: ${t.selectCategory}`, "error");
+        return;
+      }
+      if (Number.isNaN(amt) || amt <= 0) {
+        showToast(`${r.description || r.category}: ${t.enterAmount || "enter the amount."}`, "error");
+        return;
+      }
+    }
     setStatus("saving");
-    const finalCategory =
-      isOther && form.customCategory.trim()
-        ? form.customCategory.trim()
-        : form.category;
     try {
-      await addItem({
-        ...form,
-        category: finalCategory,
-        amount: parseFloat(form.amount),
-      });
+      const batch = used.length > 1 ? newBatchId() : null;
+      await Promise.all(
+        used.map((r) =>
+          addItem({
+            ...form,
+            category:
+              r.category === OTHER && r.customCategory.trim()
+                ? r.customCategory.trim()
+                : r.category,
+            description: r.description.trim(),
+            amount: parseFloat(r.amount),
+            ...(batch ? { batch } : {}),
+          }),
+        ),
+      );
       setStatus("saved");
       showToast(t.saved);
       const savedDate = form.date;
       setTimeout(() => {
         setStatus("idle");
         setLastDate(savedDate);
-        setForm({ ...emptyForm, date: savedDate });
+        resetForm(savedDate);
         setShowForm(false);
-      }, 1500);
+      }, 500);
     } catch {
       setStatus("idle");
       showToast(t.failedSave, "error");
@@ -122,6 +166,7 @@ export default function Expenses({ ownerUid }) {
         <button
           className="btn-primary"
           onClick={() => {
+            if (showForm) resetForm();
             setShowForm(!showForm);
             setStatus("idle");
           }}
@@ -133,132 +178,77 @@ export default function Expenses({ ownerUid }) {
       {showForm && (
         <form className="entry-form" onSubmit={handleSubmit}>
           <h3>{t.recordExpense}</h3>
-          <div className="form-grid">
-            <EntryDate
-              id="exp-date"
-              value={form.date}
-              onChange={(d) => setForm({ ...form, date: d })}
-            />
-            <div className="field-group">
-              <label htmlFor="exp-category">{t.expCategory} *</label>
-              <select
-                id="exp-category"
-                name="exp-category"
-                value={form.category}
-                onChange={(e) => setForm({ ...form, category: e.target.value })}
-                required
-              >
-                <option value="">{t.selectCategory}</option>
-                {CATS.map((c) => (
-                  <option key={c}>{c}</option>
-                ))}
-              </select>
+          <div className="split-form">
+            <div className="split-form-left">
+              <div className="form-grid">
+                <EntryDate
+                  id="exp-date"
+                  value={form.date}
+                  onChange={(d) => setForm({ ...form, date: d })}
+                />
+                <div className="field-group">
+                  <label htmlFor="exp-payee">{t.paidTo}</label>
+                  <input
+                    id="exp-payee"
+                    name="exp-payee"
+                    autoComplete="off"
+                    placeholder={t.paidToPh}
+                    value={form.payee}
+                    onChange={(e) => setForm({ ...form, payee: e.target.value })}
+                  />
+                </div>
+                <div className="field-group">
+                  <label htmlFor="exp-phone">{t.phone}</label>
+                  <input
+                    id="exp-phone"
+                    name="exp-phone"
+                    type="tel"
+                    autoComplete="tel"
+                    placeholder="07XX XXX XXX"
+                    value={form.phone}
+                    onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                  />
+                </div>
+                <div className="field-group full-width">
+                  <label htmlFor="exp-notes">{t.notes}</label>
+                  <input
+                    id="exp-notes"
+                    name="exp-notes"
+                    autoComplete="off"
+                    placeholder="..."
+                    value={form.notes}
+                    onChange={(e) => setForm({ ...form, notes: e.target.value })}
+                  />
+                </div>
+              </div>
             </div>
-            {isOther && (
-              <div className="field-group">
-                <label htmlFor="exp-custom-category">
-                  {t.specifyCategory} *
-                </label>
-                <input
-                  id="exp-custom-category"
-                  name="exp-custom-category"
-                  autoComplete="off"
-                  placeholder={t.specifyCatPh}
-                  value={form.customCategory}
-                  onChange={(e) =>
-                    setForm({ ...form, customCategory: e.target.value })
-                  }
-                  required
-                />
-              </div>
-            )}
-            {stock.length > 0 && (
-              <div className="field-group">
-                <label htmlFor="exp-stock">{t.pickStock}</label>
-                <SearchSelect
-                  id="exp-stock"
-                  value={form.description}
-                  onChange={handleStockSelect}
-                  options={stockOptions(stock, { valueKey: "name", t })}
-                  placeholder={t.searchItems || "Search items"}
-                  emptyText={t.noItemsSearch || "No matching items"}
-                />
-              </div>
-            )}
-            <div className="field-group">
-              <label htmlFor="exp-description">{t.description}</label>
-              <input
-                id="exp-description"
-                name="exp-description"
-                autoComplete="off"
-                placeholder={t.descriptionPh}
-                value={form.description}
-                onChange={(e) =>
-                  setForm({ ...form, description: e.target.value })
+            <div className="split-form-right">
+              <BatchRows
+                rows={rows}
+                setRows={setRows}
+                fields={rowFields}
+                stock={stock}
+                t={t}
+                idPrefix="exp"
+                makeRow={makeRow}
+                totalLabel={t.totalExpenses}
+                addLabel={t.addAnotherExpense || "Add another expense"}
+                action={
+                  <button
+                    type="submit"
+                    className={"btn-primary" + (status === "saved" ? " btn-saved" : "")}
+                    disabled={status !== "idle"}
+                  >
+                    {status === "saving"
+                      ? t.saving
+                      : status === "saved"
+                        ? t.saved
+                        : t.saveExpense}
+                  </button>
                 }
               />
             </div>
-            <div className="field-group">
-              <label htmlFor="exp-payee">{t.paidTo}</label>
-              <input
-                id="exp-payee"
-                name="exp-payee"
-                autoComplete="off"
-                placeholder={t.paidToPh}
-                value={form.payee}
-                onChange={(e) => setForm({ ...form, payee: e.target.value })}
-              />
-            </div>
-            <div className="field-group">
-              <label htmlFor="exp-phone">{t.phone}</label>
-              <input
-                id="exp-phone"
-                name="exp-phone"
-                type="tel"
-                autoComplete="tel"
-                placeholder="07XX XXX XXX"
-                value={form.phone}
-                onChange={(e) => setForm({ ...form, phone: e.target.value })}
-              />
-            </div>
-            <div className="field-group">
-              <label htmlFor="exp-amount">{t.amount} *</label>
-              <input
-                id="exp-amount"
-                name="exp-amount"
-                type="number"
-                autoComplete="off"
-                min="0"
-                step="0.01"
-                placeholder="0.00"
-                value={form.amount}
-                onChange={(e) => setForm({ ...form, amount: e.target.value })}
-                required
-              />
-            </div>
-            <div className="field-group full-width">
-              <label htmlFor="exp-notes">{t.notes}</label>
-              <input
-                id="exp-notes"
-                name="exp-notes"
-                autoComplete="off"
-                placeholder="..."
-                value={form.notes}
-                onChange={(e) => setForm({ ...form, notes: e.target.value })}
-              />
-            </div>
           </div>
-          <button
-            type="submit"
-            className={"btn-primary" + (status === "saved" ? " btn-saved" : "")}
-            disabled={status !== "idle"}
-          >
-            {status === "saving"
-              ? t.saving
-              : status === "saved"
-                ? t.saved
-                : t.saveExpense}
-          </button>
         </form>
       )}
 
@@ -270,6 +260,11 @@ export default function Expenses({ ownerUid }) {
         onUpdate={updateItem}
         showToast={showToast}
         emptyMessage={t.noExpenses}
+        totalKey="amount"
+        totalLabel={t.totalExpenses}
+        groupKey="batch"
+        groupShared={["date", "payee", "phone", "notes"]}
+        groupLabelKey="description"
       />
     </div>
   );

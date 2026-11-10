@@ -8738,3 +8738,76 @@ textarea {
   color: var(--green);
   margin-bottom: 4px;
 }
+
+/* ================================================================
+   TABLE HEADERS: solid jungle green, so they stand apart from the
+   (sand) total rows
+   ================================================================ */
+.data-table th,
+[data-theme="dark"] .data-table th {
+  background: #29573f;
+  color: #fff;
+  border-bottom: none;
+}
+[data-theme="dark"] .data-table th { background: #2f6b4b; }
+
+/* ================================================================
+   MULTI-ENTRY ROWS (Expenses, Losses, Purchases)
+   ================================================================ */
+.batch { display: flex; flex-direction: column; }
+.batch-head,
+.batch-row {
+  display: grid;
+  gap: 8px;
+  align-items: start;
+}
+.batch-head {
+  padding-bottom: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  color: var(--muted);
+}
+.batch-row { padding: 8px 0; border-bottom: 1px solid var(--border); }
+.batch-cell { min-width: 0; display: flex; flex-direction: column; }
+.batch-cell input,
+.batch-cell select { width: 100%; min-width: 0; padding: 8px 10px; font-size: 14px; }
+.batch-row .cart-remove { margin-top: 4px; }
+.batch-add {
+  align-self: flex-start;
+  border: none;
+  background: none;
+  padding: 10px 0 0;
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+}
+.batch-add:hover { text-decoration: underline; }
+[data-theme="dark"] .batch-add { color: #93cfa8; }
+/* Phones: each row stacks, labels shown above each box */
+@media (max-width: 600px) {
+  .batch-head { display: none; }
+  .batch-row { grid-template-columns: 1fr 1fr !important; position: relative; }
+  .batch-cell:first-child { grid-column: 1 / -1; padding-right: 36px; }
+  .batch-row .cart-remove { position: absolute; top: 26px; right: 0; margin: 0; }
+  .batch-cell::before {
+    content: attr(data-label);
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--muted);
+    margin-bottom: 3px;
+  }
+}
+
+/* Header with two buttons (Stock: Restock many + Add Item) */
+.module-header-actions {
+  margin-left: auto;
+  align-self: center;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.module-header { justify-content: flex-start; flex-wrap: wrap; gap: 12px; }

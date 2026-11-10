@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useCollection } from "../hooks/useCollection";
 import {
   recordStockPurchase,
-  stockLabel,
   findStockByLabel,
   roundQty,
   roundMoney,
@@ -14,14 +13,14 @@ import EntryTable from "./EntryTable";
 import EntryDate, { StockUpdateToggle } from "./EntryDate";
 import { localToday, stockUpdateWanted } from "../dates";
 import { Toast, useToast } from "./Toast";
-import ItemPicker from "./ItemPicker";
-import { stockOptions } from "../stockOptions";
+import BatchRows from "./BatchRows";
+import { newBatchRow, usedRows, newBatchId } from "../batchRows";
 
 const todayStr = localToday; // local date, not UTC
 
 // Rendered inside the Stock page (Stock/Purchases). It is no longer a
 // top-level tab in App.jsx.
-export default function Purchases({ ownerUid }) {
+export default function Purchases({ ownerUid, autoOpen = false }) {
   const { t } = useLang();
   const { items, loading, addItem, deleteItem, updateItem } = useCollection(
     "purchases",
@@ -114,13 +113,12 @@ export default function Purchases({ ownerUid }) {
   const [lastDate, setLastDate] = useState(localToday);
   const [stockChoice, setStockChoice] = useState(null);
 
+  // Shared details for everything bought in one go (date, supplier,
+  // payment…); each row is one item, so a whole restock can be entered at once.
   const emptyForm = {
     date: lastDate,
-    item: "",
     supplier: "",
     phone: "",
-    quantity: "",
-    amount: "",
     payStatus: "paid", // "paid" | "credit"
     paidNow: "", // only used when payStatus === "credit"
     dueDate: "", // promised repayment date (credit only)
@@ -129,12 +127,52 @@ export default function Purchases({ ownerUid }) {
   };
   const [form, setForm] = useState(emptyForm);
   const [status, setStatus] = useState("idle");
-  const [showForm, setShowForm] = useState(false);
-  const [selectedStockId, setSelectedStockId] = useState("");
-  // Per-unit buy price of the selected stock item — kept separate from
-  // form.amount (the TOTAL spend) so total = unitPrice × quantity always
-  // stays correct as either one changes.
-  const [unitPrice, setUnitPrice] = useState(null);
+  const [showForm, setShowForm] = useState(!!autoOpen);
+  // _unit: per-unit buy price of the picked stock item, so the row total
+  // stays unit × quantity as the quantity changes.
+  const makeRow = () => newBatchRow({ item: "", quantity: "", amount: "", _unit: null });
+  const [rows, setRows] = useState(() => [makeRow()]);
+
+  const rowFields = [
+    {
+      key: "item",
+      label: t.item,
+      type: "stock",
+      grow: 2,
+      required: true,
+      onStockPick: (st, r) => {
+        const up = st.buyPrice != null ? Number(st.buyPrice) : null;
+        const qty = parseFloat(r.quantity) || 1;
+        return { _unit: up, ...(up != null ? { amount: String(roundMoney(up * qty)) } : {}) };
+      },
+    },
+    {
+      key: "quantity",
+      label: t.quantity,
+      type: "number",
+      placeholder: "0",
+      onChange: (v, r) =>
+        r._unit != null ? { amount: String(roundMoney(r._unit * (parseFloat(v) || 0))) } : {},
+    },
+    {
+      key: "amount",
+      label: t.totalCost || t.amount,
+      type: "number",
+      placeholder: "0.00",
+      required: true,
+      onChange: (v, r) =>
+        v !== "" && parseFloat(r.quantity) > 0
+          ? { _unit: roundMoney((parseFloat(v) || 0) / parseFloat(r.quantity)) }
+          : {},
+    },
+  ];
+  const rowsTotal = roundMoney(rows.reduce((a, r) => a + (parseFloat(r.amount) || 0), 0));
+
+  const resetForm = (date = lastDate) => {
+    setForm({ ...emptyForm, date });
+    setRows([makeRow()]);
+    setStockChoice(null);
+  };
 
   // Supplier payment modal
   const [payTarget, setPayTarget] = useState(null);
@@ -145,107 +183,94 @@ export default function Purchases({ ownerUid }) {
   const [payDate, setPayDate] = useState(todayStr);
   const [paySaving, setPaySaving] = useState(false);
 
-  const handleStockSelect = (e) => {
-    const found = stock.find((c) => c.id === e.target.value);
-    setSelectedStockId(found ? found.id : "");
-    const up = found?.buyPrice != null ? Number(found.buyPrice) : null;
-    setUnitPrice(up);
-    const qty = parseFloat(form.quantity) || 1;
-    setForm((f) => ({
-      ...f,
-      item: found ? stockLabel(found) : "",
-      amount: up != null ? String(roundMoney(up * qty)) : f.amount,
-    }));
-  };
-
-  // Quantity changed — recompute the total so "10 items at 1,000 each"
-  // always lands on 10,000, not 1,000.
-  const handleQuantityChange = (e) => {
-    const q = e.target.value;
-    setForm((f) => ({
-      ...f,
-      quantity: q,
-      amount:
-        unitPrice != null
-          ? String(roundMoney(unitPrice * (parseFloat(q) || 0)))
-          : f.amount,
-    }));
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (status !== "idle") return;
+    const used = usedRows(rows, rowFields);
+    if (!used.length) {
+      showToast(t.addOneItem || "Add at least one item.", "error");
+      return;
+    }
+    for (const r of used) {
+      if (!r.item.trim()) {
+        showToast(t.chooseItemEachLine || "Enter the item on every line.", "error");
+        return;
+      }
+      if (r.amount === "" || Number.isNaN(parseFloat(r.amount))) {
+        showToast(`${r.item}: ${t.enterAmount || "enter the amount."}`, "error");
+        return;
+      }
+    }
     setStatus("saving");
     try {
-      const qty = form.quantity !== "" ? roundQty(parseFloat(form.quantity)) : null;
-      const spend = form.amount ? parseFloat(form.amount) : 0;
-      // Paid in full, or bought on credit? On credit, `paidNow` is what has
-      // been paid so far (0 if nothing) and the rest is owed to the supplier.
-      const paidNow =
-        form.payStatus === "credit"
-          ? Math.min(Math.max(parseFloat(form.paidNow) || 0, 0), spend)
-          : spend;
-      const onCredit = paidNow < spend;
       // Old purchases (older than a week) don't add to today's stock unless
       // the user ticks "update my current stock" — see dates.js.
       const touchStock = stockUpdateWanted(form.date, stockChoice);
+      const total = roundMoney(used.reduce((a, r) => a + (parseFloat(r.amount) || 0), 0));
+      // Paid in full, or bought on credit? On credit, `paidNow` is what has
+      // been paid so far for the whole lot; it is applied to the items in
+      // order, and whatever is left on each item is owed to the supplier.
+      let paidLeft =
+        form.payStatus === "credit"
+          ? Math.min(Math.max(parseFloat(form.paidNow) || 0, 0), total)
+          : total;
+      const batch = used.length > 1 ? newBatchId() : null;
+      const { paidNow: _paidNow, payStatus: _payStatus, dueDate: _dueDate, ...shared } = form;
+      const created = new Map(); // new stock items made in this save (by name)
 
-      const {
-        paidNow: _paidNow,
-        payStatus: _payStatus,
-        dueDate: _dueDate,
-        ...purchaseData
-      } = form;
-      await addItem({
-        ...purchaseData,
-        amount: spend,
-        quantity: qty,
-        // remembered so editing/deleting this purchase later doesn't move stock
-        ...(!touchStock && qty ? { stockNotAffected: true } : {}),
-        ...(onCredit
-          ? {
-              paidAmount: roundMoney(paidNow),
-              dueDate: form.dueDate || "",
-              payments:
-                paidNow > 0
-                  ? [
-                      {
-                        amount: roundMoney(paidNow),
-                        date: form.date,
-                        method: "",
-                        note: "",
-                      },
-                    ]
-                  : [],
-            }
-          : {}),
-      });
+      for (const r of used) {
+        const qty = r.quantity !== "" ? roundQty(parseFloat(r.quantity)) : null;
+        const spend = parseFloat(r.amount) || 0;
+        const paid = roundMoney(Math.min(paidLeft, spend));
+        paidLeft = roundMoney(paidLeft - paid);
+        const onCredit = paid < spend;
+        const name = r.item.trim();
 
-      // Bookkeeping: a purchase brings goods into stock. If a matching
-      // catalog item exists, top up its quantity; otherwise create one so
-      // nothing purchased falls through the cracks. Stock value always uses
-      // the FULL cost, whether or not it has been paid off yet.
-      if (touchStock && qty && form.item.trim()) {
-        const match =
-          stock.find((s) => s.id === selectedStockId) ||
-          findStockMatch(form.item);
-        if (match) {
-          await recordStockPurchase(match.id, qty, spend);
-        } else {
-          await addStockItem({
-            name: form.item.trim(),
-            buyPrice: qty ? spend / qty : 0,
-            priceMode: "fixed",
-            price: null,
-            minPrice: null,
-            maxPrice: null,
-            unit: "",
-            quantity: qty,
-            totalPurchased: qty,
-            totalSold: 0,
-            totalPurchaseValue: spend,
-            notes: "Auto-added from a purchase",
-          });
+        await addItem({
+          ...shared,
+          item: name,
+          amount: spend,
+          quantity: qty,
+          ...(batch ? { batch } : {}),
+          // remembered so editing/deleting this purchase later doesn't move stock
+          ...(!touchStock && qty ? { stockNotAffected: true } : {}),
+          ...(onCredit
+            ? {
+                paidAmount: paid,
+                dueDate: form.dueDate || "",
+                payments:
+                  paid > 0 ? [{ amount: paid, date: form.date, method: "", note: "" }] : [],
+              }
+            : {}),
+        });
+
+        // Bookkeeping: a purchase brings goods into stock. Top up the matching
+        // item, or create one so nothing purchased falls through the cracks.
+        // Stock value always uses the FULL cost, paid off or not.
+        if (touchStock && qty && name) {
+          const match =
+            stock.find((x) => x.id === r._stockId) || findStockMatch(name);
+          if (match) {
+            await recordStockPurchase(match.id, qty, spend);
+          } else if (created.has(name.toLowerCase())) {
+            await recordStockPurchase(created.get(name.toLowerCase()), qty, spend);
+          } else {
+            const ref = await addStockItem({
+              name,
+              buyPrice: qty ? spend / qty : 0,
+              priceMode: "fixed",
+              price: null,
+              minPrice: null,
+              maxPrice: null,
+              unit: "",
+              quantity: qty,
+              totalPurchased: qty,
+              totalSold: 0,
+              totalPurchaseValue: spend,
+              notes: "Auto-added from a purchase",
+            });
+            if (ref?.id) created.set(name.toLowerCase(), ref.id);
+          }
         }
       }
 
@@ -255,12 +280,9 @@ export default function Purchases({ ownerUid }) {
       setTimeout(() => {
         setStatus("idle");
         setLastDate(savedDate); // next entry starts on the same day
-        setForm({ ...emptyForm, date: savedDate });
-        setStockChoice(null);
-        setSelectedStockId("");
-        setUnitPrice(null);
+        resetForm(savedDate);
         setShowForm(false);
-      }, 1500);
+      }, 500);
     } catch {
       setStatus("idle");
       showToast(t.failedSave, "error");
@@ -453,6 +475,7 @@ export default function Purchases({ ownerUid }) {
         <button
           className="btn-primary"
           onClick={() => {
+            if (showForm) resetForm();
             setShowForm(!showForm);
             setStatus("idle");
           }}
@@ -484,164 +507,138 @@ export default function Purchases({ ownerUid }) {
       {showForm && (
         <form className="entry-form" onSubmit={handleSubmit}>
           <h3>{t.recordPurchase}</h3>
-          <div className="form-grid">
-            <EntryDate
-              id="purchase-date"
-              value={form.date}
-              onChange={(d) => {
-                setForm({ ...form, date: d });
-                setStockChoice(null);
-              }}
-            />
-            {form.item.trim() && form.quantity !== "" && (
-              <StockUpdateToggle
-                date={form.date}
-                checked={stockUpdateWanted(form.date, stockChoice)}
-                onChange={setStockChoice}
-              />
-            )}
-            <ItemPicker
-              id="purchase-item"
-              label={t.item}
-              required
-              t={t}
-              customTag={t.newItemTag || "New, not in stock list"}
-              options={stockOptions(stock, { labelFn: stockLabel, priceKey: "buyPrice", t })}
-              selectedValue={selectedStockId}
-              text={form.item}
-              onPick={(v) => handleStockSelect({ target: { value: v } })}
-              onCustom={(txt) => {
-                handleStockSelect({ target: { value: "" } });
-                setForm((f) => ({ ...f, item: txt }));
-              }}
-            />
-            <div className="field-group">
-              <label>{t.supplier}</label>
-              <input
-                placeholder={t.supplierPh}
-                value={form.supplier}
-                onChange={(e) => setForm({ ...form, supplier: e.target.value })}
-              />
-            </div>
-            <div className="field-group">
-              <label>{t.supplierPhone}</label>
-              <input
-                type="tel"
-                placeholder="07XX XXX XXX"
-                value={form.phone}
-                onChange={(e) => setForm({ ...form, phone: e.target.value })}
-              />
-            </div>
-            <div className="field-group">
-              <label>{t.category}</label>
-              <select
-                value={form.category}
-                onChange={(e) => setForm({ ...form, category: e.target.value })}
-              >
-                <option value="">{t.selectCategory}</option>
-                {CATS.map((c) => (
-                  <option key={c}>{c}</option>
-                ))}
-              </select>
-            </div>
-            <div className="field-group">
-              <label>{t.quantity}</label>
-              <input
-                type="number"
-                min="0"
-                step="any"
-                inputMode="decimal"
-                placeholder={t.quantityPh}
-                value={form.quantity}
-                onChange={handleQuantityChange}
-              />
-            </div>
-            <div className="field-group">
-              <label>{t.totalCost || t.amount} *</label>
-              <input
-                type="number"
-                min="0"
-                step="0.01"
-                placeholder="0.00"
-                value={form.amount}
-                onChange={(e) => setForm({ ...form, amount: e.target.value })}
-                required
-              />
-              {unitPrice != null && Number(form.quantity) > 1 && (
-                <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 4 }}>
-                  KES {unitPrice.toLocaleString()} × {form.quantity} ={" "}
-                  KES {roundMoney(unitPrice * (parseFloat(form.quantity) || 0)).toLocaleString()}
-                </div>
-              )}
-            </div>
-            <div className="field-group">
-              <label>{t.paymentStatus}</label>
-              <select
-                value={form.payStatus}
-                onChange={(e) => setForm({ ...form, payStatus: e.target.value })}
-              >
-                <option value="paid">{t.paidInFull}</option>
-                <option value="credit">{t.notFullyPaid}</option>
-              </select>
-            </div>
-            {form.payStatus === "credit" && (
-              <>
-                <div className="field-group">
-                  <label>{t.amountPaidNow}</label>
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    placeholder="0.00"
-                    value={form.paidNow}
-                    onChange={(e) => setForm({ ...form, paidNow: e.target.value })}
+          <div className="split-form">
+            <div className="split-form-left">
+              <div className="form-grid">
+                <EntryDate
+                  id="purchase-date"
+                  value={form.date}
+                  onChange={(d) => {
+                    setForm({ ...form, date: d });
+                    setStockChoice(null);
+                  }}
+                />
+                {rows.some((r) => r.item.trim() && r.quantity !== "") && (
+                  <StockUpdateToggle
+                    date={form.date}
+                    checked={stockUpdateWanted(form.date, stockChoice)}
+                    onChange={setStockChoice}
                   />
-                  <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 4 }}>
-                    {parseFloat(form.amount) > 0 ? (
-                      <>
-                        {t.balanceOwed}: KES{" "}
-                        {Math.max(
-                          0,
-                          roundMoney(parseFloat(form.amount) - (parseFloat(form.paidNow) || 0)),
-                        ).toLocaleString()}
-                      </>
-                    ) : (
-                      t.amountPaidNowHint
-                    )}
-                  </div>
-                </div>
+                )}
                 <div className="field-group">
-                  <label>{t.repayDate} *</label>
+                  <label>{t.supplier}</label>
                   <input
-                    type="date"
-                    min={form.date}
-                    value={form.dueDate}
-                    onChange={(e) => setForm({ ...form, dueDate: e.target.value })}
-                    required
+                    placeholder={t.supplierPh}
+                    value={form.supplier}
+                    onChange={(e) => setForm({ ...form, supplier: e.target.value })}
                   />
                 </div>
-              </>
-            )}
-            <div className="field-group full-width">
-              <label>{t.notes}</label>
-              <input
-                placeholder="..."
-                value={form.notes}
-                onChange={(e) => setForm({ ...form, notes: e.target.value })}
+                <div className="field-group">
+                  <label>{t.supplierPhone}</label>
+                  <input
+                    type="tel"
+                    placeholder="07XX XXX XXX"
+                    value={form.phone}
+                    onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                  />
+                </div>
+                <div className="field-group">
+                  <label>{t.category}</label>
+                  <select
+                    value={form.category}
+                    onChange={(e) => setForm({ ...form, category: e.target.value })}
+                  >
+                    <option value="">{t.selectCategory}</option>
+                    {CATS.map((c) => (
+                      <option key={c}>{c}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="field-group">
+                  <label>{t.paymentStatus}</label>
+                  <select
+                    value={form.payStatus}
+                    onChange={(e) => setForm({ ...form, payStatus: e.target.value })}
+                  >
+                    <option value="paid">{t.paidInFull}</option>
+                    <option value="credit">{t.notFullyPaid}</option>
+                  </select>
+                </div>
+                {form.payStatus === "credit" && (
+                  <>
+                    <div className="field-group">
+                      <label>{t.amountPaidNow}</label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        placeholder="0.00"
+                        value={form.paidNow}
+                        onChange={(e) => setForm({ ...form, paidNow: e.target.value })}
+                      />
+                      <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 4 }}>
+                        {rowsTotal > 0 ? (
+                          <>
+                            {t.balanceOwed}: KES{" "}
+                            {Math.max(
+                              0,
+                              roundMoney(rowsTotal - (parseFloat(form.paidNow) || 0)),
+                            ).toLocaleString()}
+                          </>
+                        ) : (
+                          t.amountPaidNowHint
+                        )}
+                      </div>
+                    </div>
+                    <div className="field-group">
+                      <label>{t.repayDate} *</label>
+                      <input
+                        type="date"
+                        min={form.date}
+                        value={form.dueDate}
+                        onChange={(e) => setForm({ ...form, dueDate: e.target.value })}
+                        required
+                      />
+                    </div>
+                  </>
+                )}
+                <div className="field-group full-width">
+                  <label>{t.notes}</label>
+                  <input
+                    placeholder="..."
+                    value={form.notes}
+                    onChange={(e) => setForm({ ...form, notes: e.target.value })}
+                  />
+                </div>
+              </div>
+            </div>
+            <div className="split-form-right">
+              <BatchRows
+                rows={rows}
+                setRows={setRows}
+                fields={rowFields}
+                stock={stock}
+                t={t}
+                idPrefix="purchase"
+                makeRow={makeRow}
+                totalLabel={t.totalCost || t.totalPurchases}
+                addLabel={t.addAnotherItem || "Add another item"}
+                action={
+                  <button
+                    type="submit"
+                    className={"btn-primary" + (status === "saved" ? " btn-saved" : "")}
+                    disabled={status !== "idle"}
+                  >
+                    {status === "saving"
+                      ? t.saving
+                      : status === "saved"
+                        ? t.saved
+                        : t.savePurchase}
+                  </button>
+                }
               />
             </div>
           </div>
-          <button
-            type="submit"
-            className={"btn-primary" + (status === "saved" ? " btn-saved" : "")}
-            disabled={status !== "idle"}
-          >
-            {status === "saving"
-              ? t.saving
-              : status === "saved"
-                ? t.saved
-                : t.savePurchase}
-          </button>
         </form>
       )}
 
@@ -788,6 +785,11 @@ export default function Purchases({ ownerUid }) {
         onUpdate={handleUpdate}
         showToast={showToast}
         emptyMessage={t.noPurchases}
+        totalKey="amount"
+        totalLabel={t.totalPurchases}
+        groupKey="batch"
+        groupShared={["date", "supplier", "phone", "category", "notes"]}
+        groupLabelKey="item"
       />
     </div>
   );
