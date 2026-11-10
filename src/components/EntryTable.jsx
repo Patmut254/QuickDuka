@@ -15,6 +15,7 @@ export default function EntryTable({
   showToast,
   totalKey, // optional: sum this column under the table (follows the search)
   totalLabel,
+  hideGrandTotal = false, // keep per-group totals but drop the footer total
   extraActions, // optional: (row, info) => extra buttons shown before Edit/Delete
   groupKey, // optional: rows sharing this value are shown together as one purchase
   groupShared = [], // columns shown only once per group (date, customer, …)
@@ -315,7 +316,7 @@ export default function EntryTable({
         </div>
       )}
 
-      {totalKey && !loading && filtered.length > 0 && (
+      {totalKey && !hideGrandTotal && !loading && filtered.length > 0 && (
         <div className="table-total">
           <span>
             {totalLabel || t.total || "Total"}
