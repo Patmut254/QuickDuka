@@ -108,6 +108,24 @@ export default function Losses({ ownerUid }) {
     count: items.filter((i) => i.category === cat).length,
   })).filter((c) => c.count > 0);
 
+  // Header shows the 3 biggest loss categories; the rest are combined into
+  // one "Others" box so the header never gets crowded.
+  const sortedCats = [...byCategory].sort((a, b) => b.total - a.total);
+  const headerCats =
+    sortedCats.length <= 4
+      ? sortedCats
+      : [
+          ...sortedCats.slice(0, 3),
+          sortedCats.slice(3).reduce(
+            (acc, c) => ({
+              cat: `${t.othersLabel || "Others"} (${sortedCats.length - 3})`,
+              total: acc.total + c.total,
+              count: acc.count + c.count,
+            }),
+            { total: 0, count: 0 },
+          ),
+        ];
+
   const columns = [
     { key: "date", label: t.date, inputType: "date" },
     { key: "item", label: t.lostItem },
@@ -130,7 +148,7 @@ export default function Losses({ ownerUid }) {
           <span className="stat-label">{t.totalLosses}</span>
           <span className="stat-value red">KES {total.toLocaleString()}</span>
         </div>
-        {byCategory.map((c) => (
+        {headerCats.map((c) => (
           <div key={c.cat} className="module-stat module-stat-sub">
             <span className="stat-label">{c.cat}</span>
             <span className="stat-value">KES {c.total.toLocaleString()}</span>

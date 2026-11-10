@@ -303,6 +303,7 @@ export const T = {
     // Entry dates / back-dating
     todayLabel: "Today",
     thisMonthLabel: "This month",
+    othersLabel: "Others",
     recordWord: "record",
     yesterdayLabel: "Yesterday",
     recordingFor: "Recording for",
@@ -906,6 +907,7 @@ export const T = {
     // Entry dates / back-dating
     todayLabel: "Leo",
     thisMonthLabel: "Mwezi huu",
+    othersLabel: "Nyinginezo",
     recordWord: "rekodi",
     yesterdayLabel: "Jana",
     recordingFor: "Unarekodi kwa tarehe",

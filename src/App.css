@@ -8830,3 +8830,6 @@ textarea {
 @media (max-width: 768px) {
   .module-header { flex-direction: row !important; flex-wrap: wrap; }
 }
+@media (min-width: 769px) {
+  .module-stat.module-stat-sub { flex: 0 1 150px; min-width: 120px; padding: 14px 16px; }
+}
