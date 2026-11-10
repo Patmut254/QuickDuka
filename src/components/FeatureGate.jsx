@@ -191,9 +191,9 @@ export function PlanBadge({ plan }) {
         display: "inline-block",
         padding: "2px 9px",
         borderRadius: 0,
-        background: color + "18",
-        border: `1.5px solid ${color}40`,
-        color,
+        background: color, // solid, no see-through tint
+        border: "none",
+        color: "#fff",
         fontSize: 11,
         fontWeight: 700,
         letterSpacing: 0.2,

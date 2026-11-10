@@ -8406,3 +8406,123 @@ textarea {
 .sidebar .logout-btn:hover,
 .sidebar .sidebar-lang-toggle:hover { background: #29573f; color: #fff; }
 .entry-table-wrap .table-total { padding: 12px 16px; margin-top: 0; }
+
+/* ================================================================
+   BALANCE PASS — even buttons, solid page-total boxes, tidy bars
+   (colours/sizes only; layout and icons unchanged)
+   ================================================================ */
+
+/* 1. One button size across the app */
+.btn-primary,
+.btn-secondary,
+.btn-danger,
+.btn-pay {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 40px;
+  padding: 0 18px;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+  box-sizing: border-box;
+}
+.entry-form button[type="submit"].btn-primary { min-width: 140px; }
+
+/* Smaller, matching buttons inside credit cards */
+.credit-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.credit-actions .btn-primary,
+.credit-actions .btn-secondary,
+.credit-actions .btn-danger,
+.credit-actions .btn-pay {
+  min-height: 34px;
+  padding: 0 14px !important;
+  font-size: 13px !important;
+}
+/* Record Payment: solid green (no tint) */
+.btn-pay { background: var(--green); color: #fff; border: none; }
+.btn-pay:hover { background: var(--green2); }
+/* Bad Debt: rust outline, fills rust on hover */
+.credit-actions .btn-secondary[style*="--red"]:hover {
+  background: var(--red) !important;
+  color: #fff !important;
+}
+
+/* Table row buttons: same size squares, + Item matches */
+.action-btns { display: flex; gap: 6px; align-items: center; }
+.action-btns .edit-btn,
+.action-btns .delete-btn {
+  height: 32px;
+  min-width: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.action-btns .add-item-btn { padding: 0 10px; }
+
+/* 2. Page total boxes (Sales, Expenses, Losses, Purchases, Stock): solid */
+.module-header,
+[data-theme="dark"] .module-header {
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  align-items: stretch;
+}
+.module-header > .btn-primary,
+.module-header > button { align-self: center; margin-left: auto; }
+.module-stat {
+  flex: 0 1 260px;
+  min-width: 180px;
+  padding: 14px 20px;
+  background: var(--green);
+  color: #fff;
+}
+.module-stat:has(.stat-value.orange) { background: var(--orange); }
+.module-stat:has(.stat-value.red),
+.module-stat:has(.stat-value[style*="a33a2a"]) { background: var(--red); }
+.module-stat:has(.stat-value.purple) { background: #8c6e52; }
+.module-stat:has(.stat-value[style*="--accent"]) { background: var(--sand); color: #2b2620; }
+.module-stat .stat-label { color: rgb(255 255 255 / 0.85) !important; }
+.module-stat .stat-value { color: #fff !important; }
+.module-stat:has(.stat-value[style*="--accent"]) .stat-label,
+.module-stat:has(.stat-value[style*="--accent"]) .stat-value { color: #2b2620 !important; }
+
+/* 3. Search bars same height as other inputs */
+.search-bar,
+.search-select { height: 42px; }
+.search-bar-btn,
+.search-select-btn { width: 44px; }
+
+/* 4. Top bar: equal-height controls */
+.top-bar-right > button,
+.top-bar-right > a,
+.top-bar-right .theme-toggle,
+.top-bar-right .logout-inline {
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+/* 5. AI button in the theme green */
+.ai-bubble { background: var(--green); }
+.ai-bubble:hover { background: var(--green2); }
+
+/* 6. Sidebar: readable days-left text */
+.sidebar .sub-expiry-ok { color: #c9a98b; }
+.sidebar .sub-expiry-warn { color: #e8a37c; }
+
+/* Credits: both rows of stat boxes the same height */
+.credits-stat-box { padding: 18px 18px; min-height: 84px; box-sizing: border-box; }
+/* Paid credit cards: plain border, no light-green outline */
+.credit-card-paid,
+[data-theme="dark"] .credit-card-paid { border-color: var(--border) !important; }
+/* Phones: page total boxes take their natural height */
+@media (max-width: 768px) {
+  .module-stat { flex: none; width: 100%; min-width: 0; }
+  .module-header > .btn-primary,
+  .module-header > button { margin-left: auto; }
+}
