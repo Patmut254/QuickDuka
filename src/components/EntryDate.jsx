@@ -33,7 +33,7 @@ export default function EntryDate({
         cursor: "pointer",
         fontFamily: "inherit",
         border: "1px solid var(--border2, var(--border))",
-        background: value === date ? "var(--green, #29573f)" : "var(--bg2)",
+        background: value === date ? "#29573f" : "var(--bg2)", // deep green: white text readable in light and dark
         color: value === date ? "#fff" : "var(--text)",
       }}
     >
