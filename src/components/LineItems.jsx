@@ -22,6 +22,7 @@ export default function LineItems({
   itemLabel,
   totalLabel,
   baseTotal = 0, // already-saved amount when adding to an existing entry
+  action = null, // e.g. the Save button, shown beside the total
 }) {
   const update = (key, fn) =>
     setLines((ls) => ls.map((l) => (l.key === key ? { ...l, ...fn(l) } : l)));
@@ -146,8 +147,11 @@ export default function LineItems({
       </div>
 
       <div className="line-items-total">
-        <span>{totalLabel}</span>
-        <strong>KES {total.toLocaleString()}</strong>
+        <div className="line-items-total-amount">
+          <span>{totalLabel}</span>
+          <strong>KES {total.toLocaleString()}</strong>
+        </div>
+        {action}
       </div>
     </div>
   );

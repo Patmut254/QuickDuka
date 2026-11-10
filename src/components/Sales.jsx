@@ -200,20 +200,6 @@ export default function Sales({ ownerUid, sub }) {
     {
       key: "description",
       label: t.itemSold,
-      // Items bought together in one multi-item sale get a small tag
-      format: (v, row) => {
-        const n = row?.saleGroup ? groupRows(row).length : 1;
-        return (
-          <>
-            {v || "-"}
-            {n > 1 && (
-              <span className="sale-group-tag">
-                1 of {n} {t.itemsWord || "items"}
-              </span>
-            )}
-          </>
-        );
-      },
     },
     { key: "customer", label: t.customer },
     {
@@ -318,6 +304,8 @@ export default function Sales({ ownerUid, sub }) {
               ? `${t.addItemsTo || "Add items to sale"}: ${addTo.customer || addTo.description} (${addTo.date})`
               : t.recordSale}
           </h3>
+          <div className="split-form">
+          <div className="split-form-left">
           <div className="form-grid">
             <EntryDate
               id="sale-date"
@@ -405,6 +393,8 @@ export default function Sales({ ownerUid, sub }) {
               />
             </div>
           </div>
+          </div>
+          <div className="split-form-right">
           <LineItems
             lines={lines}
             setLines={setLines}
@@ -418,18 +408,22 @@ export default function Sales({ ownerUid, sub }) {
                 : 0
             }
             totalLabel={t.saleTotal || "Sale total"}
+            action={
+            <button
+              type="submit"
+              className={"btn-primary" + (status === "saved" ? " btn-saved" : "")}
+              disabled={status !== "idle"}
+            >
+              {status === "saving"
+                ? t.saving
+                : status === "saved"
+                  ? t.saved
+                  : t.saveSale}
+            </button>
+            }
           />
-          <button
-            type="submit"
-            className={"btn-primary" + (status === "saved" ? " btn-saved" : "")}
-            disabled={status !== "idle"}
-          >
-            {status === "saving"
-              ? t.saving
-              : status === "saved"
-                ? t.saved
-                : t.saveSale}
-          </button>
+          </div>
+          </div>
         </form>
       )}
 
@@ -442,8 +436,16 @@ export default function Sales({ ownerUid, sub }) {
         showToast={showToast}
         emptyMessage={t.noSales}
         totalKey="amount"
-        extraActions={(row) =>
-          row.fromCredit ? null : (
+        groupKey="saleGroup"
+        groupShared={["date", "customer", "phone", "paymentMethod", "notes", "staffName", "branchName"]}
+        groupLabelKey="description"
+        extraActions={(row, info) =>
+          row.fromCredit ? null : info?.cont ? (
+            // keeps edit/delete lined up with the row above
+            <span className="edit-btn add-item-btn" style={{ visibility: "hidden" }} aria-hidden="true">
+              + {t.itemNo || "Item"}
+            </span>
+          ) : (
             <button
               className="edit-btn add-item-btn"
               onClick={() => startAddTo(row)}

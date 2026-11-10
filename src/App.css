@@ -8641,3 +8641,54 @@ textarea {
     white-space: nowrap;
   }
 }
+
+/* ================================================================
+   SALES / CREDITS FORM: details left, items + total + save right
+   ================================================================ */
+.split-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  border-top: 1px solid var(--border);
+  margin: 0 -20px -18px; /* run edge to edge inside the form card */
+}
+.split-form-left,
+.split-form-right { padding: 20px 24px; min-width: 0; }
+.split-form-right {
+  border-left: 1px solid var(--border);
+  background: var(--bg2);
+}
+.split-form-left .form-grid { margin-bottom: 0; }
+.split-form .cart { margin: 0; }
+/* Total bar: solid, with Save beside it */
+.split-form .line-items-total {
+  margin-top: 14px;
+  padding: 14px 16px;
+  border: none;
+  background: var(--bg3);
+  justify-content: space-between;
+  align-items: center;
+}
+.line-items-total-amount { display: flex; flex-direction: column; gap: 2px; }
+.line-items-total-amount span { font-size: 12px; color: var(--muted); }
+.line-items-total-amount strong { font-size: 20px; color: var(--text); }
+.line-items-total > div:last-child:not(.line-items-total-amount) { display: flex; gap: 8px; }
+@media (max-width: 900px) {
+  .split-form { grid-template-columns: 1fr; margin: 0; }
+  .split-form-left,
+  .split-form-right { padding: 14px 0; background: transparent; }
+  .split-form-right { border-left: none; border-top: 1px solid var(--border); }
+}
+
+/* ================================================================
+   SALES TABLE: one customer's purchase grouped, total underneath
+   ================================================================ */
+.data-table tr.row-group-first td,
+.data-table tr.row-group-cont td { border-bottom: none; }
+.data-table tr.row-group-cont td { padding-top: 2px; }
+.data-table tr.row-group-first td { padding-bottom: 2px; }
+.data-table tr.row-group-total td {
+  background: var(--bg3);
+  font-weight: 700;
+  color: var(--text);
+  border-bottom: 1px solid var(--border2);
+}
