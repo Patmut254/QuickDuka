@@ -63,7 +63,7 @@ export const T = {
     // multi-item sales / credits
     addItems: "Add items (search or tap)",
     addItemsTo: "Add items to",
-    cartEmpty: "Type an item name above, then tap it to add. Tap again to add one more.",
+    cartEmpty: "No items yet. Pick from the list below or type to search.",
     saleTotal: "Sale total",
     creditTotal: "Credit total",
     creditTotals: "Credit totals",
@@ -812,7 +812,7 @@ export const T = {
     // multi-item sales / credits
     addItems: "Ongeza bidhaa (tafuta au gusa)",
     addItemsTo: "Ongeza bidhaa kwa",
-    cartEmpty: "Andika jina la bidhaa hapo juu, kisha uguse kuiongeza. Gusa tena kuongeza moja zaidi.",
+    cartEmpty: "Bado hakuna bidhaa. Chagua kwenye orodha hapa chini au andika kutafuta.",
     saleTotal: "Jumla ya mauzo",
     creditTotal: "Jumla ya mkopo",
     creditTotals: "Jumla ya mikopo",
