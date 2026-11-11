@@ -8871,3 +8871,48 @@ textarea {
   .credit-amounts-col > * { margin-left: 0; margin-right: 0; }
   .credit-total { font-size: 20px; }
 }
+
+/* ================================================================
+   MEDIUM SCREENS (small laptops, half-width windows): stop text from
+   breaking into tall, narrow stacks
+   ================================================================ */
+/* Amounts never split ("KES" on one line, number on the next) */
+.card-value,
+.rc-value,
+.stat-value,
+.credits-stat-val,
+.credit-total { white-space: nowrap; }
+
+@media (min-width: 769px) and (max-width: 1500px) {
+  /* Dashboard boxes: icon on top, text gets the full width */
+  .summary-cards {
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  }
+  .summary-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 14px 16px !important;
+  }
+  .summary-card .card-icon { width: auto; height: auto; font-size: 18px; }
+  .summary-card .card-value { font-size: clamp(16px, 1.5vw, 20px) !important; }
+
+  /* Report boxes: wrap to fewer per row instead of squeezing */
+  .report-summary-cards {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  }
+  .rc-value { font-size: clamp(14px, 1.3vw, 16px); }
+
+  /* Credits boxes: amounts shrink a little instead of wrapping */
+  .credits-stat-val { font-size: clamp(14px, 1.4vw, 18px) !important; }
+}
+
+/* Tables: dates, phones, amounts, quantities and payment stay on one line */
+.data-table td.col-date,
+.data-table td.col-phone,
+.data-table td.col-amount,
+.data-table td.col-quantity,
+.data-table td.col-paymentMethod,
+.data-table td.col-dueDate,
+.data-table td.col-paidAmount,
+.data-table td.col-balance { white-space: nowrap; }
