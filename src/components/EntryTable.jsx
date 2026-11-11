@@ -183,7 +183,7 @@ export default function EntryTable({
             <thead>
               <tr>
                 {columns.map((c) => (
-                  <th key={c.key}>{c.label}</th>
+                  <th key={c.key} className={`col-${c.key}`}>{c.label}</th>
                 ))}
                 <th>{t.actions || "Actions"}</th>
               </tr>
@@ -193,7 +193,7 @@ export default function EntryTable({
                 row.total ? (
                   <tr key={row.key} className="row-group-total">
                     {columns.map((c) => (
-                      <td key={c.key}>
+                      <td key={c.key} className={`col-${c.key}`}>
                         {c.key === groupLabelKey
                           ? `${t.total || "Total"} · ${row.count} ${t.itemsWord || "items"}`
                           : c.key === totalKey
@@ -215,7 +215,7 @@ export default function EntryTable({
                   }
                 >
                   {columns.map((c) => (
-                    <td key={c.key}>
+                    <td key={c.key} className={`col-${c.key}`}>
                       {cont && editId !== item.id && groupShared.includes(c.key) ? null : editId === item.id ? (
                         // Edit mode — only render editable columns (skip read-only ones like staffName)
                         c.readOnly ? (
