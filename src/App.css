@@ -8859,3 +8859,15 @@ textarea {
   .summary-card .card-value,
   .credits-stat-box .credits-stat-val { font-size: 17px !important; }
 }
+
+/* Phones: credit card amounts line up with the text above them */
+@media (max-width: 600px) {
+  .credit-amounts-col {
+    align-items: flex-start;
+    text-align: left;
+    width: 100%;
+    margin-top: 8px;
+  }
+  .credit-amounts-col > * { margin-left: 0; margin-right: 0; }
+  .credit-total { font-size: 20px; }
+}
