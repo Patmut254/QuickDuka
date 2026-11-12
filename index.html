@@ -26,6 +26,15 @@
     <meta property="og:site_name" content="QuickDuka" />
     <meta property="og:description" content="Track sales, expenses, credits and grow your business." />
     <link rel="manifest" href="/manifest.json" />
+    <script>
+      // Android phones get a manifest with a padded logo so the launch
+      // screen shows it small; Windows/Mac keep the full-size app icon.
+      if (/Android/i.test(navigator.userAgent)) {
+        document
+          .querySelector('link[rel="manifest"]')
+          .setAttribute("href", "/manifest-android.json");
+      }
+    </script>
     <link rel="canonical" href="https://www.quickduka.com/" />
     <meta name="theme-color" content="#1e3f2e" />
     <meta name="mobile-web-app-capable" content="yes">
