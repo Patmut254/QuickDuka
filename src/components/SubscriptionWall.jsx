@@ -9,7 +9,6 @@ import {
   faTimesCircle,
   faRotate,
   faArrowRightFromBracket,
-  faGift,
   faLock,
   faChevronDown,
   faChevronUp,
@@ -270,7 +269,7 @@ export default function SubscriptionWall({ profile }) {
         <img src="/logo.png" alt="QuickDuka" className="sub-wall-logo" />
 
         <div className="sub-wall-icon">
-          <FontAwesomeIcon icon={isTrialEnded ? faLock : faGift} />
+          <FontAwesomeIcon icon={faLock} />
         </div>
 
         <h2 className="sub-wall-title">{heading}</h2>
