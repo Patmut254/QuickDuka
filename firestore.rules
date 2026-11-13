@@ -110,6 +110,13 @@ service cloud.firestore {
       allow create:      if creatingOwnRecord();
     }
 
+    // To-Do tasks (owner's own list)
+    match /todos/{docId} {
+      allow read, write: if isAdmin();
+      allow read, write: if ownsRecord();
+      allow create:      if creatingOwnRecord();
+    }
+
     match /losses/{docId} {
       allow read, write: if isAdmin();
       allow read, write: if ownsRecord();

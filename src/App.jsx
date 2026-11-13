@@ -45,6 +45,7 @@ import {
   faTriangleExclamation,
   faUsers,
   faCodeBranch,
+  faListCheck,
 } from "@fortawesome/free-solid-svg-icons";
 import { faSquareCheck } from "@fortawesome/free-regular-svg-icons";
 import Dashboard from "./components/Dashboard";
@@ -68,6 +69,9 @@ import { useIsMobile } from "./hooks/useIsMobile";
 import PrivacyPage from "./components/PrivacyPage";
 import ProfilePage from "./components/ProfilePage";
 import Losses from "./components/Losses";
+import TodoPage from "./components/TodoPage";
+import { useCollection } from "./hooks/useCollection";
+import { isDueNow } from "./todos";
 import StaffPage from "./components/StaffPage";
 import StaffShell from "./components/StaffShell";
 import BranchesPage from "./components/BranchesPage";
@@ -268,6 +272,10 @@ function AppShell({ user, profile, theme, toggleTheme }) {
 
   const sub = useSubscription(profile, admin);
 
+  // To-Do badge: tasks due today or overdue
+  const { items: todoItems } = useCollection("todos");
+  const todosDue = todoItems.filter((x) => isDueNow(x)).length;
+
   const toggleLang = () => {
     const next = lang === "en" ? "sw" : "en";
     setLang(next);
@@ -276,6 +284,12 @@ function AppShell({ user, profile, theme, toggleTheme }) {
 
   const tabs = [
     { id: "dashboard", label: t.dashboard, icon: faChartLine },
+    {
+      id: "todo",
+      label: t.todo || "To-Do",
+      icon: faListCheck,
+      ...(todosDue > 0 ? { badge: String(todosDue), badgeClass: "nav-badge-todo" } : {}),
+    },
     ...(admin
       ? [
           {
@@ -536,6 +550,7 @@ function AppShell({ user, profile, theme, toggleTheme }) {
                   hideReportsLink={isHiddenOnThisDevice("reports")}
                 />
               )}
+              {activeTab === "todo" && <TodoPage ownerUid={user.uid} />}
               {activeTab === "sales" && (
                 <Sales
                   ownerUid={user.uid}

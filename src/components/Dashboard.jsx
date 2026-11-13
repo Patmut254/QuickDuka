@@ -12,6 +12,8 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { useMemo } from "react";
 import { useCollection } from "../hooks/useCollection";
+import { bucketOf, nextDue } from "../todos";
+import { localToday } from "../dates";
 import { useLang } from "../LangContext";
 import {
   AreaChart,
@@ -46,6 +48,7 @@ export default function Dashboard({
   const { items: expenses } = useCollection("expenses", ownerUid ? { ownerUid } : undefined);
   const { items: losses } = useCollection("losses", ownerUid ? { ownerUid } : undefined);
   const { items: credits } = useCollection("credits", ownerUid ? { ownerUid } : undefined);
+  const { items: todos, updateItem: updateTodo } = useCollection("todos", ownerUid ? { ownerUid } : undefined);
 
   const now = new Date();
   const monthStart = startOfMonth(now);
@@ -209,6 +212,61 @@ export default function Dashboard({
           </div>
         ))}
       </div>
+
+      {/* Today's tasks (from the To-Do list) */}
+      {(() => {
+        const today = localToday();
+        const due = todos
+          .filter((x) => ["overdue", "today"].includes(bucketOf(x, today)))
+          .sort((a, b) =>
+            `${a.dueDate} ${a.dueTime || "99"}`.localeCompare(`${b.dueDate} ${b.dueTime || "99"}`),
+          );
+        const complete = (x) =>
+          x.repeat && x.repeat !== "none"
+            ? updateTodo(x.id, { dueDate: nextDue(x.dueDate, x.repeat), lastDoneAt: today }, x)
+            : updateTodo(x.id, { done: true, doneAt: today }, x);
+        return (
+          <div className="info-card dash-todo">
+            <div className="dash-todo-head">
+              <h3>
+                {t.todoTodaysTasks || "Today's tasks"}
+                {due.length > 0 && <span className="dash-todo-count">{due.length}</span>}
+              </h3>
+              <button type="button" className="dash-todo-link" onClick={() => setActiveTab("todo")}>
+                {t.todoOpen || "Open To-Do"} →
+              </button>
+            </div>
+            {due.length === 0 ? (
+              <p className="todo-empty">{t.todoNothingDue || "Nothing due today."}</p>
+            ) : (
+              <ul className="todo-list">
+                {due.slice(0, 4).map((x) => (
+                  <li key={x.id} className="todo-row">
+                    <button
+                      type="button"
+                      className="todo-check"
+                      aria-label={t.todoMarkDone || "Mark done"}
+                      onClick={() => complete(x)}
+                    />
+                    <div className="todo-main">
+                      <span className="todo-title">{x.title}</span>
+                      <span className="todo-meta">
+                        <span className={x.dueDate < today ? "todo-late" : ""}>
+                          {x.dueDate === today ? t.todayLabel || "Today" : x.dueDate}
+                        </span>
+                        {x.dueTime && <span>{x.dueTime}</span>}
+                      </span>
+                    </div>
+                  </li>
+                ))}
+                {due.length > 4 && (
+                  <li className="todo-more">+{due.length - 4} {t.todoMore || "more"}</li>
+                )}
+              </ul>
+            )}
+          </div>
+        );
+      })()}
 
       {supplierDebts.length > 0 && (
         <div
