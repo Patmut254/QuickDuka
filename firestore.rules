@@ -2,187 +2,173 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Helpers
+    // ─── Helpers ────────────────────────────────────────────────────────────
 
-    // Admin (you) gets full unrestricted access to everything
     function isAdmin() {
-      return request.auth != null &&
-             request.auth.token.email == "anitapatrick025@gmail.com";
+      return request.auth != null && request.auth.token.email == "anitapatrick025@gmail.com";
     }
 
-    // Authenticated user owns this document
-    function isOwner(userId) {
-      return request.auth != null && request.auth.uid == userId;
+    function isSignedIn() {
+      return request.auth != null;
     }
 
-    // Authenticated user owns this data record (sales, stock, losses, etc.)
-    function ownsRecord() {
-      return request.auth != null &&
-             resource.data.userId == request.auth.uid;
+    // Checks the user's own profile document without a get() call —
+    // avoids nested read costs and permission race conditions.
+    // We rely on the query-level field checks (ownerUid / userId) instead
+    // of hasActiveProfile() for business data, which is safer and faster.
+
+    function isOwnerOf(doc) {
+      // Owner accounts stamp ownerUid == their own uid on every record
+      return request.auth.uid == doc.data.ownerUid;
     }
 
-    // New record being created belongs to the authenticated user
-    function creatingOwnRecord() {
-      return request.auth != null &&
-             request.resource.data.userId == request.auth.uid;
+    function isAuthorOf(doc) {
+      // Staff accounts stamp userId == their own uid on every record
+      return request.auth.uid == doc.data.userId;
     }
 
-    // Fields that ONLY the backend (Admin SDK) may write...
-    // A user cannot promote their own subscription from the browser.
-    function touchesSubscriptionFields() {
-      return request.resource.data.diff(resource.data).affectedKeys()
-               .hasAny([
-                 'subscriptionPlan',
-                 'subscriptionStatus',
-                 'subscriptionExpiry',
-                 'subscriptionStartDate',
-                 'lastPaymentAt',
-                 'lastPaymentAmount',
-                 'lastMpesaReceipt',
-                 'trialStartedAt',
-                 'createdByAdmin'
-               ]);
-    }
-
-
-    // users/{userId}
+    // ─── Users collection ───────────────────────────────────────────────────
 
     match /users/{userId} {
-      // Admin: full access
       allow read, write: if isAdmin();
 
-      // User: always read their own doc
-      allow read: if isOwner(userId);
+      allow read: if isSignedIn() && request.auth.uid == userId;
 
-      // User: update their own doc — but NEVER subscription/payment fields
-      // (those are written by Django backend via Admin SDK, which bypasses rules)
-      allow update: if isOwner(userId) && !touchesSubscriptionFields();
+      allow create: if isSignedIn()
+        && request.auth.uid == userId
+        && request.resource.data.deleted == false
+        && request.resource.data.role == "user";
 
-      // User: create their own profile doc on first sign-up
-      allow create: if isOwner(userId);
+      // Users may update safe profile fields only
+      allow update: if isSignedIn()
+        && request.auth.uid == userId
+        && !("role"                in request.resource.data.diff(resource.data).affectedKeys())
+        && !("subscriptionStatus"  in request.resource.data.diff(resource.data).affectedKeys())
+        && !("subscriptionPlan"    in request.resource.data.diff(resource.data).affectedKeys())
+        && !("subscriptionExpiry"  in request.resource.data.diff(resource.data).affectedKeys())
+        && !("deleted"             in request.resource.data.diff(resource.data).affectedKeys());
 
-      // Deleting own account — allowed
-      allow delete: if isOwner(userId);
-
-
-      //  paymentHistory subcollection
-      // Written exclusively by Django backend via Admin SDK (bypasses rules).
-      // Users can read their own history. Nobody else.
-      match /paymentHistory/{docId} {
-        allow read, write: if isAdmin();
-        allow read:        if isOwner(userId);
-        // No user write — backend owns this
-      }
-
-      //  staff subcollection
-      match /staff/{staffId} {
-        allow read, write: if isAdmin();
-        allow read, write: if isOwner(userId);
-      }
-
-      //  branches subcollection
-      match /branches/{branchId} {
-        allow read, write: if isAdmin();
-        allow read, write: if isOwner(userId);
-      }
-
-      //  All other subcollections (future-proof)
-      match /{subcollection}/{docId} {
-        allow read, write: if isAdmin();
-        allow read:        if isOwner(userId);
-      }
+      allow delete: if false;
     }
 
+    // ─── Blocked emails ─────────────────────────────────────────────────────
 
-    // Business data collections
-    // sales, stock, losses — each document has a userId field.
-    // Users can only read and write their own records.
+    match /blockedEmails/{emailKey} {
+      allow read:  if true;
+      allow write: if isAdmin();
+    }
+
+    // ─── Business data ──────────────────────────────────────────────────────
+    //
+    // Every document in these collections has two uid fields stamped on it:
+    //   ownerUid  — the business owner's uid (same as userId for owner accounts)
+    //   userId    — the uid of whoever actually saved the record (owner or staff)
+    //
+    // Access is granted when the requester is either:
+    //   • the business owner  (ownerUid == their uid), OR
+    //   • the staff member who created it (userId == their uid)
+    //
+    // This removes the expensive get()-based hasActiveProfile() check from
+    // every read, which was causing the "Missing or insufficient permissions"
+    // cascade when the auth token wasn't fully propagated yet.
+
+    function canAccessDoc(doc) {
+      return isSignedIn() && (
+        isAdmin() ||
+        isOwnerOf(doc) ||
+        isAuthorOf(doc)
+      );
+    }
+
+    // For CREATE requests the document doesn't exist yet, so we check the
+    // incoming resource instead.
+    function canCreateDoc() {
+      return isSignedIn() && (
+        isAdmin() ||
+        request.auth.uid == request.resource.data.ownerUid ||
+        request.auth.uid == request.resource.data.userId
+      );
+    }
+
+    match /purchases/{docId} {
+      allow read, update, delete: if canAccessDoc(resource);
+      allow create:               if canCreateDoc();
+    }
 
     match /sales/{docId} {
-      allow read, write: if isAdmin();
-      allow read, write: if ownsRecord();
-      allow create:      if creatingOwnRecord();
+      allow read, update, delete: if canAccessDoc(resource);
+      allow create:               if canCreateDoc();
     }
 
-    match /stock/{docId} {
-      allow read, write: if isAdmin();
-      allow read, write: if ownsRecord();
-      allow create:      if creatingOwnRecord();
-    }
-
-    // To-Do tasks (owner's own list)
-    match /todos/{docId} {
-      allow read, write: if isAdmin();
-      allow read, write: if ownsRecord();
-      allow create:      if creatingOwnRecord();
+    match /expenses/{docId} {
+      allow read, update, delete: if canAccessDoc(resource);
+      allow create:               if canCreateDoc();
     }
 
     match /losses/{docId} {
-      allow read, write: if isAdmin();
-      allow read, write: if ownsRecord();
-      allow create:      if creatingOwnRecord();
+      allow read, update, delete: if canAccessDoc(resource);
+      allow create:               if canCreateDoc();
     }
 
+    match /stock/{docId} {
+      allow read, update, delete: if canAccessDoc(resource);
+      allow create:               if canCreateDoc();
+    }
 
-    // auditLog
-    // Each entry has a userId field. Users append their own audit entries
-    // and read their own history. Logs are immutable once written.
+    match /credits/{docId} {
+      allow read, update, delete: if canAccessDoc(resource);
+      allow create:               if canCreateDoc();
+    }
+
+    match /branches/{docId} {
+      allow read, update, delete: if canAccessDoc(resource);
+      allow create:               if canCreateDoc();
+    }
+
+    match /staff/{docId} {
+      allow read, update, delete: if canAccessDoc(resource);
+      allow create:               if canCreateDoc();
+    }
 
     match /auditLog/{docId} {
-      allow read, write: if isAdmin();
-      allow read:        if request.auth != null && ownsRecord();
-      allow create:      if creatingOwnRecord();
-      // No update/delete for users — audit logs are append-only
+      allow read, update, delete: if canAccessDoc(resource);
+      allow create:               if canCreateDoc();
+    }
+    
+    match /aiChats/{docId} {
+      allow read, update, delete: if canAccessDoc(resource);
+      allow create:               if canCreateDoc();
     }
 
-
-    // pageVisits
-    // Analytics. Authenticated users append their own visit records.
-    // Only admin reads them.
-
-    match /pageVisits/{docId} {
-      allow read, write: if isAdmin();
-      allow create:      if request.auth != null;
-      // No read for regular users — internal analytics only
+    // To-Do tasks (business task list)
+    match /todos/{docId} {
+      allow read, update, delete: if canAccessDoc(resource);
+      allow create:               if canCreateDoc();
     }
 
+    // ─── Referrers ──────────────────────────────────────────────────────────
 
-    // contactMessages
-    // Written by the Django backend (contact form → Firestore).
-    // Only admin reads them. No client writes.
-
-    match /contactMessages/{docId} {
-      allow read, write: if isAdmin();
-      // No client read or write — backend owns this collection
+    match /referrers/{docId} {
+      allow read:  if true;
+      allow write: if isAdmin();
     }
-
-
-    // referrerApplications
-    // Public form — anyone can submit, no auth required.
-    // Only admin reads and manages them.
 
     match /referrerApplications/{docId} {
+      allow create:     if true;
       allow read, write: if isAdmin();
-      allow create:      if true; // Public form submission
     }
 
+    // ─── Page visits (write-only for signed-in users) ───────────────────────
 
-    // referrers
-    // Managed entirely by admin. Referrers have no direct client access.
-
-    match /referrers/{referrerId} {
+    match /pageVisits/{docId} {
+      allow create: if isSignedIn();
       allow read, write: if isAdmin();
-
-      match /payments/{paymentId} {
-        allow read, write: if isAdmin();
-      }
     }
 
+    // ─── Catch-all: deny everything else ────────────────────────────────────
 
-    // Catch-all: deny everything not listed above
     match /{document=**} {
       allow read, write: if isAdmin();
     }
-
   }
 }
