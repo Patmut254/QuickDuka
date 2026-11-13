@@ -284,12 +284,6 @@ function AppShell({ user, profile, theme, toggleTheme }) {
 
   const tabs = [
     { id: "dashboard", label: t.dashboard, icon: faChartLine },
-    {
-      id: "todo",
-      label: t.todo || "To-Do",
-      icon: faListCheck,
-      ...(todosDue > 0 ? { badge: String(todosDue), badgeClass: "nav-badge-todo" } : {}),
-    },
     ...(admin
       ? [
           {
@@ -338,6 +332,13 @@ function AppShell({ user, profile, theme, toggleTheme }) {
     { id: "losses", label: t.losses, icon: faTriangleExclamation },
     { id: "stock", label: t.stockPurchases || "Stock/Purchases", icon: faBox },
     { id: "reports", label: t.reports, icon: faSackDollar },
+    // To-Do sits near the end, just before History
+    {
+      id: "todo",
+      label: t.todo || "To-Do",
+      icon: faListCheck,
+      ...(todosDue > 0 ? { badge: String(todosDue), badgeClass: "nav-badge-todo" } : {}),
+    },
     { id: "history", label: t.history, icon: faClockRotateLeft },
     { id: "contact", label: t.contact, icon: faHeadset },
     { id: "faq", label: t.faq, icon: faQuestionCircle },
