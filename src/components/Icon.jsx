@@ -15,10 +15,11 @@ import {
   CircleX, Ban, UserCog, ThumbsDown, Bot, Database, CirclePlus, CalendarPlus,
   Briefcase, UserX, Tag, RefreshCw, Pencil, Search, Lightbulb, Layers, IdCard,
   Hash, Save, FileUp, SquarePen, Crown, Cookie, MessageCircleMore, Brain,
-  Menu, ArrowUp,
+  Menu, ArrowUp, ListTodo,
 } from "lucide-react";
 
 const MAP = {
+  "list-check": ListTodo,
   "chart-line": ChartLine,
   "money-bill-trend-up": TrendingUp,
   "arrow-trend-up": TrendingUp,
