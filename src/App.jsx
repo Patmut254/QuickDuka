@@ -316,7 +316,6 @@ function AppShell({ user, profile, theme, toggleTheme }) {
           },
         ]
       : []),
-    { id: "profile", label: t.profile, icon: faCircleUser },
     { id: "sales", label: t.sales, icon: faMoneyBillTrendUp },
     {
       id: "credits",
@@ -340,6 +339,8 @@ function AppShell({ user, profile, theme, toggleTheme }) {
       ...(todosDue > 0 ? { badge: String(todosDue), badgeClass: "nav-badge-todo" } : {}),
     },
     { id: "history", label: t.history, icon: faClockRotateLeft },
+    // Profile sits at the end of the main menu
+    { id: "profile", label: t.profile, icon: faCircleUser },
     { id: "contact", label: t.contact, icon: faHeadset },
     { id: "faq", label: t.faq, icon: faQuestionCircle },
     { id: "privacy", label: t.privacy, icon: faShieldHalved },
