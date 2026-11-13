@@ -2,6 +2,7 @@
 // the list below; tap it again to add one more. Each row's quantity and
 // amount can be adjusted, and the total shows underneath.
 // Used by the Sales and Credits forms (new entries and "add item").
+import { useState } from "react";
 import ItemPicker from "./ItemPicker";
 import { stockOptions } from "../stockOptions";
 import { roundMoney } from "../hooks/useStock";
@@ -27,6 +28,10 @@ export default function LineItems({
   const update = (key, fn) =>
     setLines((ls) => ls.map((l) => (l.key === key ? { ...l, ...fn(l) } : l)));
   const remove = (key) => setLines((ls) => ls.filter((l) => l.key !== key));
+  // The stock list closes once an item is picked (keeps the form short);
+  // typing in the search box or tapping "Add another item" opens it again.
+  const [listOpen, setListOpen] = useState(true);
+  const showList = listOpen || lines.length === 0;
 
   const options = stockOptions(stock, {
     labelFn: (s) => (s.variant ? `${s.name} (${s.variant})` : s.name),
@@ -136,14 +141,26 @@ export default function LineItems({
           options={options}
           selectedValue=""
           text=""
+          listOnType={!showList}
           onPick={(v) => {
             const s = stock.find((x) => x.id === v);
             if (s) setLines((ls) => addStockToLines(ls, s));
+            setListOpen(false);
           }}
-          onCustom={(txt) =>
-            setLines((ls) => [...ls, { ...newLine(), text: txt }])
-          }
+          onCustom={(txt) => {
+            setLines((ls) => [...ls, { ...newLine(), text: txt }]);
+            setListOpen(false);
+          }}
         />
+        {!showList && (
+          <button
+            type="button"
+            className="batch-add"
+            onClick={() => setListOpen(true)}
+          >
+            + {t.addAnotherItem || "Add another item"}
+          </button>
+        )}
       </div>
 
       <div className="line-items-total">

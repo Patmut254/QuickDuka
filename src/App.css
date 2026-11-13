@@ -8916,3 +8916,24 @@ textarea {
 .data-table td.col-dueDate,
 .data-table td.col-paidAmount,
 .data-table td.col-balance { white-space: nowrap; }
+
+/* Sales form order: laptops = date + details left, items right;
+   phones = date → items → payment, customer, phone, notes */
+.split-form.sale-split {
+  grid-template-areas: "date items" "rest items";
+  grid-template-rows: auto 1fr;
+}
+.sale-split .sf-date { grid-area: date; padding-bottom: 0; }
+.sale-split .sf-items { grid-area: items; }
+.sale-split .sf-rest { grid-area: rest; }
+@media (max-width: 900px) {
+  .split-form.sale-split { grid-template-areas: "date" "items" "rest"; }
+  .sale-split .sf-items { border-top: 1px solid var(--border); }
+  .sale-split .sf-rest { border-top: 1px solid var(--border); }
+}
+.save-bottom { display: none; }
+@media (max-width: 900px) {
+  .sale-split .save-beside-total { display: none; }
+  .sale-split .save-bottom { display: flex; width: 100%; margin-top: 16px; }
+}
+.item-picker.list-hidden .item-picker-list-wrap { display: none; } /* list closed until they type or tap "Add another item" */

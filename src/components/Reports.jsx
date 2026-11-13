@@ -389,7 +389,7 @@ const bestLocation = salesByLocation[0] || null;
 // ── CSV Download ──────────────────────────────────────────────────────
 const downloadCSV = () => {
   const rows = [
-    ["Type", "Date", "Description / Item", "Category", "Quantity", "Payment Method", "Amount (KES)", "Customer", "Phone"],
+    ["Type", "Date", "Description / Item", "Category", "Quantity", "Payment Method", "Amount (KES)", "Customer / Supplier", "Phone", "Notes"],
     ...sales
       .filter(inRange)
       .map((s) => [
@@ -402,6 +402,7 @@ const downloadCSV = () => {
         s.amount || 0,
         s.customer || "",
         s.phone || "",
+        s.notes || "",
       ]),
     ...purchases
       .filter(inRange)
@@ -413,6 +414,9 @@ const downloadCSV = () => {
         p.quantity ?? "",
         "",
         p.amount || 0,
+        p.supplier || "",
+        p.phone || "",
+        p.notes || "",
       ]),
     ...expenses
       .filter(inRange)
@@ -424,6 +428,9 @@ const downloadCSV = () => {
         "",
         "",
         e.amount || 0,
+        e.payee || "",
+        e.phone || "",
+        e.notes || "",
       ]),
     ...losses
       .filter(inRange)
@@ -432,9 +439,12 @@ const downloadCSV = () => {
         l.date || "",
         l.item || l.description || "",
         l.category || "",
-        "",
+        l.quantity ?? "",
         "",
         l.amount || 0,
+        "",
+        "",
+        l.notes || "",
       ]),
     [],
     ["SUMMARY"],
@@ -448,13 +458,13 @@ const downloadCSV = () => {
 
   const escape = (v) => {
     const str = String(v ?? "");
-    return str.includes(",") || str.includes('"')
-      ? `"${str.replace(/"/g, '""')}"`
-      : str;
+    // quote anything with commas, quotes or line breaks (notes often have them)
+    return /[",\r\n]/.test(str) ? `"${str.replace(/"/g, '""')}"` : str;
   };
 
   const csv = rows.map((r) => r.map(escape).join(",")).join("\n");
-  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  // BOM so Excel opens Swahili/special characters correctly
+  const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;

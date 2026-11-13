@@ -2,11 +2,7 @@ import { useState, useEffect } from "react";
 import { collection, onSnapshot } from "firebase/firestore";
 import { db } from "../firebase";
 import { useCollection } from "../hooks/useCollection";
-import {
-  useStock,
-  recordStockSale,
-  findStockByLabel,
-} from "../hooks/useStock";
+import { useStock, recordStockSale, findStockByLabel } from "../hooks/useStock";
 import { PAYMENT_METHODS, paymentMethodOptions } from "../paymentMethods";
 import { priceError } from "../stockPrice";
 import EntryDate, { StockUpdateToggle } from "./EntryDate";
@@ -16,19 +12,16 @@ import EntryTable from "./EntryTable";
 import PeriodStats from "./PeriodStats";
 import { Toast, useToast } from "./Toast";
 import LineItems from "./LineItems";
-import {
-  lineStock,
-  lineQty,
-  filledLines,
-  validateLines,
-} from "../lineItems";
+import { lineStock, lineQty, filledLines, validateLines } from "../lineItems";
 
 export default function Sales({ ownerUid, sub }) {
   const { t } = useLang();
   // If ownerUid is passed, query by ownerUid to get all sales including staff.
   // Otherwise fall back to normal userId query (staff's own view).
-  const { items, loading, addItem, deleteItem, updateItem } =
-    useCollection("sales", ownerUid ? { ownerUid } : undefined);
+  const { items, loading, addItem, deleteItem, updateItem } = useCollection(
+    "sales",
+    ownerUid ? { ownerUid } : undefined,
+  );
   const stock = useStock();
   const { toast, showToast } = useToast();
 
@@ -81,7 +74,11 @@ export default function Sales({ ownerUid, sub }) {
     `g${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
   // All rows that belong to the same customer purchase
   const groupRows = (row) =>
-    row?.saleGroup ? items.filter((i) => i.saleGroup === row.saleGroup) : row ? [row] : [];
+    row?.saleGroup
+      ? items.filter((i) => i.saleGroup === row.saleGroup)
+      : row
+        ? [row]
+        : [];
 
   const resetForm = (date = lastDate) => {
     setForm({ ...emptyForm, date });
@@ -182,9 +179,14 @@ export default function Sales({ ownerUid, sub }) {
       !oldData?.fromCredit && // credit payments are part-payments, not prices
       Number(newData.amount) !== Number(oldData?.amount)
     ) {
-      const item = findStockByLabel(stock, newData.description ?? oldData?.description);
+      const item = findStockByLabel(
+        stock,
+        newData.description ?? oldData?.description,
+      );
       const qty = Number(newData.quantity ?? oldData?.quantity) || 1;
-      const msg = item ? priceError(item, qty, Number(newData.amount), t) : null;
+      const msg = item
+        ? priceError(item, qty, Number(newData.amount), t)
+        : null;
       if (msg) {
         const err = new Error(msg);
         err.userMessage = msg;
@@ -256,25 +258,59 @@ export default function Sales({ ownerUid, sub }) {
     // branchName is display-only — where this sale happened (Nairobi,
     // Mombasa, etc). Only shown for owners on the Business plan.
     ...(canUseBranches && branches.length > 0
-      ? [{
-          key: "branchName",
-          label: "Location",
-          readOnly: true,
-          format: (v) => v
-            ? <span style={{ fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 0, background: "#4f6f7d15", color: "#4f6f7d" }}>{v}</span>
-            : <span style={{ fontSize: 11, color: "var(--muted)" }}></span>,
-        }]
+      ? [
+          {
+            key: "branchName",
+            label: "Location",
+            readOnly: true,
+            format: (v) =>
+              v ? (
+                <span
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 600,
+                    padding: "2px 8px",
+                    borderRadius: 0,
+                    background: "#4f6f7d15",
+                    color: "#4f6f7d",
+                  }}
+                >
+                  {v}
+                </span>
+              ) : (
+                <span style={{ fontSize: 11, color: "var(--muted)" }}></span>
+              ),
+          },
+        ]
       : []),
     // staffName is display-only — mark readOnly so EntryTable skips it in edit mode
     ...(ownerUid
-      ? [{
-          key: "staffName",
-          label: "By",
-          readOnly: true,
-          format: (v) => v
-            ? <span style={{ fontSize: 11, fontWeight: 600, padding: "2px 7px", borderRadius: 0, background: "var(--accent)15", color: "var(--accent)" }}>{v}</span>
-            : <span style={{ fontSize: 11, color: "var(--muted)" }}>Owner</span>,
-        }]
+      ? [
+          {
+            key: "staffName",
+            label: "By",
+            readOnly: true,
+            format: (v) =>
+              v ? (
+                <span
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 600,
+                    padding: "2px 7px",
+                    borderRadius: 0,
+                    background: "var(--accent)15",
+                    color: "var(--accent)",
+                  }}
+                >
+                  {v}
+                </span>
+              ) : (
+                <span style={{ fontSize: 11, color: "var(--muted)" }}>
+                  Owner
+                </span>
+              ),
+          },
+        ]
       : []),
   ];
 
@@ -306,125 +342,160 @@ export default function Sales({ ownerUid, sub }) {
               ? `${t.addItemsTo || "Add items to sale"}: ${addTo.customer || addTo.description} (${addTo.date})`
               : t.recordSale}
           </h3>
-          <div className="split-form">
-          <div className="split-form-left">
-          <div className="form-grid">
-            <EntryDate
-              id="sale-date"
-              value={form.date}
-              onChange={(d) => {
-                setForm({ ...form, date: d });
-                setStockChoice(null);
-              }}
-            />
-            {lines.some((l) => lineStock(l, stock)) && (
-              <StockUpdateToggle
-                date={form.date}
-                checked={stockUpdateWanted(form.date, stockChoice)}
-                onChange={setStockChoice}
-              />
-            )}
-            {canUseBranches && branches.length > 0 && (
-              <div className="field-group">
-                <label htmlFor="sale-branch">Location / Branch</label>
-                <select
-                  id="sale-branch"
-                  name="sale-branch"
-                  value={form.branchId}
-                  onChange={(e) =>
-                    setForm({ ...form, branchId: e.target.value })
-                  }
-                >
-                  <option value="">No specific branch</option>
-                  {branches.map((b) => (
-                    <option key={b.id} value={b.id}>
-                      {b.name}
-                      {b.location ? ` (${b.location})` : ""}
-                    </option>
-                  ))}
-                </select>
+          {/* Order on phones: date → items → payment, customer, phone, notes.
+              On laptops: date and details on the left, items on the right. */}
+          <div className="split-form sale-split">
+            <div className="split-form-left sf-date">
+              <div className="form-grid">
+                <EntryDate
+                  id="sale-date"
+                  value={form.date}
+                  onChange={(d) => {
+                    setForm({ ...form, date: d });
+                    setStockChoice(null);
+                  }}
+                />
+                {lines.some((l) => lineStock(l, stock)) && (
+                  <StockUpdateToggle
+                    date={form.date}
+                    checked={stockUpdateWanted(form.date, stockChoice)}
+                    onChange={setStockChoice}
+                  />
+                )}
+                {canUseBranches && branches.length > 0 && (
+                  <div className="field-group">
+                    <label htmlFor="sale-branch">Location / Branch</label>
+                    <select
+                      id="sale-branch"
+                      name="sale-branch"
+                      value={form.branchId}
+                      onChange={(e) =>
+                        setForm({ ...form, branchId: e.target.value })
+                      }
+                    >
+                      <option value="">No specific branch</option>
+                      {branches.map((b) => (
+                        <option key={b.id} value={b.id}>
+                          {b.name}
+                          {b.location ? ` (${b.location})` : ""}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
               </div>
-            )}
-            <div className="field-group">
-              <label htmlFor="sale-customer">{t.customer}</label>
-              <input
-                id="sale-customer"
-                name="sale-customer"
-                autoComplete="name"
-                placeholder={t.customerPh}
-                value={form.customer}
-                onChange={(e) => setForm({ ...form, customer: e.target.value })}
+            </div>
+            <div className="split-form-right sf-items">
+              <LineItems
+                lines={lines}
+                setLines={setLines}
+                stock={stock}
+                t={t}
+                idPrefix="sale"
+                itemLabel={t.itemSold}
+                baseTotal={
+                  addTo
+                    ? groupRows(addTo).reduce(
+                        (a, r) => a + (Number(r.amount) || 0),
+                        0,
+                      )
+                    : 0
+                }
+                totalLabel={t.saleTotal || "Sale total"}
+                action={
+                  <button
+                    type="submit"
+                    className={
+                      "btn-primary save-beside-total" +
+                      (status === "saved" ? " btn-saved" : "")
+                    }
+                    disabled={status !== "idle"}
+                  >
+                    {status === "saving"
+                      ? t.saving
+                      : status === "saved"
+                        ? t.saved
+                        : t.saveSale}
+                  </button>
+                }
               />
             </div>
-            <div className="field-group">
-              <label htmlFor="sale-phone">{t.phone}</label>
-              <input
-                id="sale-phone"
-                name="sale-phone"
-                type="tel"
-                autoComplete="tel"
-                placeholder="07XX XXX XXX"
-                value={form.phone}
-                onChange={(e) => setForm({ ...form, phone: e.target.value })}
-              />
-            </div>
-            <div className="field-group">
-              <label htmlFor="sale-payment-method">{t.paymentMethod}</label>
-              <select
-                id="sale-payment-method"
-                name="sale-payment-method"
-                value={form.paymentMethod}
-                onChange={(e) => setForm({ ...form, paymentMethod: e.target.value })}
+            <div className="split-form-left sf-rest">
+              <div className="form-grid">
+                <div className="field-group">
+                  <label htmlFor="sale-payment-method">{t.paymentMethod}</label>
+                  <select
+                    id="sale-payment-method"
+                    name="sale-payment-method"
+                    value={form.paymentMethod}
+                    onChange={(e) =>
+                      setForm({ ...form, paymentMethod: e.target.value })
+                    }
+                  >
+                    {PAYMENT_METHODS.map((m) => (
+                      <option key={m} value={m}>
+                        {t.paymentMethods?.[m] || m}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="field-group">
+                  <label htmlFor="sale-customer">{t.customer}</label>
+                  <input
+                    id="sale-customer"
+                    name="sale-customer"
+                    autoComplete="name"
+                    placeholder={t.customerPh}
+                    value={form.customer}
+                    onChange={(e) =>
+                      setForm({ ...form, customer: e.target.value })
+                    }
+                  />
+                </div>
+                <div className="field-group">
+                  <label htmlFor="sale-phone">{t.phone}</label>
+                  <input
+                    id="sale-phone"
+                    name="sale-phone"
+                    type="tel"
+                    autoComplete="tel"
+                    placeholder="07XX XXX XXX"
+                    value={form.phone}
+                    onChange={(e) =>
+                      setForm({ ...form, phone: e.target.value })
+                    }
+                  />
+                </div>
+                <div className="field-group full-width">
+                  <label htmlFor="sale-notes">{t.notes}</label>
+                  <input
+                    id="sale-notes"
+                    name="sale-notes"
+                    autoComplete="off"
+                    placeholder="..."
+                    value={form.notes}
+                    onChange={(e) =>
+                      setForm({ ...form, notes: e.target.value })
+                    }
+                  />
+                </div>
+              </div>
+              {/* Phones: Save sits at the bottom, after customer details */}
+              <button
+                type="submit"
+                className={
+                  "btn-primary save-bottom" +
+                  (status === "saved" ? " btn-saved" : "")
+                }
+                disabled={status !== "idle"}
               >
-                {PAYMENT_METHODS.map((m) => (
-                  <option key={m} value={m}>
-                    {t.paymentMethods?.[m] || m}
-                  </option>
-                ))}
-              </select>
+                {status === "saving"
+                  ? t.saving
+                  : status === "saved"
+                    ? t.saved
+                    : t.saveSale}
+              </button>
             </div>
-            <div className="field-group full-width">
-              <label htmlFor="sale-notes">{t.notes}</label>
-              <input
-                id="sale-notes"
-                name="sale-notes"
-                autoComplete="off"
-                placeholder="..."
-                value={form.notes}
-                onChange={(e) => setForm({ ...form, notes: e.target.value })}
-              />
-            </div>
-          </div>
-          </div>
-          <div className="split-form-right">
-          <LineItems
-            lines={lines}
-            setLines={setLines}
-            stock={stock}
-            t={t}
-            idPrefix="sale"
-            itemLabel={t.itemSold}
-            baseTotal={
-              addTo
-                ? groupRows(addTo).reduce((a, r) => a + (Number(r.amount) || 0), 0)
-                : 0
-            }
-            totalLabel={t.saleTotal || "Sale total"}
-            action={
-            <button
-              type="submit"
-              className={"btn-primary" + (status === "saved" ? " btn-saved" : "")}
-              disabled={status !== "idle"}
-            >
-              {status === "saving"
-                ? t.saving
-                : status === "saved"
-                  ? t.saved
-                  : t.saveSale}
-            </button>
-            }
-          />
-          </div>
           </div>
         </form>
       )}
@@ -439,12 +510,24 @@ export default function Sales({ ownerUid, sub }) {
         emptyMessage={t.noSales}
         totalKey="amount"
         groupKey="saleGroup"
-        groupShared={["date", "customer", "phone", "paymentMethod", "notes", "staffName", "branchName"]}
+        groupShared={[
+          "date",
+          "customer",
+          "phone",
+          "paymentMethod",
+          "notes",
+          "staffName",
+          "branchName",
+        ]}
         groupLabelKey="description"
         extraActions={(row, info) =>
           row.fromCredit ? null : info?.cont ? (
             // keeps edit/delete lined up with the row above
-            <span className="edit-btn add-item-btn" style={{ visibility: "hidden" }} aria-hidden="true">
+            <span
+              className="edit-btn add-item-btn"
+              style={{ visibility: "hidden" }}
+              aria-hidden="true"
+            >
               + {t.itemNo || "Item"}
             </span>
           ) : (
